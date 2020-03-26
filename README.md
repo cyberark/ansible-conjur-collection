@@ -4,7 +4,7 @@
 
 ### cyberark.conjur-collection
 
-This collection contains plugins to be used for CyberArk Conjur & DAP [ansible galaxy](https://galaxy.ansible.com/cyberark/conjur).
+This collection contains plugins to be used for CyberArk Conjur & DAP hosted in [ansible galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ### Requirements
 
