@@ -51,8 +51,17 @@ DOCUMENTATION = """
 """
 
 EXAMPLES = """
-  - debug:
-      msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
+---
+  - hosts: localhost
+
+    collections:
+      - cyberark.conjur-collection
+
+    tasks:
+
+      - name: Lookup variable in Conjur
+        debug:
+          msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
 """
 
 RETURN = """

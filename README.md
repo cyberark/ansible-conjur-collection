@@ -2,7 +2,7 @@
 
 ****
 
-### cyberark.conjur
+### cyberark.conjur-collection
 
 This collection is the CyberArk Ansible Conjur project and can be found on [ansible galaxy](https://galaxy.ansible.com/cyberark/conjur).
 

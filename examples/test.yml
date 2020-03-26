@@ -2,11 +2,11 @@
   - hosts: localhost
   
     collections:
-      - cyberark.conjur
+      - cyberark.conjur-collection
   
     tasks:
   
       - name: Lookup variable in Conjur
-          debug:
+        debug:
           msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
   
