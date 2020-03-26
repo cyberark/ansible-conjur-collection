@@ -12,6 +12,10 @@ DOCUMENTATION = """
     lookup: conjur_variable
     version_added: "2.5"
     short_description: Fetch credentials from CyberArk Conjur.
+    author:
+      - CyberArk BizDev (@cyberark-bizdev)
+      - Edward Nunez (@enunez-cyberark)
+      - James Stutes (@jimmyjamcabd) 
     description:
       - Retrieves credentials from Conjur using the controlling host's Conjur identity
         or environment variables.
