@@ -1,6 +1,6 @@
 namespace: "cyberark"
-name: "conjur-collection"
-version: "0.5.0"
+name: "conjur_collection"
+version: "0.5.1"
 readme: README.md
 authors:
     - CyberArk Business Development (@cyberark-bizdev)

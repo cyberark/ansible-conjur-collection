@@ -21,13 +21,28 @@ None.
 
 ### conjur_variable Lookup Plugin
 
-- Retrieves credentials from Conjur using the controlling host's Conjur identity or environment variables.
+- Fetch credentials from CyberArk Conjur using the controlling host's Conjur identity or environment variables.
 - The controlling host running Ansible has a Conjur identity. [More Information here](https://docs.conjur.org/latest/en/Content/Get%20Started/key_concepts/machine_identity.html)
 - Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY
 
+#### Example Playbook
+
+```yaml
+---
+  - hosts: localhost
+  
+    collections:
+      - cyberark.conjur-collection
+  
+    tasks:
+  
+      - name: Lookup variable in Conjur
+        debug:
+          msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
+```
 
 ### Author Information
 - CyberArk Business Development Technical Team 
-    - @enunez-cyberark
     - @cyberark-bizdev
+    - @enunez-cyberark
     - @jimmyjamcabd
