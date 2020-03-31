@@ -25,9 +25,13 @@ DOCUMENTATION = """
       - 'The controlling host running Ansible has a Conjur identity.
         (More: U(https://docs.conjur.org/latest/en/Content/Get%20Started/key_concepts/machine_identity.html))'
     options:
-      _term:
+      _terms:
         description: Variable path
         required: True
+      validate_certs:
+        description: Flag to control SSL certificate validation
+        type: boolean
+        default: True
       identity_file:
         description: Path to the Conjur identity file. The identity file follows the netrc file format convention.
         type: path
@@ -82,6 +86,7 @@ import yaml
 
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
+import ssl
 
 display = Display()
 
@@ -135,11 +140,11 @@ def _merge_dictionaries(*arg):
 
 
 # Use credentials to retrieve temporary authorization token
-def _fetch_conjur_token(conjur_url, account, username, api_key):
+def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
     conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, quote_plus(username))
     display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, quote_plus(username)))
 
-    response = open_url(conjur_url, data=api_key, method='POST')
+    response = open_url(conjur_url, data=api_key, method='POST', validate_certs=validate_certs)
     code = response.getcode()
     if code != 200:
         raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
@@ -149,7 +154,7 @@ def _fetch_conjur_token(conjur_url, account, username, api_key):
 
 
 # Retrieve Conjur variable using the temporary token
-def _fetch_conjur_variable(conjur_variable, token, conjur_url, account):
+def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs):
     token = b64encode(token)
     headers = {'Authorization': 'Token token="{0}"'.format(token.decode("utf-8"))}
     display.vvvv('Header: {0}'.format(headers))
@@ -157,11 +162,12 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account):
     url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, quote_plus(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))
 
-    response = open_url(url, headers=headers, method='GET')
+    response = open_url(url, headers=headers, method='GET', validate_certs=validate_certs)
 
     if response.getcode() == 200:
         display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
-        return [response.read().decode("utf-8")]
+        value = response.read().decode("utf-8")
+        return [value]
     if response.getcode() == 401:
         raise AnsibleError('Conjur request has invalid authorization credentials')
     if response.getcode() == 403:
@@ -176,6 +182,7 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account):
 class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
+        self.set_options(direct=kwargs)
         conf_file = self.get_option('config_file')
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
@@ -218,15 +225,33 @@ class LookupModule(LookupBase):
                     " URL or they should be environment variables")
             )
 
+        if 'cert_file' in conf:
+            display.vvv("creating default context with {0}".format(conf['cert_file']))
+            validate_certs = self.get_option('validate_certs')
+            if validate_certs:
+                if hasattr(ssl, 'SSLContext'):
+                    display.vvv("SSL context")
+                    ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                    ctx.verify_mode = ssl.CERT_REQUIRED
+                    ctx.check_hostname = True
+                    ctx.load_verify_locations(cafile=conf['cert_file'])
+                    ssl._create_default_https_context = ctx
+            else:
+                if hasattr(ssl, 'SSLContext'):
+                    display.vvv("unverified context")
+                    ssl._create_default_https_context = ssl._create_unverified_context
+
         token = _fetch_conjur_token(
             conf['appliance_url'],
             conf['account'],
             identity['id'],
-            identity['api_key']
+            identity['api_key'],
+            validate_certs
         )
         return _fetch_conjur_variable(
             terms[0],
             token,
             conf['appliance_url'],
-            conf['account']
+            conf['account'],
+            validate_certs
         )

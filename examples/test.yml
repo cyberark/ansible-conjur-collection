@@ -2,11 +2,15 @@
   - hosts: localhost
   
     collections:
-      - cyberark.conjur-collection
+      - cyberark.conjur_collection
   
     tasks:
   
       - name: Lookup variable in Conjur
         debug:
-          msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
+          msg: "{{ lookup('cyberark.conjur_collection.conjur_variable', '/path/to/secret') }}"
+
+      - name: Lookup variable in Conjur to not validate certs (in case of self-signed)
+        debug:
+          msg: "{{ lookup('cyberark.conjur_collection.conjur_variable', '/path/to/secret', validate_certs=false) }}"
   
