@@ -36,7 +36,7 @@ Fetch credentials from CyberArk Conjur using the controlling host's Conjur ident
   
       - name: Lookup variable in Conjur
         debug:
-          msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
+          msg: "{{ lookup('cyberark.conjur_collection.conjur_variable', '/path/to/secret') }}"
 ```
 
 ### Author Information
