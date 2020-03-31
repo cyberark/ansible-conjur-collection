@@ -32,9 +32,6 @@ Fetch credentials from CyberArk Conjur using the controlling host's Conjur ident
 ---
   - hosts: localhost
   
-    collections:
-      - cyberark.conjur-collection
-  
     tasks:
   
       - name: Lookup variable in Conjur

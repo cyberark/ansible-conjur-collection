@@ -1,9 +1,6 @@
 ---
   - hosts: localhost
   
-    collections:
-      - cyberark.conjur_collection
-  
     tasks:
   
       - name: Lookup variable in Conjur
