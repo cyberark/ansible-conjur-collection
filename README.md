@@ -1,3 +1,4 @@
+![](https://img.shields.io/badge/Certification%20Level-Community-EA0A8E?link=https://github.com/cyberark/community/tree/master/Conjur/conventions/certification-levels.md)
 ## CyberArk Ansible Conjur Collection
 
 ****

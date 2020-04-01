@@ -157,7 +157,6 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
 def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs):
     token = b64encode(token)
     headers = {'Authorization': 'Token token="{0}"'.format(token.decode("utf-8"))}
-    display.vvvv('Header: {0}'.format(headers))
 
     url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, quote_plus(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))

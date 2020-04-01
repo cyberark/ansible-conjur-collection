@@ -1,6 +1,6 @@
 # Contributing to the Ansible Conjur Collection
 
-Thanks for your interest in the Ansible Conjur collection.  Before considering contributing, please take a moment to read and sign our <a href="https://github.com/cyberark/conjur/blob/master/Contributing_OSS/CyberArk_Open_Source_Contributor_Agreement.pdf" download="conjur_contributor_agreement">Contributor Agreement</a>. This provides patent protection for all CyberArk Ansible users and allows CyberArk to enforce its license terms.
+Thanks for your interest in the Ansible Conjur collection.
 
 ## Pull Request Workflow
 
