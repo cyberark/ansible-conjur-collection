@@ -1,4 +1,5 @@
 ![](https://img.shields.io/badge/Certification%20Level-Community-EA0A8E?link=https://github.com/cyberark/community/tree/master/Conjur/conventions/certification-levels.md)
+
 ## CyberArk Ansible Conjur Collection
 
 ****
@@ -9,8 +10,9 @@ This collection contains plugins to be used for CyberArk Conjur & DAP hosted in 
 
 ### Requirements
 
-- [CyberArk Conjur Open Source](https://www.conjur.org) or
-- [CyberArk Dynamic Access Provider](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
+- [CyberArk Conjur Open Source](https://www.conjur.org) v1.x+ or
+- [CyberArk Dynamic Access Provider](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm) v10.x+
+- Ansible v2.9+
 
 ### Role Variables
 
