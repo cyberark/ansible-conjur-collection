@@ -17,10 +17,10 @@ DOCUMENTATION = """
       - Edward Nunez (@enunez-cyberark)
       - James Stutes (@jimmyjamcabd)
     description:
-      - Retrieves credentials from Conjur using the controlling host's Conjur identity
-        or environment variables.
-      - Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY
-      - Conjur info: U(https://www.conjur.org/).
+      Retrieves credentials from Conjur using the controlling host's Conjur identity
+      or environment variables.
+      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY
+      Conjur info - U(https://www.conjur.org/).
     requirements:
       - 'The controlling host running Ansible has a Conjur identity.
         (More: U(https://docs.conjur.org/latest/en/Content/Get%20Started/key_concepts/machine_identity.html))'
