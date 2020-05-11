@@ -4,7 +4,7 @@
 
 ****
 
-### cyberark.conjur-collection
+### cyberark.conjur
 
 This collection contains plugins to be used for CyberArk Conjur & DAP hosted in [ansible galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
@@ -39,7 +39,7 @@ Fetch credentials from CyberArk Conjur using the controlling host's Conjur ident
   
       - name: Lookup variable in Conjur
         debug:
-          msg: "{{ lookup('cyberark.conjur_collection.conjur_variable', '/path/to/secret') }}"
+          msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
 ```
 
 ### Author Information
