@@ -33,13 +33,11 @@ Fetch credentials from CyberArk Conjur using the controlling host's Conjur ident
 
 ```yaml
 ---
-  - hosts: localhost
-  
-    tasks:
-  
-      - name: Lookup variable in Conjur
-        debug:
-          msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
+- hosts: localhost
+  tasks:
+  - name: Lookup variable in Conjur
+    debug:
+      msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
 ```
 
 ### Author Information
