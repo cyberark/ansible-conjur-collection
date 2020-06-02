@@ -8,6 +8,14 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '30'))
   }
 
+  stage('Validate') {
+    parallel {
+      stage('Changelog') {
+        steps { sh './bin/parse-changelog.sh' }
+      }
+    }
+  }
+
   stages {
     stage('Run tests') {
       steps {
