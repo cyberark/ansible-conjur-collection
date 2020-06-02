@@ -1,0 +1,92 @@
+#!/bin/bash -e
+
+set -o pipefail
+
+function cleanup {
+  echo 'Removing test environment'
+  echo '---'
+  docker-compose down -v
+}
+trap cleanup EXIT
+
+cleanup
+
+# normalises project name by filtering non alphanumeric characters and transforming to lowercase
+declare -x COMPOSE_PROJECT_NAME
+COMPOSE_PROJECT_NAME=$(echo ${BUILD_TAG:-"ansible-plugin-testing"} | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+
+declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
+declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
+declare -x ANSIBLE_CONJUR_CERT_FILE=''
+
+function main() {
+
+  docker-compose up -d --build conjur \
+                               conjur_proxy \
+                               conjur_cli
+
+  echo "Waiting for Conjur server to come up"
+  wait_for_conjur
+
+  echo "Fetching SSL certs"
+  fetch_ssl_certs
+
+  echo "Fetching admin API key"
+  CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+
+  echo "Recreating conjur CLI with admin credentials"
+  docker-compose up -d conjur_cli
+
+  echo "Configuring Conjur via CLI"
+  setup_conjur
+
+  echo "Fetching Ansible master host credentials"
+  ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+
+  echo "Preparing Ansible for test run"
+  docker-compose up -d --build ansible
+
+  echo "Running tests"
+  run_test_cases
+}
+
+function wait_for_conjur {
+  docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
+}
+
+function fetch_ssl_certs {
+  docker-compose exec -T conjur_proxy cat cert.crt > conjur.pem
+}
+
+function setup_conjur {
+  docker-compose exec -T conjur_cli bash -c '
+    conjur policy load root /policy/root.yml
+    conjur variable values add ansible/test-secret test_secret_password
+  '
+}
+
+function run_test_cases {
+  for test_case in `ls test_cases`; do
+    run_test_case "$test_case"
+  done
+}
+
+function run_test_case {
+  echo "---- testing ${test_case} ----"
+  local test_case=$1
+  if [ -n "$test_case" ]; then
+    docker-compose exec -T ansible bash -ec "
+      cd tests
+      ansible-playbook test_cases/${test_case}/playbook.yml
+      py.test --junitxml=./junit/${test_case} \
+        --connection docker \
+        -v test_cases/${test_case}/tests/test_default.py
+    "
+  else
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
+  fi
+}
+
+main
