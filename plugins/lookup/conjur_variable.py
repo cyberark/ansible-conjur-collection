@@ -189,6 +189,7 @@ class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
         self.set_options(direct=kwargs)
+        validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
@@ -233,7 +234,6 @@ class LookupModule(LookupBase):
 
         if 'cert_file' in conf:
             display.vvv("creating default context with {0}".format(conf['cert_file']))
-            validate_certs = self.get_option('validate_certs')
             if validate_certs:
                 if hasattr(ssl, 'SSLContext'):
                     display.vvv("SSL context")
