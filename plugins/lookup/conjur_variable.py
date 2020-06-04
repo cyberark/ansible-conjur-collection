@@ -81,7 +81,7 @@ from base64 import b64encode
 from netrc import netrc
 from os import environ
 from time import time
-from ansible.module_utils.six.moves.urllib.parse import quote
+from ansible.module_utils.six.moves.urllib.parse import quote_plus
 import yaml
 
 from ansible.module_utils.urls import open_url
@@ -141,8 +141,8 @@ def _merge_dictionaries(*arg):
 
 # Use credentials to retrieve temporary authorization token
 def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
-    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, quote(username))
-    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, quote(username)))
+    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, quote_plus(username))
+    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, quote_plus(username)))
 
     response = open_url(conjur_url, data=api_key, method='POST', validate_certs=validate_certs)
     code = response.getcode()
@@ -158,7 +158,7 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
     token = b64encode(token)
     headers = {'Authorization': 'Token token="{0}"'.format(token.decode("utf-8"))}
 
-    url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, quote(conjur_variable))
+    url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, quote_plus(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))
 
     response = open_url(url, headers=headers, method='GET', validate_certs=validate_certs)
