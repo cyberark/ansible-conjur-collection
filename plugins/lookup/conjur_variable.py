@@ -138,11 +138,18 @@ def _merge_dictionaries(*arg):
         ret.update(a)
     return ret
 
+# The `quote` method's default value for `safe` is '/' so it doesn't encode slashes
+# into "%2F" which is what the Conjur server expects. Thus, we need to use this
+# method with no safe characters. We can't use the method `quote_plus` (which encodes
+# slashes correctly) because it encodes spaces into the character '+' instead of "%20"
+# as expected by the Conjur server
+def _encode_str(str):
+    return quote(str, safe='')
 
 # Use credentials to retrieve temporary authorization token
 def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
-    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, quote(username))
-    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, quote(username)))
+    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
+    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, _encode_str(username)))
 
     response = open_url(conjur_url, data=api_key, method='POST', validate_certs=validate_certs)
     code = response.getcode()
@@ -158,7 +165,7 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
     token = b64encode(token)
     headers = {'Authorization': 'Token token="{0}"'.format(token.decode("utf-8"))}
 
-    url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, quote(conjur_variable))
+    url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, _encode_str(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))
 
     response = open_url(url, headers=headers, method='GET', validate_certs=validate_certs)
