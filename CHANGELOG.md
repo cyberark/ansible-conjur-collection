@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Encode spaces to "%20" instead of "+". This encoding fixes an issue where Conjur
   variables that have spaces were not encoded correctly 
-  ([cyberark/ansible-conjur-collection#5](https://github.com/cyberark/ansible-conjur-collection/pull/5))
+  ([cyberark/ansible-conjur-collection#12](https://github.com/cyberark/ansible-conjur-collection/issues/12))
 
 ## [1.0.3] - 2020-04-18
 ### Changed
