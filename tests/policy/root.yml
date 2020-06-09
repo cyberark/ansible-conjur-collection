@@ -11,9 +11,8 @@
       description: Host for running Ansible on remote targets
 
   - &variables
-
-    - !variable
-      id: test-secret
+    - !variable test-secret
+    - !variable var with spaces
 
   - !permit
     role: !host ansible-master
