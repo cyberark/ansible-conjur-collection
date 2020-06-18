@@ -24,6 +24,17 @@ pipeline {
         junit 'tests/junit/*'
       }
     }
+
+    stage('Build Release Artifacts') {
+      when {
+        branch 'master'
+      }
+
+      steps {
+        sh './bin/build_release'
+        archiveArtifacts 'cyberark-conjur-*.tar.gz'
+      }
+    }
   }
 
   post {
