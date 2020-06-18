@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.0.5] - 2020-06-18
 
 ### Added
-- Plugin now can correctly consume provided server certificates
+- Plugin supports validation of self-signed certificates provided in `CONJUR_CERT_FILE`
+  or Conjur config file
   ([cyberark/ansible-conjur-collection#4](https://github.com/cyberark/ansible-conjur-collection/issues/4))
 
 ### Fixed
