@@ -1,4 +1,4 @@
-# (c) 2018, Jason Vanderhoof <jason.vanderhoof@cyberark.com>, Oren Ben Meir <oren.benmeir@cyberark.com>
+# (c) 2020, Jason Vanderhoof <jason.vanderhoof@cyberark.com>, Oren Ben Meir <oren.benmeir@cyberark.com>, Srdjan Grubor <sgnn7@sgnn7.org>
 # (c) 2018 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import (absolute_import, division, print_function)
@@ -16,6 +16,9 @@ DOCUMENTATION = """
       - CyberArk BizDev (@cyberark-bizdev)
       - Edward Nunez (@enunez-cyberark)
       - James Stutes (@jimmyjamcabd)
+      - Oren Ben Meir (@orenbm)
+      - Jason Vanderhoof (@jvanderhoof)
+      - Srdjan Grubor (@sgnn7)
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity
       or environment variables.
