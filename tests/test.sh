@@ -20,9 +20,8 @@ declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
-
   docker-compose up -d --build conjur \
-                               conjur_proxy \
+                               conjur_https \
                                conjur_cli
 
   echo "Waiting for Conjur server to come up"
@@ -56,7 +55,7 @@ function wait_for_conjur {
 }
 
 function fetch_ssl_certs {
-  docker-compose exec -T conjur_proxy cat cert.crt > conjur.pem
+  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
 }
 
 function setup_conjur {
@@ -74,20 +73,22 @@ function run_test_cases {
 }
 
 function run_test_case {
-  echo "---- testing ${test_case} ----"
   local test_case=$1
-  if [ -n "$test_case" ]; then
-    docker-compose exec -T ansible bash -ec "
-      cd tests
-      ansible-playbook test_cases/${test_case}/playbook.yml
-      py.test --junitxml=./junit/${test_case} \
-              --connection docker \
-              -v test_cases/${test_case}/tests/test_default.py
-    "
-  else
+  echo "---- testing ${test_case} ----"
+
+  if [ ! -n "$test_case" ]; then
     echo ERROR: run_test called with no argument 1>&2
     exit 1
   fi
+
+  docker-compose exec -T ansible bash -ec "
+    cd tests
+    # Add -vvvv to command line for debug output
+    ansible-playbook test_cases/${test_case}/playbook.yml
+    py.test --junitxml=./junit/${test_case} \
+            --connection docker \
+            -v test_cases/${test_case}/tests/test_default.py
+  "
 }
 
 main

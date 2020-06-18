@@ -7,13 +7,14 @@ services:
     entrypoint: sleep
     command: infinity
     environment:
-      CONJUR_APPLIANCE_URL: http://conjur:3000
+      CONJUR_APPLIANCE_URL: https://conjur-https
       CONJUR_ACCOUNT: cucumber
       CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
       CONJUR_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}
       COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
-      CONJUR_VERSION: 5
       CONJUR_CERT_FILE: ${ANSIBLE_CONJUR_CERT_FILE}
+    links:
+      - "conjur_https:conjur-https"
     volumes:
       - ../plugins:/root/.ansible/plugins
       - ..:/cyberark
@@ -29,13 +30,13 @@ services:
     image: cyberark/conjur
     command: server -a cucumber -p 3000
     environment:
-      CONJUR_APPLIANCE_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres:StrongPass@pg/postgres
       CONJUR_DATA_KEY: "W0BuL8iTr/7QvtjIluJbrb5LDAnmXzmcpxkqihO3dXA="
     depends_on:
       - pg
 
-  conjur_proxy:
+  conjur_https:
+    hostname: conjur-https
     build:
       context: .
       dockerfile: Dockerfile_nginx
