@@ -137,8 +137,8 @@ def _load_identity_from_file(identity_path, appliance_url):
 # Merge multiple dictionaries by using dict.update mechanism
 def _merge_dictionaries(*arg):
     ret = {}
-    for a in arg:
-        ret.update(a)
+    for item in arg:
+        ret.update(item)
     return ret
 
 # The `quote` method's default value for `safe` is '/' so it doesn't encode slashes
@@ -146,13 +146,15 @@ def _merge_dictionaries(*arg):
 # method with no safe characters. We can't use the method `quote_plus` (which encodes
 # slashes correctly) because it encodes spaces into the character '+' instead of "%20"
 # as expected by the Conjur server
-def _encode_str(str):
-    return quote(str, safe='')
+def _encode_str(input_str):
+    return quote(input_str, safe='')
 
 # Use credentials to retrieve temporary authorization token
 def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
     conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
-    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, _encode_str(username)))
+    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
+        conjur_url,
+        _encode_str(username)))
 
     response = open_url(conjur_url, data=api_key, method='POST', validate_certs=validate_certs)
     code = response.getcode()
@@ -231,8 +233,8 @@ class LookupModule(LookupBase):
         if 'id' not in identity or 'api_key' not in identity:
             raise AnsibleError(
                 ("Identity file on the controlling host must contain "
-                    "`login` and `password` entries for Conjur appliance"
-                    " URL or they should be environment variables")
+                 "`login` and `password` entries for Conjur appliance"
+                 " URL or they should be environment variables")
             )
 
         if 'cert_file' in conf:
