@@ -81,13 +81,20 @@ function run_test_case {
     exit 1
   fi
 
-  docker-compose exec -T ansible bash -ec "
+  docker-compose exec -T ansible bash -exc "
     cd tests
-    # Add -vvvv to command line for debug output
-    ansible-playbook test_cases/${test_case}/playbook.yml
-    py.test --junitxml=./junit/${test_case} \
-            --connection docker \
-            -v test_cases/${test_case}/tests/test_default.py
+
+    # If env vars were provided, load them
+    if [ -e 'test_cases/${test_case}/env' ]; then
+      . ./test_cases/${test_case}/env
+    fi
+
+    # You can add -vvvv here for debugging
+    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+
+    py.test --junitxml='./junit/${test_case}' \
+      --connection docker \
+      -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
 

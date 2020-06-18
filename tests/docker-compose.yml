@@ -12,7 +12,6 @@ services:
       CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
       CONJUR_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}
       COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
-      CONJUR_CERT_FILE: ${ANSIBLE_CONJUR_CERT_FILE}
     links:
       - "conjur_https:conjur-https"
     volumes:

@@ -1,5 +1,5 @@
 ---
-- name: Retrieve Conjur variable with spaces in the variable name
+- name: Retrieve Conjur variable fails with bad cert
   hosts: localhost
   connection: local
   tasks:
@@ -8,7 +8,8 @@
         state: absent
         path: /conjur_secrets.txt
 
-    - name: Retrieve Conjur variable with spaces in the variable name
+    - name: Retrieve Conjur variable with bad cert
       vars:
-        super_secret_key: "{{lookup('conjur_variable', 'ansible/var with spaces')}}"
+        super_secret_key: "{{lookup('conjur_variable', 'ansible/test-secret')}}"
       shell: echo "{{super_secret_key}}" > /conjur_secrets.txt
+      ignore_errors: True
