@@ -6,3 +6,6 @@ tests/conjur.pem
 
 # We should never check in pycache directories
 **/__pycache__/
+
+# Distributable files should not be included in the repo
+*.tar.gz
