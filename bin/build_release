@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+CURRENT_DIR=$(dirname $BASH_SOURCE)
+
+pushd "$CURRENT_DIR/.." >/dev/null
+  ansible-galaxy collection build --force
+popd  >/dev/null

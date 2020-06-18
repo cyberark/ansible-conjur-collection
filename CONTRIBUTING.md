@@ -14,7 +14,7 @@ To release a new version of this plugin:
 - Update the version number in [`galaxy.yml`](galaxy.yml) and [`CHANGELOG.md`](CHANGELOG.md)
 - Tag the git history with `v##.##.##` version
 - Create the release on GitHub for that tag
-- Build the release package with `ansible-galaxy collection build`
+- Build the release package with `./bin/build_release`
 - Upload that package to:
   - GitHub release
   - https://galaxy.ansible.com/cyberark/conjur
