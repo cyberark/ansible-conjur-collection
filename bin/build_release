@@ -2,8 +2,11 @@
 
 set -euo pipefail
 
-CURRENT_DIR=$(dirname $BASH_SOURCE)
+CURRENT_DIR="$(cd "$(dirname "$BASH_SOURCE")"; pwd)"
 
 pushd "$CURRENT_DIR/.." >/dev/null
-  ansible-galaxy collection build --force
+  docker run --rm -it \
+    -v "$CURRENT_DIR/..:/runner" \
+    ansible/ansible-runner \
+    ansible-galaxy collection build --force
 popd  >/dev/null
