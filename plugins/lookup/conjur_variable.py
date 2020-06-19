@@ -1,4 +1,4 @@
-# (c) 2018, Jason Vanderhoof <jason.vanderhoof@cyberark.com>, Oren Ben Meir <oren.benmeir@cyberark.com>
+# (c) 2020 CyberArk Software Ltd. All rights reserved.
 # (c) 2018 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import (absolute_import, division, print_function)
@@ -16,6 +16,9 @@ DOCUMENTATION = """
       - CyberArk BizDev (@cyberark-bizdev)
       - Edward Nunez (@enunez-cyberark)
       - James Stutes (@jimmyjamcabd)
+      - Oren Ben Meir (@orenbm)
+      - Jason Vanderhoof (@jvanderhoof)
+      - Srdjan Grubor (@sgnn7)
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity
       or environment variables.
@@ -134,8 +137,8 @@ def _load_identity_from_file(identity_path, appliance_url):
 # Merge multiple dictionaries by using dict.update mechanism
 def _merge_dictionaries(*arg):
     ret = {}
-    for a in arg:
-        ret.update(a)
+    for item in arg:
+        ret.update(item)
     return ret
 
 # The `quote` method's default value for `safe` is '/' so it doesn't encode slashes
@@ -143,15 +146,21 @@ def _merge_dictionaries(*arg):
 # method with no safe characters. We can't use the method `quote_plus` (which encodes
 # slashes correctly) because it encodes spaces into the character '+' instead of "%20"
 # as expected by the Conjur server
-def _encode_str(str):
-    return quote(str, safe='')
+def _encode_str(input_str):
+    return quote(input_str, safe='')
 
 # Use credentials to retrieve temporary authorization token
-def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
+def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
     conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
-    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(conjur_url, _encode_str(username)))
+    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
+        conjur_url,
+        _encode_str(username)))
 
-    response = open_url(conjur_url, data=api_key, method='POST', validate_certs=validate_certs)
+    response = open_url(conjur_url,
+                        data=api_key,
+                        method='POST',
+                        validate_certs=validate_certs,
+                        ca_path=cert_file)
     code = response.getcode()
     if code != 200:
         raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
@@ -161,14 +170,18 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs):
 
 
 # Retrieve Conjur variable using the temporary token
-def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs):
+def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):
     token = b64encode(token)
     headers = {'Authorization': 'Token token="{0}"'.format(token.decode("utf-8"))}
 
     url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, _encode_str(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))
 
-    response = open_url(url, headers=headers, method='GET', validate_certs=validate_certs)
+    response = open_url(url,
+                        headers=headers,
+                        method='GET',
+                        validate_certs=validate_certs,
+                        ca_path=cert_file)
 
     if response.getcode() == 200:
         display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
@@ -228,36 +241,28 @@ class LookupModule(LookupBase):
         if 'id' not in identity or 'api_key' not in identity:
             raise AnsibleError(
                 ("Identity file on the controlling host must contain "
-                    "`login` and `password` entries for Conjur appliance"
-                    " URL or they should be environment variables")
+                 "`login` and `password` entries for Conjur appliance"
+                 " URL or they should be environment variables")
             )
 
+        cert_file = None
         if 'cert_file' in conf:
-            display.vvv("creating default context with {0}".format(conf['cert_file']))
-            if validate_certs:
-                if hasattr(ssl, 'SSLContext'):
-                    display.vvv("SSL context")
-                    ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-                    ctx.verify_mode = ssl.CERT_REQUIRED
-                    ctx.check_hostname = True
-                    ctx.load_verify_locations(cafile=conf['cert_file'])
-                    ssl._create_default_https_context = ctx
-            else:
-                if hasattr(ssl, 'SSLContext'):
-                    display.vvv("unverified context")
-                    ssl._create_default_https_context = ssl._create_unverified_context
+            display.vvv("Using cert file path {0}".format(conf['cert_file']))
+            cert_file = conf['cert_file']
 
         token = _fetch_conjur_token(
             conf['appliance_url'],
             conf['account'],
             identity['id'],
             identity['api_key'],
-            validate_certs
+            validate_certs,
+            cert_file
         )
         return _fetch_conjur_variable(
             terms[0],
             token,
             conf['appliance_url'],
             conf['account'],
-            validate_certs
+            validate_certs,
+            cert_file
         )
