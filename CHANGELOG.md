@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Plugin support authenticating with access token provided by authn-k8s.
+  [cyberark/ansible-conjur-collection#23](https://github.com/cyberark/ansible-conjur-collection/issues/23)
+
 ## [1.0.5] - 2020-06-18
 
 ### Added

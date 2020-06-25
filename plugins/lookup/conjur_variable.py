@@ -22,7 +22,7 @@ DOCUMENTATION = """
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity
       or environment variables.
-      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY
+      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_TOKEN_FILE
       Conjur info - U(https://www.conjur.org/).
     requirements:
       - 'The controlling host running Ansible has a Conjur identity.
@@ -45,6 +45,16 @@ DOCUMENTATION = """
             key: identity_file_path
         env:
           - name: CONJUR_IDENTITY_FILE
+      authn_token_file:
+        description: Path to the access token file.
+        type: path
+        default: /var/run/conjur/access-token
+        required: False
+        ini:
+          - section: conjur,
+            key: authn_token_file
+        env:
+          - name: CONJUR_AUTHN_TOKEN_FILE
       config_file:
         description: Path to the Conjur configuration file. The configuration file is a YAML file.
         type: path
@@ -60,12 +70,9 @@ DOCUMENTATION = """
 EXAMPLES = """
 ---
   - hosts: localhost
-
     collections:
       - cyberark.conjur-collection
-
     tasks:
-
       - name: Lookup variable in Conjur
         debug:
           msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
@@ -182,6 +189,7 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
                         method='GET',
                         validate_certs=validate_certs,
                         ca_path=cert_file)
+    
 
     if response.getcode() == 200:
         display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
@@ -217,47 +225,63 @@ class LookupModule(LookupBase):
             {
                 "cert_file": environ.get('CONJUR_CERT_FILE')
             } if (environ.get('CONJUR_CERT_FILE') is not None)
-            else {}
-        )
-
-        identity_file = self.get_option('identity_file')
-        identity = _merge_dictionaries(
-            _load_identity_from_file(identity_file, conf['appliance_url']),
+            else {},
             {
-                "id": environ.get('CONJUR_AUTHN_LOGIN'),
-                "api_key": environ.get('CONJUR_AUTHN_API_KEY')
-            } if (environ.get('CONJUR_AUTHN_LOGIN') is not None
-                  and environ.get('CONJUR_AUTHN_API_KEY') is not None)
+                "authn_token_file": environ.get('CONJUR_AUTHN_TOKEN_FILE')
+            } if (environ.get('CONJUR_AUTHN_TOKEN_FILE') is not None)
             else {}
         )
-
-        if 'account' not in conf or 'appliance_url' not in conf:
-            raise AnsibleError(
-                ("Configuration file on the controlling host must "
-                 "define `account` and `appliance_url`"
-                 "entries or they should be environment variables")
+        
+        
+        
+        if 'authn_token_file' not in conf:
+            identity_file = self.get_option('identity_file')
+            identity = _merge_dictionaries(
+                _load_identity_from_file(identity_file, conf['appliance_url']),
+                {
+                    "id": environ.get('CONJUR_AUTHN_LOGIN'),
+                    "api_key": environ.get('CONJUR_AUTHN_API_KEY')
+                } if (environ.get('CONJUR_AUTHN_LOGIN') is not None
+                      and environ.get('CONJUR_AUTHN_API_KEY') is not None)
+                else {}
             )
 
-        if 'id' not in identity or 'api_key' not in identity:
-            raise AnsibleError(
-                ("Identity file on the controlling host must contain "
-                 "`login` and `password` entries for Conjur appliance"
-                 " URL or they should be environment variables")
-            )
+            if 'account' not in conf or 'appliance_url' not in conf:
+                raise AnsibleError(
+                    ("Configuration file on the controlling host must "
+                     "define `account` and `appliance_url`"
+                     "entries or they should be environment variables")
+                )
+
+            if 'id' not in identity or 'api_key' not in identity:
+                raise AnsibleError(
+                    ("Identity file on the controlling host must contain "
+                     "`login` and `password` entries for Conjur appliance"
+                     " URL or they should be environment variables")
+                )
 
         cert_file = None
         if 'cert_file' in conf:
             display.vvv("Using cert file path {0}".format(conf['cert_file']))
             cert_file = conf['cert_file']
-
-        token = _fetch_conjur_token(
-            conf['appliance_url'],
-            conf['account'],
-            identity['id'],
-            identity['api_key'],
-            validate_certs,
-            cert_file
-        )
+        
+        token = None
+        if 'authn_token_file' not in conf:
+            token = _fetch_conjur_token(
+                conf['appliance_url'],
+                conf['account'],
+                identity['id'],
+                identity['api_key'],
+                validate_certs,
+                cert_file
+            )
+        else:
+            if not os.path.exists(conf['authn_token_file']):
+                raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
+                                  .format(conf['authn_token_file']))
+            with open(conf['authn_token_file'], 'rb') as f:
+                token = f.read()
+            
         return _fetch_conjur_variable(
             terms[0],
             token,
