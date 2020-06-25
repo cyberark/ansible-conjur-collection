@@ -7,6 +7,7 @@ function cleanup {
   echo '---'
   docker-compose down -v
 }
+
 trap cleanup EXIT
 
 cleanup
@@ -43,6 +44,9 @@ function main() {
   ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
   ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
 
+  echo "Get Access Token"
+  setup_access_token
+
   echo "Preparing Ansible for test run"
   docker-compose up -d --build ansible
 
@@ -65,6 +69,15 @@ function setup_conjur {
     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
   '
 }
+
+function setup_access_token {
+  docker-compose exec -T conjur_cli bash -c "
+    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+    conjur authn authenticate
+  " > access_token
+}
+
 
 function run_test_cases {
   for test_case in `ls test_cases`; do
