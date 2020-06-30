@@ -35,6 +35,16 @@ pipeline {
         archiveArtifacts 'cyberark-conjur-*.tar.gz'
       }
     }
+
+    stage('Publish to Ansible Galaxy') {
+      when {
+        buildingTag()
+      }
+
+      steps {
+        sh 'summon ./bin/publish_to_galaxy'
+      }
+    }
   }
 
   post {
