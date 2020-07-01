@@ -27,7 +27,10 @@ pipeline {
 
     stage('Build Release Artifacts') {
       when {
-        branch 'master'
+        anyOf {
+            branch 'master'
+            buildingTag()
+        }
       }
 
       steps {
