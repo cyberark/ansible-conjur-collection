@@ -50,6 +50,9 @@ function main() {
   echo "Preparing Ansible for test run"
   docker-compose up -d --build ansible
 
+  echo "Running Sanity Tests"
+  docker-compose exec -T ansible bash -c "ansible-test sanity --docker -v"
+
   echo "Running tests"
   run_test_cases
 }

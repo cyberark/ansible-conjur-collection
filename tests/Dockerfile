@@ -14,7 +14,7 @@ RUN apt-get update && \
     pip3 install --upgrade pip==9.0.3
 
 # install ansible and its test tool
-RUN pip3 install ansible testinfra
+RUN pip3 install ansible ansible-test testinfra
 
 # install docker installation requirements
 RUN apt-get update && \
