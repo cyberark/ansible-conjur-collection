@@ -1,0 +1,10 @@
+FROM docker:dind
+
+ADD . /ansible_collections/cyberark/conjur/ansible-conjur-collection
+
+WORKDIR /ansible_collections/cyberark/conjur/ansible-conjur-collection
+
+RUN apk add py3-pip && \
+    pip3 install ansible-test
+
+RUN ansible-test sanity --docker -v

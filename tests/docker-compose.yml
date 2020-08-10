@@ -56,3 +56,10 @@ services:
       CONJUR_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}
     volumes:
       - ./policy:/policy
+
+  sanity:
+    build:
+      context: .
+      dockerfile: Dockerfile_sanity
+    entrypoint: sleep
+    command: infinity
