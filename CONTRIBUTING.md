@@ -22,5 +22,5 @@ of this plugin:
       [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur)
     
 - Create the release on GitHub for that tag
-    - Build the release package with `./bin/build_release`
+    - Build the release package with `./ci/build_release`
     - Attach package to Github Release
