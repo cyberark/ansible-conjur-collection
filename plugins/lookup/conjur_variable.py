@@ -148,6 +148,7 @@ def _merge_dictionaries(*arg):
         ret.update(item)
     return ret
 
+
 # The `quote` method's default value for `safe` is '/' so it doesn't encode slashes
 # into "%2F" which is what the Conjur server expects. Thus, we need to use this
 # method with no safe characters. We can't use the method `quote_plus` (which encodes
@@ -155,6 +156,7 @@ def _merge_dictionaries(*arg):
 # as expected by the Conjur server
 def _encode_str(input_str):
     return quote(input_str, safe='')
+
 
 # Use credentials to retrieve temporary authorization token
 def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
@@ -189,7 +191,6 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
                         method='GET',
                         validate_certs=validate_certs,
                         ca_path=cert_file)
-    
 
     if response.getcode() == 200:
         display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
@@ -231,9 +232,7 @@ class LookupModule(LookupBase):
             } if (environ.get('CONJUR_AUTHN_TOKEN_FILE') is not None)
             else {}
         )
-        
-        
-        
+
         if 'authn_token_file' not in conf:
             identity_file = self.get_option('identity_file')
             identity = _merge_dictionaries(
@@ -264,7 +263,7 @@ class LookupModule(LookupBase):
         if 'cert_file' in conf:
             display.vvv("Using cert file path {0}".format(conf['cert_file']))
             cert_file = conf['cert_file']
-        
+
         token = None
         if 'authn_token_file' not in conf:
             token = _fetch_conjur_token(
@@ -278,10 +277,10 @@ class LookupModule(LookupBase):
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
-                                  .format(conf['authn_token_file']))
+                                   .format(conf['authn_token_file']))
             with open(conf['authn_token_file'], 'rb') as f:
                 token = f.read()
-            
+
         return _fetch_conjur_variable(
             terms[0],
             token,

@@ -14,7 +14,7 @@ cleanup
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
-COMPOSE_PROJECT_NAME=$(echo ${BUILD_TAG:-"ansible-plugin-testing"} | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
@@ -80,8 +80,8 @@ function setup_access_token {
 
 
 function run_test_cases {
-  for test_case in `ls test_cases`; do
-    run_test_case "$test_case"
+  for test_case in test_cases/*; do
+    run_test_case "$(basename -- "$test_case")"
   done
 }
 

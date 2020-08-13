@@ -13,14 +13,14 @@ pipeline {
     stage('Validate') {
       parallel {
         stage('Changelog') {
-          steps { sh './bin/parse-changelog.sh' }
+          steps { sh './ci/parse-changelog.sh' }
         }
       }
     }
 
     stage('Run tests') {
       steps {
-        sh './bin/test.sh'
+        sh './ci/test.sh'
         junit 'tests/junit/*'
       }
     }
@@ -34,7 +34,7 @@ pipeline {
       }
 
       steps {
-        sh './bin/build_release'
+        sh './ci/build_release'
         archiveArtifacts 'cyberark-conjur-*.tar.gz'
       }
     }
@@ -45,7 +45,7 @@ pipeline {
       }
 
       steps {
-        sh 'summon ./bin/publish_to_galaxy'
+        sh 'summon ./ci/publish_to_galaxy'
       }
     }
   }
