@@ -10,3 +10,18 @@ tests/access_token
 
 # Distributable files should not be included in the repo
 *.tar.gz
+
+# ansible-conjur-host-identity
+*.log
+.cache
+*.retry
+.idea/
+*.pem
+*.pyc
+**/.molecule/
+**/test-files/output
+junit
+molecule/conjur.pem
+*.tmp
+vendor/
+.pytest_cache

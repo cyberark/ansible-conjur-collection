@@ -1,0 +1,30 @@
+dependencies: []
+
+galaxy_info:
+  short_description: Grants Conjur machine identity
+  description: Grants Conjur machine identity to hosts
+  company: CyberArk
+  license: Apache
+  author:
+    - Dustin Collins (@dustinmm80)
+    - Oren Ben Meir (@orenbm)
+    - Jason Vanderhoof (@jvanderhoof)
+    - Kumbirai Tanekha (@doodlesbykumbi)
+    - Gary Moon (@garymoon)
+
+  min_ansible_version: '2.3'
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+        - xenial
+    - name: EL
+      versions:
+        - 7
+
+  galaxy_tags:
+    - identity
+    - cyberark
+    - conjur
+    - security

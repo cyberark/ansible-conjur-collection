@@ -1,6 +1,6 @@
 # Contributing to the Ansible Conjur Collection
 
-Thanks for your interest in the Ansible Conjur collection.
+For general contribution and community guidelines, please see the [community repo](https://github.com/cyberark/community).
 
 ## Pull Request Workflow
 
@@ -24,3 +24,12 @@ of this plugin:
 - Create the release on GitHub for that tag
     - Build the release package with `./ci/build_release`
     - Attach package to Github Release
+
+### Testing
+
+To run the tests:
+
+```sh-session
+$ cd tests
+$ ./test.sh
+```
