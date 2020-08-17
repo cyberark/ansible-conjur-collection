@@ -31,5 +31,5 @@ To run the tests:
 
 ```sh-session
 $ cd tests
-$ ./test.sh
+$ ./test.sh <conjur or conjur-host-identity>
 ```

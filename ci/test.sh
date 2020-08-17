@@ -1,4 +1,5 @@
 #!/bin/bash -ex
 
-cd "${PWD}/tests"
+cd "${PWD}/tests/$@"
+
 ./test.sh

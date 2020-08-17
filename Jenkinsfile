@@ -19,9 +19,20 @@ pipeline {
     }
 
     stage('Run tests') {
-      steps {
-        sh './ci/test.sh'
-        junit 'tests/junit/*'
+      parallel {
+        stage("Test Ansible-Conjur-Collection") {
+          steps {
+            sh './ci/test.sh conjur'
+            junit 'tests/junit/*'
+          }
+        }
+
+        stage("Test Ansible-Conjur-Host-Identity") {
+          steps {
+            sh './ci/test.sh conjur-host-identity'
+            junit 'tests/junit/*'
+          }
+        }
       }
     }
 

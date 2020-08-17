@@ -16,7 +16,6 @@ tests/access_token
 .cache
 *.retry
 .idea/
-*.pem
 *.pyc
 **/.molecule/
 **/test-files/output
