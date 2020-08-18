@@ -4,9 +4,7 @@ version: "1.0.6"
 readme: README.md
 authors:
     - CyberArk Business Development (@cyberark-bizdev)
-    - Edward Nunez (@enunez-cyberark)
-    - James Stutes (@JimmyJamCABD)
-    - Srdjan Grubor (@sgnn7)
+    - CyberArk Community and Integrations Team (@cyberark/community-and-integrations-team)
 description: "This is a Collection of CyberArk Conjur/DAP toolkit."
 license: "Apache-2.0"
 tags:

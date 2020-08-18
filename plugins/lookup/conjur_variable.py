@@ -14,11 +14,7 @@ DOCUMENTATION = """
     short_description: Fetch credentials from CyberArk Conjur.
     author:
       - CyberArk BizDev (@cyberark-bizdev)
-      - Edward Nunez (@enunez-cyberark)
-      - James Stutes (@jimmyjamcabd)
-      - Oren Ben Meir (@orenbm)
-      - Jason Vanderhoof (@jvanderhoof)
-      - Srdjan Grubor (@sgnn7)
+      - CyberArk Community and Integrations Team (@cyberark/community-and-integrations-team)
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity
       or environment variables.
