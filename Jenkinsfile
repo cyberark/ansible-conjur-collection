@@ -21,16 +21,18 @@ pipeline {
     stage('Run tests') {
       parallel {
         stage("Test Ansible-Conjur-Collection") {
+          agent { label 'executor-v2-large' }
+
           steps {
             sh './ci/test.sh conjur'
-            junit 'tests/junit/*'
+            junit 'tests/conjur/junit/*'
           }
         }
 
         stage("Test Ansible-Conjur-Host-Identity") {
           steps {
             sh './ci/test.sh conjur-host-identity'
-            junit 'tests/junit/*'
+            junit 'tests/conjur-host-identity/junit/*'
           }
         }
       }

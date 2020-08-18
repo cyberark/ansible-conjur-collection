@@ -15,8 +15,8 @@ services:
     links:
       - "conjur_https:conjur-https"
     volumes:
-      - ../plugins:/root/.ansible/plugins
-      - ..:/cyberark
+      - ../../plugins:/root/.ansible/plugins
+      - ../..:/cyberark
       - /var/run/docker.sock:/var/run/docker.sock
 
   pg:

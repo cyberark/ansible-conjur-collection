@@ -95,7 +95,7 @@ function run_test_case {
   fi
 
   docker-compose exec -T ansible bash -exc "
-    cd tests
+    cd tests/conjur
 
     # If env vars were provided, load them
     if [ -e 'test_cases/${test_case}/env' ]; then

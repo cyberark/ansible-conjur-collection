@@ -1,9 +1,9 @@
 .DS_Store
 
 # We don't care about test outputs
-tests/junit/
-tests/conjur.pem
-tests/access_token
+tests/*/junit/
+tests/*/conjur.pem
+tests/*/access_token
 
 # We should never check in pycache directories
 **/__pycache__/
