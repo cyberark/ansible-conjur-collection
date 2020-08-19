@@ -11,7 +11,8 @@ trap finish EXIT
 finish
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
-declare -x COMPOSE_PROJECT_NAME=$(echo ${BUILD_TAG:-"ansible-role-testing"} | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+declare -x COMPOSE_PROJECT_NAME
+COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
@@ -31,7 +32,9 @@ function api_key_for {
 }
 
 function hf_token {
-  echo $(docker exec ${cli_cid} conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r '.[0].token')
+  docker exec ${cli_cid} conjur hostfactory tokens create \
+    --duration-days=5 \
+    ansible/ansible-factory | jq -r '.[0].token'
 }
 
 function setup_conjur {
@@ -46,9 +49,9 @@ function setup_conjur {
 }
 
 function run_test_cases {
-  for test_case in `ls test_cases`; do
+  for test_case in test_cases/*; do
     teardown_and_setup
-    run_test_case $test_case
+    run_test_case "$(basename -- "$test_case")"
   done
 }
 
@@ -57,11 +60,11 @@ function run_test_case {
   local test_case=$1
   if [ ! -z "$test_case" ]
   then
-    docker exec ${ansible_cid} env HFTOKEN=$(hf_token) bash -c "
+    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -c "
       cd tests
       ansible-playbook test_cases/${test_case}/playbook.yml
     "
-    docker exec ${ansible_cid} bash -c "
+    docker exec "${ansible_cid}" bash -c "
       cd tests
       py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
     "
@@ -77,8 +80,9 @@ function teardown_and_setup {
 }
 
 function wait_for_server {
-  docker exec ${cli_cid} bash -c '
-    for i in $(seq 20); do
+  # shellcheck disable=SC2016
+  docker exec "${cli_cid}" bash -c '
+    for i in $( seq 20 ); do
       curl -o /dev/null -fs -X OPTIONS ${CONJUR_APPLIANCE_URL} > /dev/null && echo "server is up" && break
       echo "."
       sleep 2

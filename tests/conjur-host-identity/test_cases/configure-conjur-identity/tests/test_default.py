@@ -1,7 +1,11 @@
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+
 import testinfra.utils.ansible_runner
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
     '/conjurinc/tests/inventory.tmp').get_hosts('testapp')
+
 
 def test_hosts_file(host):
     f = host.file('/etc/hosts')
