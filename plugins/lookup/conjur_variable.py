@@ -67,11 +67,11 @@ EXAMPLES = """
 ---
   - hosts: localhost
     collections:
-      - cyberark.conjur-collection
+      - cyberark.conjur
     tasks:
       - name: Lookup variable in Conjur
         debug:
-          msg: "{{ lookup('conjur_variable', '/path/to/secret') }}"
+          msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
 """
 
 RETURN = """
