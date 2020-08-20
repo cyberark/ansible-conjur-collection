@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Various improvements to code quality, documentation, and adherence to Ansible standards
-  in preparation for the release of Ansible 2.10.
+  in preparation for including this collection in the release of Ansible 2.10.
   [cyberark/ansible-conjur-collection#30](https://github.com/cyberark/ansible-conjur-collection/issues/30)
 
 ## [1.0.6] - 2020-07-01
