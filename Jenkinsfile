@@ -24,14 +24,14 @@ pipeline {
           agent { label 'executor-v2-large' }
 
           steps {
-            sh './ci/test.sh conjur'
+            sh './ci/test.sh -d conjur'
             junit 'tests/conjur/junit/*'
           }
         }
 
         stage("Test Ansible-Conjur-Host-Identity") {
           steps {
-            sh './ci/test.sh conjur-host-identity'
+            sh './ci/test.sh -d conjur-host-identity'
             junit 'tests/conjur-host-identity/junit/*'
           }
         }
