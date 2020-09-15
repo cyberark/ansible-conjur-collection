@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- The Ansible [conjur-host-identity](https://galaxy.ansible.com/cyberark/conjur-host-identity) has  
+  been migrated to this collection, where it will be maintained moving forward. [cyberark/
+  conjur-host-identity#30](https://github.com/cyberark/ansible-conjur-host-identity/issues/30)
+
+### Changed
+- [Added retries](https://github.com/cyberark/ansible-conjur-host-identity/pull/32) to tasks/  
+  identity/Request identity from Conjur.
+  This will increase the reliability of host factory requests without introducing any extra delay 
+  if the first request succeeds.
+
 ## [1.0.7] - 2020-08-20
 
 ### Changed
