@@ -20,19 +20,17 @@ pipeline {
 
     stage('Run tests') {
       parallel {
-        stage("Test Ansible-Conjur-Collection") {
-          agent { label 'executor-v2-large' }
-
+        stage("Test conjur_lookup Plugin") {
           steps {
-            sh './ci/test.sh -d conjur'
-            junit 'tests/conjur/junit/*'
+            sh './ci/test.sh -d conjur_variable'
+            junit 'tests/conjur_variable/junit/*'
           }
         }
 
-        stage("Test Ansible-Conjur-Host-Identity") {
+        stage("Test conjur_host_identity Role") {
           steps {
-            sh './ci/test.sh -d conjur-host-identity'
-            junit 'tests/conjur-host-identity/junit/*'
+            sh './ci/test.sh -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
       }

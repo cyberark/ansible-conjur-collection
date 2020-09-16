@@ -6,13 +6,9 @@ galaxy_info:
   company: CyberArk
   license: Apache
   author:
-    - Dustin Collins (@dustinmm80)
-    - Oren Ben Meir (@orenbm)
-    - Jason Vanderhoof (@jvanderhoof)
-    - Kumbirai Tanekha (@doodlesbykumbi)
-    - Gary Moon (@garymoon)
+    - Cyberark Community and Integrations Team (@cyberark/community-and-integrations-team)
 
-  min_ansible_version: '2.3'
+  min_ansible_version: '2.9'
 
   platforms:
     - name: Ubuntu

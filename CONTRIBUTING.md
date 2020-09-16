@@ -27,9 +27,15 @@ of this plugin:
 
 ### Testing
 
-To run the tests:
+To run a specific set of tests:
 
 ```sh-session
 $ cd tests
-$ ./test.sh <conjur or conjur-host-identity>
+$ ./test.sh -d <role or plugin name>
+```
+To run all tests:
+
+```sh-session
+$ cd tests
+$ ./test.sh -a
 ```

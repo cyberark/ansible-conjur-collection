@@ -14,7 +14,7 @@ cleanup
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
-COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
@@ -23,7 +23,7 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 function main() {
   docker-compose up -d --build conjur \
                                conjur_https \
-                               conjur_cli
+                               conjur_cli \
 
   echo "Waiting for Conjur server to come up"
   wait_for_conjur
@@ -95,7 +95,7 @@ function run_test_case {
   fi
 
   docker-compose exec -T ansible bash -exc "
-    cd tests/conjur
+    cd tests/conjur_variable
 
     # If env vars were provided, load them
     if [ -e 'test_cases/${test_case}/env' ]; then

@@ -1,26 +1,25 @@
+# System directories files
 .DS_Store
+.idea/
 
-# We don't care about test outputs
+# Test output
 tests/*/junit/
 tests/*/conjur.pem
 tests/*/access_token
+**/test-files/output
+junit
 
-# We should never check in pycache directories
+# Pycache directories and files
 **/__pycache__/
+.pytest_cache
+*.pyc
 
-# Distributable files should not be included in the repo
+# Distributable directories files
 *.tar.gz
+vendor/
 
-# ansible-conjur-host-identity
+# Temporary files
 *.log
 .cache
 *.retry
-.idea/
-*.pyc
-**/.molecule/
-**/test-files/output
-junit
-molecule/conjur.pem
 *.tmp
-vendor/
-.pytest_cache
