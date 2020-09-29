@@ -1,12 +1,25 @@
+# System directories files
 .DS_Store
+.idea/
 
-# We don't care about test outputs
-tests/junit/
-tests/conjur.pem
-tests/access_token
+# Test output
+tests/*/junit/
+tests/*/conjur.pem
+tests/*/access_token
+**/test-files/output
+junit
 
-# We should never check in pycache directories
+# Pycache directories and files
 **/__pycache__/
+.pytest_cache
+*.pyc
 
-# Distributable files should not be included in the repo
+# Distributable directories files
 *.tar.gz
+vendor/
+
+# Temporary files
+*.log
+.cache
+*.retry
+*.tmp

@@ -19,9 +19,20 @@ pipeline {
     }
 
     stage('Run tests') {
-      steps {
-        sh './ci/test.sh'
-        junit 'tests/junit/*'
+      parallel {
+        stage("Test conjur_lookup Plugin") {
+          steps {
+            sh './ci/test.sh -d conjur_variable'
+            junit 'tests/conjur_variable/junit/*'
+          }
+        }
+
+        stage("Test conjur_host_identity Role") {
+          steps {
+            sh './ci/test.sh -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
+          }
+        }
       }
     }
 

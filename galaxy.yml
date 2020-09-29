@@ -5,7 +5,7 @@ readme: README.md
 authors:
     - CyberArk Business Development (@cyberark-bizdev)
     - CyberArk Community and Integrations Team (@cyberark/community-and-integrations-team)
-description: "This is a Collection of CyberArk Conjur/DAP toolkit."
+description: "This is a Collection of the CyberArk Conjur/DAP toolkit."
 license: "Apache-2.0"
 tags:
   - cyberark

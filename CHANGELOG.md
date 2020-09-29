@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- The [Conjur Ansible role](https://galaxy.ansible.com/cyberark/conjur-host-identity) has been
+  migrated to this collection, where it will be maintained moving forward.
+  [cyberark/ansible-conjur-host-identity#30](https://github.com/cyberark/ansible-conjur-host-identity/issues/30)
+
 ## [1.0.7] - 2020-08-20
 
 ### Changed
