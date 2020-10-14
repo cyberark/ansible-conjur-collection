@@ -23,3 +23,8 @@ vendor/
 .cache
 *.retry
 *.tmp
+
+# Vagrant files
+.vagrant/
+nginx.crt
+nginx.key

@@ -1,0 +1,13 @@
+- name: Deploy Conjur
+  hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Tear down any existing services
+      community.general.docker_compose:
+        project_src: build
+        state: absent
+    
+    - name: Create and start services
+      community.general.docker_compose:
+        project_src: build
