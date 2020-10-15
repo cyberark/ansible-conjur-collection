@@ -1,0 +1,23 @@
+---
+- name: Load Root Conjur Policy
+  shell: |
+    docker exec conjur_client \
+      conjur policy load root /policy/root.yml
+
+- name: Load Host Identity Conjur Policy
+  shell: |
+    docker exec conjur_client \
+      conjur policy load host-identity /policy/host-identity.yml
+  register: hostidentity_output
+
+- name: Load Lookup Plugin Conjur Policy
+  shell: |
+    docker exec conjur_client \
+      conjur policy load lookup-plugin /policy/lookup-plugin.yml
+  register: lookupplugin_output
+  no_log: yes
+
+- name: Return Only API Key
+  shell: echo '{{ lookupplugin_output.stdout_lines[4] }}' | awk '/"api_key":/{print $2}' | tr -d '"' | tr -d '\r\n'
+  register: host_identity
+  no_log: yes

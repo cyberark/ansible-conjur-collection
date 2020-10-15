@@ -7,3 +7,21 @@
   roles:
     - conjur
     - config
+
+- name: Load Conjur Policies
+  hosts: localhost
+  
+  roles:
+    - policy
+
+- name: Setup Host Identity Demo
+  hosts: localhost
+  
+  roles:
+     - host-identity
+
+- name: Setup Lookup Plugin Demo
+  hosts: localhost
+
+  roles:
+    - lookup-plugin
