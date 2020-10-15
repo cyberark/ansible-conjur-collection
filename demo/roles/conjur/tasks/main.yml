@@ -1,0 +1,91 @@
+---
+- name: Start OpenSSL
+  community.general.docker_container:
+    name: openssl
+    image: svagi/openssl
+    auto_remove: yes
+    entrypoint:
+      - openssl
+      - req
+      - -newkey
+      - rsa:2048
+      - -days
+      - "365"
+      - -nodes
+      - -x509
+      - -config
+      - tmp/conf/tls.conf
+      - -extensions
+      - v3_ca
+      - -keyout
+      - tmp/conf/nginx.key
+      - -out
+      - tmp/conf/nginx.crt
+    volumes:
+      - ./conf/tls/:/tmp/conf
+
+- name: Start PostgreSQL 9.4 Database
+  community.general.docker_container:
+    name: postgres_database
+    image: postgres:9.4
+    hostname: database
+    detach: yes
+    env:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+- name: Generate Master Data Encryption Key
+  community.general.docker_container:
+    name: generate-datakey
+    image: cyberark/conjur
+    command: data-key generate
+    detach: no
+  register: data_key
+  no_log: yes
+
+- set_fact:
+    data_key: "{{ data_key.ansible_facts.docker_container.Output }}"
+  no_log: yes
+
+- community.general.docker_container:
+    name: generate-datakey
+    state: absent
+
+- name: Start Conjur Server
+  community.general.docker_container:
+    name: conjur_server
+    image: cyberark/conjur
+    hostname: conjur
+    command: server
+    detach: yes
+    restart_policy: on-failure
+    env:
+      DATABASE_URL: postgres://postgres@database/postgres
+      CONJUR_DATA_KEY: "{{ data_key }}"
+    links:
+      - postgres_database:database
+
+- name: Start NGINX Proxy
+  community.general.docker_container:
+    name: nginx_proxy
+    image: nginx:1.13.6-alpine
+    detach: yes
+    restart_policy: on-failure
+    ports:
+      - "8443:443"
+    volumes:
+      - ./conf/:/etc/nginx/conf.d/:ro
+      - ./conf/tls/:/etc/nginx/tls/:ro
+    links:
+      - conjur_server:conjur
+
+- name: Start Conjur CLI Client
+  community.general.docker_container:
+    name: conjur_client
+    image: cyberark/conjur-cli:5
+    entrypoint:
+      - sleep
+    command: infinity
+    volumes:
+      - ./conf/policy:/policy
+    links:
+      - nginx_proxy:proxy

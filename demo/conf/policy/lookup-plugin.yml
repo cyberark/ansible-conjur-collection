@@ -1,0 +1,13 @@
+# CLI: conjur policy load lookup-plugin lookup-plugin.yml
+
+# Create a secret value to fetch in the demo using Ansible
+- !variable playbook-secret
+
+# Create a host identity for the Ansible host
+- !host ansible-host
+
+# Permit Ansible host to read playbook-secret
+- !permit
+  role: !host ansible-host
+  privileges: [ read ]
+  resource: !variable playbook-secret

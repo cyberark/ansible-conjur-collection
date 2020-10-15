@@ -1,0 +1,19 @@
+# CLI: conjur policy load host-identity host-identity.yml
+
+# Create a secret value to fetch in the demo using Summon
+- !variable summon-secret
+
+# Create a layer for dynamic hosts
+- !layer
+
+# Create a host-factory for our previous layer to trust dynamic hosts
+- !host-factory
+  layers: [ !layer ]
+  annotations:
+    ansible: true
+
+# Permit dynamic hosts in the layer to read summon-secret
+- !permit
+  role: !layer
+  privileges: [ read ]
+  resource: !variable summon-secret

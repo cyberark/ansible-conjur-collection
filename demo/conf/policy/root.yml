@@ -1,0 +1,9 @@
+# CLI: conjur policy load root root.yml
+
+# Establish root policy ownership of host-identity policy branch
+- !policy
+  id: host-identity
+
+# Establish root policy ownership of lookup-plugin policy branch
+- !policy
+  id: lookup-plugin

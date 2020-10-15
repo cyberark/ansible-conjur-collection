@@ -1,0 +1,9 @@
+---
+# This playbook deploys the whole demonstration stack in this site.
+
+- name: Deploy Conjur
+  hosts: localhost
+
+  roles:
+    - conjur
+    - config

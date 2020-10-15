@@ -1,0 +1,24 @@
+---
+- name: Create Account in Conjur Server
+  command: docker exec conjur_server conjurctl account create cyberarkdemo
+  register: conjur_details
+  no_log: yes
+
+- name: Return Only API Key
+  shell: echo "{{ conjur_details.stdout_lines[9] }}" | awk '/admin:/{print $5}' | tr -d '\r\n'
+  register: api_key
+  no_log: yes
+
+- name: Initialize Conjur CLI Client
+  shell: |
+    openssl x509 -in conf/tls/nginx.crt -out conf/tls/conjur-cyberarkdemo.pem -outform PEM
+    docker cp conf/tls/conjur-cyberarkdemo.pem conjur_client:/root/conjur-cyberarkdemo.pem
+    docker cp roles/config/files/conjurrc.template conjur_client:/root/.conjurrc
+
+- name: Login Conjur CLI Client as Admin User and Set Password
+  shell: |
+    docker exec conjur_client \
+      conjur authn login -u admin -p "{{ api_key.stdout }}"
+    docker exec conjur_client \
+      conjur user update_password -p CYberark11!!
+  no_log: yes

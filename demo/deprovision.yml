@@ -1,0 +1,23 @@
+- name: Deprovision Conjur
+  hosts: localhost
+
+  tasks:
+    - name: Remove PostgreSQL 9.4 Database
+      community.general.docker_container:
+        name: postgres_database
+        state: absent
+
+    - name: Remove Conjur Server
+      community.general.docker_container:
+        name: conjur_server
+        state: absent
+    
+    - name: Remove NGINX Proxy
+      community.general.docker_container:
+        name: nginx_proxy
+        state: absent
+    
+    - name: Remove Conjur CLI Client
+      community.general.docker_container:
+        name: conjur_client
+        state: absent
