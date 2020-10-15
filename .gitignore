@@ -28,3 +28,4 @@ vendor/
 .vagrant/
 nginx.crt
 nginx.key
+conjur-cyberarkdemo.pem
