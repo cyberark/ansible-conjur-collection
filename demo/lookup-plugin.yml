@@ -1,0 +1,28 @@
+- name: Lookup Plugin (conjur_variable) Demo
+  hosts: localhost
+
+  pre_tasks:
+    - name: Register Host Identity API Key as Variable
+      debug: var=item
+      with_file:
+        - "config/lookup_plugin.config"
+      register: hostidentity_apikey
+      no_log: yes
+
+    - name: Set lookup-plugin/playbook-secret Value to ITWORKED
+      shell: |
+        docker exec conjur_client \
+          conjur variable values add lookup-plugin/playbook-secret ITWORKED
+    
+  vars:
+    lookup_plugin:
+      CONJUR_ACCOUNT: cyberarkdemo
+      CONJUR_APPLIANCE_URL: "https://localhost:8443"
+      CONJUR_AUTHN_LOGIN: host/lookup-plugin/ansible-host
+      CONJUR_AUTHN_API_KEY: "{{ hostidentity_apikey }}"
+
+  tasks:
+    - name: Lookup Secret in Conjur
+      ansible.builtin.debug:
+        msg: "The secret value is: {{ lookup('cyberark.conjur.conjur_variable', '/lookup-plugin/playbook-secret') }}"
+      environment: "{{ lookup_plugin }}"
