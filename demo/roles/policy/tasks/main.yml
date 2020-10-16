@@ -21,3 +21,8 @@
   shell: echo '{{ lookupplugin_output.stdout_lines[4] }}' | awk '/"api_key":/{print $2}' | tr -d '"' | tr -d '\r\n'
   register: host_identity
   no_log: yes
+
+- name: Add Host Identity to File @ config/host_identity.config
+  ansible.builtin.copy:
+    content: "{{ host_identity.stdout }}"
+    dest: config/lookup_plugin.config

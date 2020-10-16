@@ -1,0 +1,50 @@
+- name: Host Identity (Conjurize) Demo
+  hosts: localhost
+  vars:
+    conjur_appliance_url: https://proxy/api
+    conjur_account: cyberarkdemo
+    conjur_host_factory_token: "{{ hostfactory_token.stdout }}"
+    conjur_host_name: conjurize_target
+
+  pre_tasks:
+    - name: Generate Host Factory Token
+      shell: |
+        docker exec conjur_client \
+          conjur hostfactory tokens create --duration-days 1 --cidr 172.17.0.0/16 host-identity
+      register: hostfactory_output
+      no_log: yes
+
+    - name: Return Only API Key
+      shell: echo '{{ hostfactory_output.stdout_lines[2] }}' | awk '/"token":/{print $2}' | tr -d '"' | tr -d '\r\n'
+      register: hostfactory_token
+      no_log: yes
+    
+    - name: Start Remote Host to Conjurize
+      community.general.docker_container:
+        name: conjurize_target
+        image: ubuntu
+        detach: yes
+        entrypoint:
+          - sleep
+        command: infinity
+        env:
+          CONJUR_HOST_FACTORY_TOKEN: "{{ hostfactory_token.stdout }}"
+
+    - name: Add Remote Host to Inventory
+      add_host:
+        name: conjurize_target
+        ansible_connection: docker
+      changed_when: false
+  
+  roles:
+    - cyberark.conjur.conjur-host-identity
+
+  tasks:
+    - name: Invoke Summon to printenv
+      shell: |
+        summon --yaml 'SUMMON_SECRET: !var host-identity/summon-secret' printenv SUMMON_SECRET
+      register: summon_secret
+
+    - name: Print Output
+      ansible.builtin.debug:
+        msg: "{{ summon_secret.stdout }}"

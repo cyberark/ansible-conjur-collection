@@ -1,4 +1,0 @@
----
-- name: Print Host Identity API Key
-  ansible.builtin.debug:
-    msg: "{{ host_identity.stdout }}"
