@@ -10,7 +10,7 @@
     - name: Generate Host Factory Token
       shell: |
         docker exec conjur_client \
-          conjur hostfactory tokens create --duration-days 1 --cidr 172.17.0.0/16 host-identity
+          conjur hostfactory tokens create --duration-hours 1 --cidr 172.17.0.0/16 host-identity
       register: hostfactory_output
       no_log: yes
 
