@@ -31,6 +31,10 @@ DOCUMENTATION = """
         description: Flag to control SSL certificate validation
         type: boolean
         default: True
+      file_mode:
+        description: Store lookup result in a temp file
+        type: boolean
+        default: False
       identity_file:
         description: Path to the Conjur identity file. The identity file follows the netrc file format convention.
         type: path
@@ -86,6 +90,9 @@ from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
 from os import environ
+import stat
+from random import choice
+import string
 from time import time
 from ansible.module_utils.six.moves.urllib.parse import quote
 import yaml
@@ -203,12 +210,24 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
     return {}
 
 
+def _store_in_file(value):
+    file_name = ''.join(choice(string.ascii_uppercase + string.digits) for i in range(12))
+    file_path = os.path.join("/dev/shm", file_name)
+    with open(file_path, 'w+') as file:
+        file.write(value[0])
+        os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
+
+        return [file_path]
+
+
 class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
         self.set_options(direct=kwargs)
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
+        file_mode = self.get_option('file_mode')
+
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
             {
@@ -277,7 +296,7 @@ class LookupModule(LookupBase):
             with open(conf['authn_token_file'], 'rb') as f:
                 token = f.read()
 
-        return _fetch_conjur_variable(
+        conjur_variable = _fetch_conjur_variable(
             terms[0],
             token,
             conf['appliance_url'],
@@ -285,3 +304,8 @@ class LookupModule(LookupBase):
             validate_certs,
             cert_file
         )
+
+        if file_mode:
+            return _store_in_file(conjur_variable)
+        else:
+            return conjur_variable
