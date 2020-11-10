@@ -2,11 +2,6 @@
 
 For general contribution and community guidelines, please see the [community repo](https://github.com/cyberark/community).
 
-## Pull Request Workflow
-
-Currently, this repository is source-available and not open to contributions.  
-Please continue to follow this repository for updates and open-source availability
-
 ## Releasing
 
 From a clean instance of master, perform the following actions to release a new version 
