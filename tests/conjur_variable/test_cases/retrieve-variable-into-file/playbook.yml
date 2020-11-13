@@ -1,0 +1,14 @@
+---
+- name: Retrieve Conjur variable into file
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact path
+      file:
+        state: absent
+        path: /conjur_secret_path.txt
+
+    - name: Retrieve Conjur variable into file using file_mode option
+      vars:
+        secret_path: "{{lookup('conjur_variable', 'ansible/test-secret-in-file', file_mode=True)}}"
+      shell: echo "{{secret_path}}" > /conjur_secret_path.txt
