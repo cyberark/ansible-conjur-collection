@@ -8,7 +8,7 @@
         state: absent
         path: /conjur_secret_path.txt
 
-    - name: Retrieve Conjur variable into file using file_mode option
+    - name: Retrieve Conjur variable into file using as_file option
       vars:
-        secret_path: "{{lookup('conjur_variable', 'ansible/test-secret-in-file', file_mode=True)}}"
+        secret_path: "{{lookup('conjur_variable', 'ansible/test-secret-in-file', as_file=True)}}"
       shell: echo "{{secret_path}}" > /conjur_secret_path.txt

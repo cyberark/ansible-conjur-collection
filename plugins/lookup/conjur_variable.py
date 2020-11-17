@@ -31,8 +31,10 @@ DOCUMENTATION = """
         description: Flag to control SSL certificate validation
         type: boolean
         default: True
-      file_mode:
-        description: Store lookup result in a temp file
+      as_file:
+        description: >
+          Store lookup result in a temporary file and returns the file path. Thus allowing it to be consumed as an ansible file parameter
+          (eg ansible_ssh_private_key_file).
         type: boolean
         default: False
       identity_file:
@@ -90,11 +92,10 @@ from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
 from os import environ
-import stat
-from random import choice
-import string
 from time import time
 from ansible.module_utils.six.moves.urllib.parse import quote
+from stat import S_IRUSR, S_IWUSR
+from tempfile import gettempdir, NamedTemporaryFile
 import yaml
 
 from ansible.module_utils.urls import open_url
@@ -210,14 +211,19 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
     return {}
 
 
-def _store_in_file(value):
-    file_name = ''.join(choice(string.ascii_uppercase + string.digits) for i in range(12))
-    file_path = os.path.join("/dev/shm", file_name)
-    with open(file_path, 'w+') as file:
-        file.write(value[0])
-        os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
+def _default_tmp_path():
+    if os.access("/dev/shm", os.W_OK):
+        return "/dev/shm"
 
-        return [file_path]
+    return gettempdir()
+
+
+def _store_secret_in_file(value):
+    secrets_file = NamedTemporaryFile(mode='w', dir=_default_tmp_path(), delete=False)
+    os.chmod(secrets_file.name, S_IRUSR | S_IWUSR)
+    secrets_file.write(value[0])
+
+    return [secrets_file.name]
 
 
 class LookupModule(LookupBase):
@@ -226,7 +232,7 @@ class LookupModule(LookupBase):
         self.set_options(direct=kwargs)
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
-        file_mode = self.get_option('file_mode')
+        as_file = self.get_option('as_file')
 
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
@@ -305,7 +311,7 @@ class LookupModule(LookupBase):
             cert_file
         )
 
-        if file_mode:
-            return _store_in_file(conjur_variable)
-        else:
-            return conjur_variable
+        if as_file:
+            return _store_secret_in_file(conjur_variable)
+
+        return conjur_variable

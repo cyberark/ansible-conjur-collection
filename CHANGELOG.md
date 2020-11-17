@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The [Conjur Ansible role](https://galaxy.ansible.com/cyberark/conjur-host-identity) has been
   migrated to this collection, where it will be maintained moving forward.
   [cyberark/ansible-conjur-host-identity#30](https://github.com/cyberark/ansible-conjur-host-identity/issues/30)
-- Add `file_mode` boolean option to store the secret as a temporary file in /dev/shm/ and return its path.
+- Add `as_file` boolean option to store the secret as a temporary file and returns its path.
+  [Cyberark Commons post #1070](https://discuss.cyberarkcommons.org/t/conjur-ansible-lookup-plugin-and-ssh-key-file/1070) 
 
 ## [1.0.7] - 2020-08-20
 
