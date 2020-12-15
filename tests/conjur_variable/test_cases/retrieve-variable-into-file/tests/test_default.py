@@ -9,13 +9,14 @@ testinfra_hosts = [os.environ['COMPOSE_PROJECT_NAME'] + '_ansible_1']
 
 
 def test_retrieved_secret(host):
-    secret_path_file = host.file('/conjur_secret_path.txt')
-    assert secret_path_file.exists
+    """
+    Verify that the as_file parameter makes the lookup plugin return the path to a temporary file
+    containing the secret.
+    """
+    lookup_output_file = host.file('/lookup_output.txt')
+    assert lookup_output_file.exists
 
-    secret_path = host.check_output("cat /conjur_secret_path.txt", shell=True)
-    secret_file = host.file(secret_path)
+    secret_file = host.file(lookup_output_file.content_string)
     assert secret_file.exists
     assert secret_file.mode == 0o600
-
-    secret = host.check_output("cat {0}".format(secret_path), shell=True)
-    assert secret == "test_secret_in_file_password"
+    assert secret_file.content_string == "test_secret_in_file_password"
