@@ -18,7 +18,9 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 * [Conjur Ansible Lookup Plugin](#conjur-ansible-lookup-plugin)
   + [Environment variables](#environment-variables)
   + [Role Variables](#role-variables-1)
-  + [Example Playbook](#example-playbook-1)
+  + [Examples](#examples)
+    - [Retrieve a secret in a Playbook](#retrieve-a-secret-in-a-playbook)
+    - [Retrieve a private key in an Inventory file](#retrieve-a-private-key-in-an-inventory-file)
 * [Contributing](#contributing)
 * [License](#license)
 
@@ -148,8 +150,10 @@ Conjur host, if they are present on the system running the lookup plugin.
 
 None.
 
-### Example Playbook
+### Examples
 
+#### Retrieve a secret in a Playbook
+ 
 ```yaml
 ---
 - hosts: localhost
@@ -158,6 +162,17 @@ None.
     debug:
       msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
 ```
+
+#### Retrieve a private key in an Inventory file
+
+```yaml
+---
+ansible_host: <host>
+ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'path/to/secret-id', as_file=True) }}"
+```
+
+**Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written 
+in `ansible_ssh_private_key_file`.
 
 ## Contributing
 
