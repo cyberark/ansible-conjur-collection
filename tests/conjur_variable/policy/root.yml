@@ -12,6 +12,7 @@
 
   - &variables
     - !variable test-secret
+    - !variable test-secret-in-file
     - !variable var with spaces
 
   - !permit
