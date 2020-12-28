@@ -6,11 +6,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.1.0] - 2020-12-29
+
 ### Added
 - The [Conjur Ansible role](https://galaxy.ansible.com/cyberark/conjur-host-identity) has been
   migrated to this collection, where it will be maintained moving forward.
+  At current, the role in the collection is aligned with the v0.3.2 release of
+  the standalone role.
   [cyberark/ansible-conjur-host-identity#30](https://github.com/cyberark/ansible-conjur-host-identity/issues/30)
-- Add `as_file` boolean option to store the secret as a temporary file and returns its path.
+- Add `as_file` boolean option to the lookup plugin which stores the secret as
+  a temporary file and returns its path. This enables users to use the
+  `ansible_ssh_private_key_file` parameter to define an SSH private key using a
+  variable stored in Conjur; previously, users couldn't set this parameter via
+  a direct call to the lookup plugin because the parameter does not accept
+  inline SSH keys, and the lookup plugin could only return a string.
+  [cyberark/ansible-conjur-collection#52](https://github.com/cyberark/ansible-conjur-collection/issues/52),
   [Cyberark Commons post #1070](https://discuss.cyberarkcommons.org/t/conjur-ansible-lookup-plugin-and-ssh-key-file/1070) 
 
 ## [1.0.7] - 2020-08-20
@@ -49,7 +59,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.7...v1.1.0
 [1.0.7]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.3...v1.0.5
