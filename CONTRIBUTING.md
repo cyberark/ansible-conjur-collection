@@ -20,7 +20,7 @@ of this plugin:
     - Build the release package with `./ci/build_release`
     - Attach package to Github Release
 
-### Testing
+## Testing
 
 To run a specific set of tests:
 
