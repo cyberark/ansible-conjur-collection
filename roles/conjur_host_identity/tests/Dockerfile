@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     python3-pip
 
-RUN pip3 install pytest testinfra ansible && mkdir -p /conjurinc/
+RUN pip3 install pytest pytest-testinfra ansible && mkdir -p /conjurinc/
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \

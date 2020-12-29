@@ -35,6 +35,17 @@ http://ecotrust-canada.github.io/markdown-toc/ -->
   v10.x+ accessible from the target node
 - Ansible >= 2.9
 
+## Using ansible-conjur-collection with Conjur OSS
+
+Are you using this project with [Conjur OSS](https://github.com/cyberark/conjur)? Then we
+**strongly** recommend choosing the version of this project to use from the latest [Conjur OSS
+suite release](https://docs.conjur.org/Latest/en/Content/Overview/Conjur-OSS-Suite-Overview.html).
+Conjur maintainers perform additional testing on the suite release versions to ensure
+compatibility. When possible, upgrade your Conjur version to match the
+[latest suite release](https://docs.conjur.org/Latest/en/Content/ReleaseNotes/ConjurOSS-suite-RN.htm);
+when using integrations, choose the latest suite release that matches your Conjur version. For any
+questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/c/conjur/5).
+
 ## Installation 
 
 From terminal, run the following command:
@@ -43,10 +54,6 @@ ansible-galaxy collection install cyberark.conjur
 ```
 
 ## Conjur Ansible Role
-
-**NOTE**: This role is currently not available in releases installed through Ansible Galaxy, but
-will be added in the next release. Follow [issue
-#30](https://github.com/cyberark/ansible-conjur-collection/issues/35) for updates.
 
 This Ansible role provides the ability to grant Conjur machine identity to a host. Based on that
 identity, secrets can then be retrieved securely using the [Conjur Lookup
@@ -83,10 +90,12 @@ Configure a remote node with a Conjur identity and Summon:
 - hosts: servers
   roles:
     - role: cyberark.conjur.conjur-host-identity
-      conjur_appliance_url: 'https://conjur.myorg.com/api',
+      conjur_appliance_url: 'https://conjur.myorg.com',
       conjur_account: 'myorg',
-      conjur_host_factory_token: "{{lookup('env', 'HFTOKEN')}}",
-      conjur_host_name: "{{inventory_hostname}}"
+      conjur_host_factory_token: "{{ lookup('env', 'HFTOKEN') }}",
+      conjur_host_name: "{{ inventory_hostname }}"
+      conjur_ssl_certificate: "{{ lookup('file', '/path/to/conjur.pem') }}"
+      conjur_validate_certs: yes
 ```
 
 This example:
@@ -183,9 +192,11 @@ descriptions of our development workflows, please see our [contributing guide][c
 
 ## License
 
-Copyright (c) 2020 CyberArk Software Ltd. All rights reserved. Licensed under the Apache License,
-Version 2.0 (the "License"); you may not use this file except in compliance with the License. You
-may obtain a copy of the License at
+Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
 
    http://www.apache.org/licenses/LICENSE-2.0
 
