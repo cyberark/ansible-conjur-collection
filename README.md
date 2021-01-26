@@ -1,5 +1,3 @@
-![](https://img.shields.io/badge/Certification%20Level-Community-28A745?link=https://github.com/cyberark/community/blob/master/Conjur/conventions/certification-levels.md)
-
 # CyberArk Ansible Conjur Collection
 
 This collection contains components to be used with CyberArk Conjur & DAP (Dynamic Access Provider)
@@ -7,6 +5,7 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ## Table of Contents
 
+* [Certification Level](#certification-level)
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Conjur Ansible Role](#conjur-ansible-role)
@@ -26,6 +25,13 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 <!-- Table of contents generated with markdown-toc
 http://ecotrust-canada.github.io/markdown-toc/ -->
+
+## Certification Level
+
+![](https://img.shields.io/badge/Certification%20Level-Community-28A745?link=https://github.com/cyberark/community/blob/master/Conjur/conventions/certification-levels.md)
+
+This repo is a **Community** level project. It's a community contributed project that **is not reviewed or supported
+by CyberArk**. For more detailed information on our certification levels, see [our community guidelines](https://github.com/cyberark/community/blob/master/Conjur/conventions/certification-levels.md#community).
 
 ## Requirements
 
