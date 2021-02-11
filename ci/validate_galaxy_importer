@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+
+# Strip the 'v' from the Tag Name
+if [[ ! -z "${TAG_NAME:-}" ]]; then
+  TAG=${TAG_NAME//"v"}
+else
+  TAG="$(cat galaxy.yml | grep version | awk '{ print $2 }' | tr -d '"')"
+fi
+
+docker run --rm -t \
+  -v "$PWD:/runner/cyberark/" \
+  python:3.8-buster \
+  bash -c "
+    pip install galaxy-importer
+    python -m galaxy_importer.main /runner/cyberark/cyberark-conjur-${TAG}.tar.gz
+  "

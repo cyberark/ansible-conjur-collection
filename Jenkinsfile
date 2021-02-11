@@ -37,16 +37,15 @@ pipeline {
     }
 
     stage('Build Release Artifacts') {
-      when {
-        anyOf {
-            branch 'master'
-            buildingTag()
-        }
-      }
-
       steps {
         sh './ci/build_release'
         archiveArtifacts 'cyberark-conjur-*.tar.gz'
+      }
+    }
+
+    stage('Validate Release Artifacts') {
+      steps {
+        sh './ci/validate_galaxy_importer'
       }
     }
 
