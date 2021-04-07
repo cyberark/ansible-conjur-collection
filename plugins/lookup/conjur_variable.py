@@ -97,6 +97,12 @@ from ansible.module_utils.six.moves.urllib.parse import quote
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
 import yaml
+try:
+    import backoff
+except ImportError as imp_exc:
+    BACKOFF_IMPORT_ERROR = imp_exc
+else:
+    BACKOFF_IMPORT_ERROR = None
 
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
@@ -182,6 +188,15 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
     return response.read()
 
 
+@backoff.on_predicate(backoff.expo, lambda response: response.getcode() == 500, max_tries=5)
+def _repeat_open_url(url, headers=None, method=None, validate_certs=True, cert_file=None):
+    return open_url(url,
+                    headers=headers,
+                    method=method,
+                    validate_certs=validate_certs,
+                    ca_path=cert_file)
+
+
 # Retrieve Conjur variable using the temporary token
 def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):
     token = b64encode(token)
@@ -190,11 +205,11 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
     url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, _encode_str(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))
 
-    response = open_url(url,
-                        headers=headers,
-                        method='GET',
-                        validate_certs=validate_certs,
-                        ca_path=cert_file)
+    response = _repeat_open_url(url,
+                                headers=headers,
+                                method='GET',
+                                validate_certs=validate_certs,
+                                ca_path=cert_file)
 
     if response.getcode() == 200:
         display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
