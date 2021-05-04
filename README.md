@@ -111,7 +111,7 @@ This example:
 
 ### Summon & Service Managers
 
-With Summon installed, using Conjur with a Service Manager (like systemd) becomes a snap.  Here's a
+With Summon installed, using Conjur with a Service Manager (like systemd) becomes a snap. Here's a
 simple example of a `systemd` file connecting to Conjur:
 
 ```ini
