@@ -92,7 +92,7 @@ from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
 from os import environ
-from time import time
+from time import time, sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
@@ -182,6 +182,38 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
     return response.read()
 
 
+def retry(retry_predicate, retries, retry_interval):
+    """
+    Custom retry decorator
+
+    Args:
+        retry_predicate: A predicate used to determine whether retry is needed.
+        retries (int, optional): Number of retries. Defaults to 5.
+        retry_interval (int, optional): Time to wait between intervals. Defaults to 10.
+    """
+    def parameters_wrapper(target):
+        def decorator(*args, **kwargs):
+            retry_count = 0
+            while True:
+                retry_count += 1
+                return_value = target(*args, **kwargs)
+                if not retry_predicate(return_value) or retry_count >= retries:
+                    return return_value
+                sleep(retry_interval)
+        return decorator
+    return parameters_wrapper
+
+
+@retry(retries=5, retry_interval=10,
+       retry_predicate=lambda response: response.getcode() == 500)
+def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None):
+    return open_url(url,
+                    headers=headers,
+                    method=method,
+                    validate_certs=validate_certs,
+                    ca_path=ca_path)
+
+
 # Retrieve Conjur variable using the temporary token
 def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):
     token = b64encode(token)
@@ -190,11 +222,11 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
     url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, _encode_str(conjur_variable))
     display.vvvv('Conjur Variable URL: {0}'.format(url))
 
-    response = open_url(url,
-                        headers=headers,
-                        method='GET',
-                        validate_certs=validate_certs,
-                        ca_path=cert_file)
+    response = _repeat_open_url(url,
+                                headers=headers,
+                                method='GET',
+                                validate_certs=validate_certs,
+                                ca_path=cert_file)
 
     if response.getcode() == 200:
         display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
