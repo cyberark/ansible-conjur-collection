@@ -95,7 +95,7 @@ from netrc import netrc
 from os import environ
 from time import time, sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
-from ansible.module_utils.urls import urllib_error 
+from ansible.module_utils.urls import urllib_error
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
 import yaml
