@@ -87,6 +87,7 @@ RETURN = """
 """
 
 import os.path
+import socket
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
@@ -94,6 +95,7 @@ from netrc import netrc
 from os import environ
 from time import time, sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
+from ansible.module_utils.urls import urllib_error
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
 import yaml
@@ -182,12 +184,11 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
     return response.read()
 
 
-def retry(retry_predicate, retries, retry_interval):
+def retry(retries, retry_interval):
     """
     Custom retry decorator
 
     Args:
-        retry_predicate: A predicate used to determine whether retry is needed.
         retries (int, optional): Number of retries. Defaults to 5.
         retry_interval (int, optional): Time to wait between intervals. Defaults to 10.
     """
@@ -196,16 +197,23 @@ def retry(retry_predicate, retries, retry_interval):
             retry_count = 0
             while True:
                 retry_count += 1
-                return_value = target(*args, **kwargs)
-                if not retry_predicate(return_value) or retry_count >= retries:
+                try:
+                    return_value = target(*args, **kwargs)
                     return return_value
+                except urllib_error.HTTPError as e:
+                    if retry_count >= retries:
+                        raise e
+                    display.v('Error encountered. Retrying..')
+                except socket.timeout:
+                    if retry_count >= retries:
+                        raise e
+                    display.v('Socket timeout encountered. Retrying..')
                 sleep(retry_interval)
         return decorator
     return parameters_wrapper
 
 
-@retry(retries=5, retry_interval=10,
-       retry_predicate=lambda response: response.getcode() == 500)
+@retry(retries=5, retry_interval=10)
 def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None):
     return open_url(url,
                     headers=headers,
