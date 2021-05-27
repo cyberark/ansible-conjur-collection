@@ -28,10 +28,10 @@ http://ecotrust-canada.github.io/markdown-toc/ -->
 
 ## Certification Level
 
-![](https://img.shields.io/badge/Certification%20Level-Community-28A745?link=https://github.com/cyberark/community/blob/master/Conjur/conventions/certification-levels.md)
+![](https://img.shields.io/badge/Certification%20Level-Community-28A745?link=https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md)
 
 This repo is a **Community** level project. It's a community contributed project that **is not reviewed or supported
-by CyberArk**. For more detailed information on our certification levels, see [our community guidelines](https://github.com/cyberark/community/blob/master/Conjur/conventions/certification-levels.md#community).
+by CyberArk**. For more detailed information on our certification levels, see [our community guidelines](https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md#community).
 
 ## Requirements
 
@@ -194,7 +194,7 @@ in `ansible_ssh_private_key_file`.
 We welcome contributions of all kinds to this repository. For instructions on how to get started and
 descriptions of our development workflows, please see our [contributing guide][contrib].
 
-[contrib]: https://github.com/cyberark/ansible-conjur-collection/blob/master/CONTRIBUTING.md
+[contrib]: https://github.com/cyberark/ansible-conjur-collection/blob/main/CONTRIBUTING.md
 
 ## License
 

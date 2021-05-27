@@ -4,7 +4,7 @@ For general contribution and community guidelines, please see the [community rep
 
 ## Releasing
 
-From a clean instance of master, perform the following actions to release a new version 
+From a clean instance of main, perform the following actions to release a new version 
 of this plugin:
 
 - Update the version number in [`galaxy.yml`](galaxy.yml) and [`CHANGELOG.md`](CHANGELOG.md)
