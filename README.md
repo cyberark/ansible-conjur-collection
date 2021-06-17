@@ -1,6 +1,6 @@
 # CyberArk Ansible Conjur Collection
 
-This collection contains components to be used with CyberArk Conjur & DAP (Dynamic Access Provider)
+This collection contains components to be used with CyberArk Conjur & Conjur Enterprise
 hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ## Table of Contents
@@ -35,15 +35,14 @@ by CyberArk**. For more detailed information on our certification levels, see [o
 
 ## Requirements
 
-- An instance of [CyberArk Conjur Open Source](https://www.conjur.org) v1.x+ or [CyberArk Dynamic
-  Access
-  Provider](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
-  v10.x+ accessible from the target node
+- An instance of [CyberArk Conjur Open Source](https://www.conjur.org) v1.x+ or [CyberArk
+  Conjur Enterprise](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
+  (formerly DAP) v10.x+ accessible from the target node
 - Ansible >= 2.9
 
-## Using ansible-conjur-collection with Conjur OSS
+## Using ansible-conjur-collection with Conjur Open Source
 
-Are you using this project with [Conjur OSS](https://github.com/cyberark/conjur)? Then we
+Are you using this project with [Conjur Open Source](https://github.com/cyberark/conjur)? Then we
 **strongly** recommend choosing the version of this project to use from the latest [Conjur OSS
 suite release](https://docs.conjur.org/Latest/en/Content/Overview/Conjur-OSS-Suite-Overview.html).
 Conjur maintainers perform additional testing on the suite release versions to ensure
