@@ -1,6 +1,6 @@
 # CyberArk Ansible Conjur Collection
 
-This collection contains components to be used with CyberArk Conjur & DAP (Dynamic Access Provider)
+This collection contains components to be used with CyberArk Conjur
 hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ## Table of Contents
