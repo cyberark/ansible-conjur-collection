@@ -8,8 +8,6 @@
 #    - devel
 #
 #Python versions:
-#    - Python 2.7
-#    - Python 3.7
 #    - Python 3.8
 
 name: CI
@@ -36,8 +34,6 @@ jobs:
           - stable-2.10
           - devel
         python:
-          - 2.7
-          - 3.7
           - 3.8
     runs-on: ubuntu-latest
     steps:

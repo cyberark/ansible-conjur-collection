@@ -22,7 +22,7 @@ declare ansible_cid=''
 
 function api_key_for {
   local role_id=$1
-  if [ ! -z "$role_id" ]
+  if [ -n "$role_id" ]
   then
     docker exec ${conjur_cid} rails r "print Credentials['${role_id}'].api_key"
   else
@@ -58,7 +58,7 @@ function run_test_cases {
 function run_test_case {
   echo "---- testing ${test_case} ----"
   local test_case=$1
-  if [ ! -z "$test_case" ]
+  if [ -n "$test_case" ]
   then
     docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -c "
       cd tests
