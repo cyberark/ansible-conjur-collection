@@ -1,24 +1,42 @@
-FROM ubuntu:18.04
+FROM ubuntu:latest
 
-RUN apt-get update && apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common \
-    python3-pip
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN pip3 install pytest pytest-testinfra ansible && mkdir -p /conjurinc/
+WORKDIR /cyberark
 
+# install ansible
+RUN apt-get update && \
+    apt-get install -y ansible
+
+# install python 3
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    pip3 install --upgrade pip==9.0.3
+
+# install ansible and its test tool
+RUN pip3 install ansible pytest-testinfra
+
+# install docker installation requirements
+RUN apt-get update && \
+    apt-get install -y apt-transport-https \
+                       ca-certificates \
+                       curl \
+                       software-properties-common
+
+# install docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
        $(lsb_release -cs) \
        stable"
-RUN apt-get update && apt-get -y install docker-ce
+
+RUN apt-get update && \
+    apt-get -y install docker-ce
+
+# NOTE: Everything above is copied from REPO_ROOT/tests/conjur_variable/Dockerfile. It defines a
+# standard container image for running ansible tests
+
+# install ruby
 RUN apt-get update && apt-get install -y gcc build-essential
 RUN apt-add-repository -y ppa:brightbox/ruby-ng && apt-get update && apt-get install -y ruby2.4 ruby2.4-dev
 RUN gem install conjur-cli
-
-WORKDIR /conjurinc/
-
-CMD ["/bin/sleep", "1d"]
