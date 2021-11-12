@@ -1,14 +1,19 @@
-#!/bin/bash -e
-set -x
+#!/bin/bash
+set -ex
 
-function finish {
+function clean {
   echo 'Removing test environment'
   echo '---'
   docker-compose down -v
   rm -rf inventory.tmp
 }
+function finish {
+  rv=$?
+  clean || true
+  exit $rv
+}
 trap finish EXIT
-finish
+clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
@@ -22,7 +27,7 @@ declare ansible_cid=''
 
 function api_key_for {
   local role_id=$1
-  if [ ! -z "$role_id" ]
+  if [ -n "$role_id" ]
   then
     docker exec ${conjur_cid} rails r "print Credentials['${role_id}'].api_key"
   else
@@ -43,7 +48,7 @@ function setup_conjur {
   docker exec ${cli_cid} conjur policy load root /policy/root.yml
 
   # set secret values
-  docker exec ${cli_cid} bash -c '
+  docker exec ${cli_cid} bash -ec '
     conjur variable values add ansible/target-password target_secret_password
   '
 }
@@ -58,13 +63,13 @@ function run_test_cases {
 function run_test_case {
   echo "---- testing ${test_case} ----"
   local test_case=$1
-  if [ ! -z "$test_case" ]
+  if [ -n "$test_case" ]
   then
-    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -c "
+    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
       ansible-playbook test_cases/${test_case}/playbook.yml
     "
-    docker exec "${ansible_cid}" bash -c "
+    docker exec "${ansible_cid}" bash -ec "
       cd tests
       py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
     "
@@ -81,7 +86,7 @@ function teardown_and_setup {
 
 function wait_for_server {
   # shellcheck disable=SC2016
-  docker exec "${cli_cid}" bash -c '
+  docker exec "${cli_cid}" bash -ec '
     for i in $( seq 20 ); do
       curl -o /dev/null -fs -X OPTIONS ${CONJUR_APPLIANCE_URL} > /dev/null && echo "server is up" && break
       echo "."
@@ -96,7 +101,7 @@ function fetch_ssl_cert {
 
 function generate_inventory {
   # uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
-  docker-compose exec -T ansible bash -c '
+  docker-compose exec -T ansible bash -ec '
     cd tests
     ansible-playbook inventory-playbook.yml
   '

@@ -90,7 +90,7 @@ function run_test_case {
   local test_case=$1
   echo "---- testing ${test_case} ----"
 
-  if [ ! -n "$test_case" ]; then
+  if [ -z "$test_case" ]; then
     echo ERROR: run_test called with no argument 1>&2
     exit 1
   fi

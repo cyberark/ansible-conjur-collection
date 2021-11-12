@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 
 # Test runner for Ansible Conjur Collection
 
@@ -41,7 +41,7 @@ function run_role_test {
 
 # Handles input to dictate wether all tests should be ran, or just one set
 function handle_input {
-    if [[ ! -z ${target} ]]; then
+    if [[ -n ${target} ]]; then
         for test_dir in "${test_directories[@]}"; do 
             if [[ ${target} == "${test_dir}" ]]; then
                 run_test ${target}
@@ -85,6 +85,11 @@ while getopts ahd: option; do
             ;;
         h) help
             ;;
+        * )
+          echo "$1 is not a valid option"
+          help
+          exit 1
+          ;;
     esac
 done
 

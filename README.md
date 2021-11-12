@@ -95,9 +95,9 @@ Configure a remote node with a Conjur identity and Summon:
 - hosts: servers
   roles:
     - role: cyberark.conjur.conjur-host-identity
-      conjur_appliance_url: 'https://conjur.myorg.com',
-      conjur_account: 'myorg',
-      conjur_host_factory_token: "{{ lookup('env', 'HFTOKEN') }}",
+      conjur_appliance_url: 'https://conjur.myorg.com'
+      conjur_account: 'myorg'
+      conjur_host_factory_token: "{{ lookup('env', 'HFTOKEN') }}"
       conjur_host_name: "{{ inventory_hostname }}"
       conjur_ssl_certificate: "{{ lookup('file', '/path/to/conjur.pem') }}"
       conjur_validate_certs: yes
