@@ -42,4 +42,5 @@ RUN apt-add-repository -y ppa:brightbox/ruby-ng && apt-get update && apt-get ins
 RUN gem install conjur-cli
 
 # install Ansible Conjur Collection
-RUN ansible-galaxy collection install cyberark.conjur
+RUN ansible-galaxy collection install cyberark.conjur && \
+    ansible-galaxy install cyberark.conjur-host-identity

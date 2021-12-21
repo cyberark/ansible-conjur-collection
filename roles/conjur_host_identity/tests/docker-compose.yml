@@ -17,9 +17,9 @@ services:
       # see https://docs.ansible.com/ansible/latest/reference_appendices/config.html#avoiding-security-risks-with-ansible-cfg-in-the-current-directory.
       ANSIBLE_CONFIG: ./ansible.cfg
     volumes:
-      # - ..:/cyberark/cyberark.conjur.conjur-host-identity/
       - .:/cyberark/tests/
       - /var/run/docker.sock:/var/run/docker.sock
+
   pg:
     image: postgres:9.3
 
