@@ -40,3 +40,6 @@ RUN apt-get update && \
 RUN apt-get update && apt-get install -y gcc build-essential
 RUN apt-add-repository -y ppa:brightbox/ruby-ng && apt-get update && apt-get install -y ruby2.4 ruby2.4-dev
 RUN gem install conjur-cli
+
+# install Ansible Conjur Collection
+RUN ansible-galaxy collection install cyberark.conjur
