@@ -55,8 +55,10 @@ function setup_conjur {
 
 function run_test_cases {
   for test_case in test_cases/*; do
-    teardown_and_setup
-    run_test_case "$(basename -- "$test_case")"
+    if [ "${test_case}" != "test_cases/common" ]; then
+      teardown_and_setup
+      run_test_case "$(basename -- "$test_case")"
+    fi
   done
 }
 
@@ -71,7 +73,7 @@ function run_test_case {
     "
     docker exec "${ansible_cid}" bash -ec "
       cd tests
-      py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+      py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/common/test_default.py
     "
   else
     echo ERROR: run_test called with no argument 1>&2
