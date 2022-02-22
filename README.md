@@ -20,6 +20,12 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
   + [Examples](#examples)
     - [Retrieve a secret in a Playbook](#retrieve-a-secret-in-a-playbook)
     - [Retrieve a private key in an Inventory file](#retrieve-a-private-key-in-an-inventory-file)
+* [Development Environment](#dev-env)
+    - [Setup a conjur OSS with Ansible control node and managed nodes ](#ansible-control-and-managed-nodes)
+    - [The repo includes scripts to setup and teardown the dev env in bin/ dir ](#setup-dev-env)
+* [Test Environment](#testcases-env)
+    - [Setup a conjur OSS with Ansible control node and managed nodes ](#ansible-control-and-managed-nodes)
+    - [Register the host with Conjur, adding it into the Conjur policy layer defined for the provided host factory token](#Register-the-host-with-Conjur)
 * [Contributing](#contributing)
 * [License](#license)
 
