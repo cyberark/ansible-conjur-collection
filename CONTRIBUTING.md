@@ -10,7 +10,7 @@ of this plugin:
 - Update the version number in [`galaxy.yml`](galaxy.yml) and [`CHANGELOG.md`](CHANGELOG.md)
     - Verify that all changes for this version in `CHANGELOG.md` are clear and accurate, 
       and are followed by a link to their respective issue
-    - Create a PR with these changes
+    - Create a PR with these changes 
 
 - Create an annotated tag with the new version, formatted as `v##.##.##`
     - This will kick off an automated script which publish the release to 
@@ -19,6 +19,9 @@ of this plugin:
 - Create the release on GitHub for that tag
     - Build the release package with `./ci/build_release`
     - Attach package to Github Release
+
+- To work on Development environment
+    - The repo includes dev and test scripts to setup environment in bin/dev 
 
 ## Testing
 
