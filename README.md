@@ -1,6 +1,6 @@
 # CyberArk Ansible Conjur Collection
 
-This collection contains components to be used with CyberArk Conjur & Conjur Enterprise
+This collection contains components to be used  with CyberArk Conjur & Conjur Enterprise
 hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ## Table of Contents
