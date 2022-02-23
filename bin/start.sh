@@ -59,26 +59,26 @@ function setup_conjur {
 }
 
 function setup_conjur_identities {
-  for test_case in config_conjur_identity/*; do
+  for conjur_identity in config_conjur_identity/*; do
     teardown_and_setup
-    setup_conjur_identity "$(basename -- "$test_case")"
+    setup_conjur_identity "$(basename -- "$conjur_identity")"
   done
 }
 
 # configure_conjur_identity
 
 function setup_conjur_identity {
-  echo "---- testing ${test_case} ----"
-  local test_case=$1
-  if [ -n "$test_case" ]
+  echo "---- testing ${conjur_identity} ----"
+  local conjur_identity=$1
+  if [ -n "$conjur_identity" ]
   then
     docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd dev
-      ansible-playbook config_conjur_identity/${test_case}/playbook.yml
+      ansible-playbook config_conjur_identity/${conjur_identity}/playbook.yml
     "
     docker exec "${ansible_cid}" bash -ec "
       cd dev
-      py.test --junitxml=./junit/${test_case} --connection docker -v config_conjur_identity/${test_case}/dev/dev_default.py
+      py.test --junitxml=./junit/${conjur_identity} --connection docker -v config_conjur_identity/${conjur_identity}/dev/dev_default.py
     "
   else
     echo ERROR: run_test called with no argument 1>&2
