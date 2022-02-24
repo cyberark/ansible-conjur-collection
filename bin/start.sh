@@ -1,5 +1,5 @@
-#!/bin/bash -e
-set -o pipefail
+#!/bin/bash -ex
+
 cd ..
 cd dev
 
@@ -15,7 +15,7 @@ function finish {
   clean || true
   exit $rv
 }
-#trap finish EXIT
+trap finish EXIT
 clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
