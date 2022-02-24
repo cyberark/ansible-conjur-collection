@@ -1,14 +1,13 @@
-#!/bin/bash
+#!/bin/bash -e
+set -o pipefail
 cd ..
 cd dev
-
-set -ex
 
 function clean {
 
   echo 'Removing test environment'
   echo '---'
-  #docker-compose down -v
+  docker-compose down -v
   rm -rf inventory.tmp
 }
 function finish {
@@ -131,10 +130,8 @@ function main() {
   ANSIBLE_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:host:ansible/ansible-master')
   docker-compose up -d ansible
   ansible_cid=$(docker-compose ps -q ansible)
-
-
   setup_conjur_identities
-  
+
 }
 
 main
