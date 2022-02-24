@@ -34,7 +34,7 @@ jobs:
           - stable-2.10
           - devel
         python:
-          - 3.10
+          - 3.8
     runs-on: ubuntu-latest
     steps:
 
