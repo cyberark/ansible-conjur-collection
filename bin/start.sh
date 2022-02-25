@@ -9,13 +9,8 @@ echo '---'
 docker-compose down -v
 rm -rf inventory.tmp
 }
-function finish {
-rv=$?
-clean || true
-exit $rv
-}
-trap finish EXIT
-clean
+
+
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
@@ -103,6 +98,7 @@ function generate_inventory {
 }
 
 function main() {
+  clean
   docker-compose up -d --build
   generate_inventory
   conjur_cid=$(docker-compose ps -q conjur)

@@ -42,7 +42,8 @@ function main() {
 
   echo "Fetching Ansible master host credentials"
   ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+  #ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+  ANSIBLE_CONJUR_CERT_FILE='/cyberark/dev/conjur.pem'
 
   echo "Get Access Token"
   setup_access_token
@@ -95,21 +96,7 @@ function run_test_case {
     exit 1
   fi
 
-  docker-compose exec -T ansible bash -exc "
-    cd tests/conjur_variable
 
-    # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env' ]; then
-      . ./test_cases/${test_case}/env
-    fi
-
-    # You can add -vvvv here for debugging
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
-
-    py.test --junitxml='./junit/${test_case}' \
-      --connection docker \
-      -v 'test_cases/${test_case}/tests/test_default.py'
-  "
 }
 
 main
