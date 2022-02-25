@@ -7,5 +7,6 @@ ci/build_release shebang
 ci/parse-changelog.sh shebang
 ci/publish_to_galaxy shebang
 ci/test.sh shebang
-bin/start.sh shebang
+bin/start.sh
+bin/
 secrets.yml yamllint:unparsable-with-libyaml # File loaded by Conjur server, not via Python
