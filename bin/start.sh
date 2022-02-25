@@ -68,9 +68,6 @@ function setup_conjur_identity {
   docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
   cd dev
   ansible-playbook config_conjur_identity/${conjur_identity}/playbook.yml"
-  docker exec "${ansible_cid}" bash -ec "
-  cd dev
-  py.test --junitxml=./junit/${conjur_identity} --connection docker -v config_conjur_identity/${conjur_identity}/dev/dev_default.py"
   else
   echo ERROR: run_test called with no argument 1>&2
   exit 1
