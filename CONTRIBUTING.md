@@ -21,9 +21,9 @@ of this plugin:
     - Attach package to Github Release
 
 
-## Dev Environment 
-    - Setup a conjur OSS , Ansible control node and Managed nodes 
-    - Register the hosts with Conjur, adding it into the Conjur policy layer defined for the provided host factory token
+### Dev Environment 
+- Setup a conjur OSS , Ansible control node and Managed nodes 
+- Register the hosts with Conjur, adding it into the Conjur policy layer defined for the provided host factory token
  
  ```sh-session
 $ cd bin
