@@ -1,5 +1,6 @@
-#!/bin/bash
-set -ex
+#!/bin/bash -e
+
+set -o pipefail
 
 cd ..
 cd dev
