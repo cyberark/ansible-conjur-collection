@@ -1,2 +1,1 @@
 startup/start.sh shebang
-startup/
