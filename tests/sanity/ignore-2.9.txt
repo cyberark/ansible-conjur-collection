@@ -5,6 +5,6 @@ ci/build_release shebang
 ci/parse-changelog.sh shebang
 ci/publish_to_galaxy shebang
 ci/test.sh shebang
-bin/start.sh shebang
-bin/start.sh!skip
-bin/!skip
+startpoint/start.sh shebang
+startpoint/start.sh!skip
+startpoint/!skip
