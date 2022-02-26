@@ -1,1 +1,3 @@
 bin/start.sh shebang
+bin/start.sh
+dev/
