@@ -1,5 +1,6 @@
 #!/bin/bash
 set -ex
+
 cd ..
 cd dev
 
