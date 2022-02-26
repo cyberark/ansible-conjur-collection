@@ -27,7 +27,7 @@ function api_key_for {
   local role_id=$1
   if [ -n "$role_id" ]
   then
-  docker exec ${conjur_cid} rails r "print Credentials['${role_id}'].api_key"
+  docker exec "${conjur_cid}" rails r "print Credentials['${role_id}'].api_key"
   else
   echo ERROR: api_key_for called with no argument 1>&2
   exit 1
@@ -35,7 +35,7 @@ function api_key_for {
   }
 
 function hf_token {
-  docker exec ${cli_cid} bash -c 'conjur hostfactory tokens create \
+  docker exec "${cli_cid}" bash -c 'conjur hostfactory tokens create \
   --duration-days=5 \
   ansible/ansible-factory | jq -r ".[0].token"'
   }
@@ -43,9 +43,9 @@ function hf_token {
 function setup_conjur {
   echo "---- setting up conjur ----"
   # run policy
-  docker exec ${cli_cid} conjur policy load root /policy/root.yml
+  docker exec "${cli_cid}" conjur policy load root /policy/root.yml
   # set secret values
-  docker exec ${cli_cid} bash -ec 'conjur variable values add ansible/target-password target_secret_password'
+  docker exec "${cli_cid}" bash -ec 'conjur variable values add ansible/target-password target_secret_password'
   }
 
 function setup_conjur_identities {
