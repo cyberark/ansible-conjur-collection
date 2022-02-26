@@ -1,2 +1,2 @@
-bin/start.sh shebang
-bin/
+startup/start.sh shebang
+startup/
