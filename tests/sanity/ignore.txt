@@ -1,3 +1,2 @@
 startpoint/start.sh shebang
-startpoint/start.sh!skip
 startpoint/
