@@ -1,1 +1,1 @@
-bin/startup.sh shebang
+ansible-conjur-collection/bin/start.sh shebang
