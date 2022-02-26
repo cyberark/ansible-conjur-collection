@@ -4,7 +4,7 @@ set -ex
 function clean {
   echo 'Removing test environment'
   echo '---'
-  docker-compose down -v
+  #docker-compose down -v
   rm -rf inventory.tmp
 }
 function finish {
@@ -12,7 +12,7 @@ function finish {
   clean || true
   exit $rv
 }
-trap finish EXIT
+#trap finish EXIT
 clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
@@ -59,6 +59,7 @@ function run_test_cases {
     run_test_case "$(basename -- "$test_case")"
   done
 }
+vcbvbnmmnb,mnvhnb mnbvmnbm,nvcbncvmnbvbjnmbnmbmnonly for testing purpose i am doing it
 
 function run_test_case {
   echo "---- testing ${test_case} ----"
