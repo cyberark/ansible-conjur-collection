@@ -1,8 +1,8 @@
 Jenkinsfile shebang
+**/*.sh shebang
 tests/conjur_variable/test.sh shebang
 roles/conjur_host_identity/tests/test.sh shebang
 ansible-conjur-collection/bin/start.sh shebang
-**/*.sh shebang
 ci/build_release shebang
 ci/parse-changelog.sh shebang
 ci/publish_to_galaxy shebang
