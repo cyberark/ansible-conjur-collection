@@ -4,6 +4,7 @@ tests/conjur_variable/policy/root.yml yamllint:unparsable-with-libyaml # File lo
 roles/conjur_host_identity/tests/test.sh shebang
 roles/conjur_host_identity/tests/policy/root.yml yamllint:unparsable-with-libyaml # File loaded by Conjur server, not via Python
 *.sh
+/*.sh
 ci/build_release shebang
 ci/parse-changelog.sh shebang
 ci/publish_to_galaxy shebang
