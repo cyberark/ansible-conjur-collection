@@ -1,5 +1,5 @@
 Jenkinsfile shebang
-**/*.sh shebang
+**/start.sh shebang
 tests/conjur_variable/test.sh shebang
 tests/conjur_variable/policy/root.yml yamllint:unparsable-with-libyaml
 roles/conjur_host_identity/tests/test.sh shebang
