@@ -6,3 +6,4 @@ ci/build_release shebang
 ci/parse-changelog.sh shebang
 ci/publish_to_galaxy shebang
 ci/test.sh shebang
+dev/policy/root.yml yamllint:unparsable-with-libyaml
