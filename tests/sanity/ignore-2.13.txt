@@ -1,4 +1,5 @@
 Jenkinsfile shebang
+dev/start.sh shebang
 tests/conjur_variable/test.sh shebang
 tests/conjur_variable/policy/root.yml yamllint:unparsable-with-libyaml # File loaded by Conjur server, not via Python
 roles/conjur_host_identity/tests/test.sh shebang
@@ -8,3 +9,4 @@ ci/parse-changelog.sh shebang
 ci/publish_to_galaxy shebang
 ci/test.sh shebang
 secrets.yml yamllint:unparsable-with-libyaml # File loaded by Summon utility (in Jenkinsfile), not via Python
+dev/policy/root.yml yamllint:unparsable-with-libyaml
