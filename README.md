@@ -196,9 +196,9 @@ in `ansible_ssh_private_key_file`.
 
 For developers, it is easy-to-use development environment, so that they can work on the collection, roles, plugins, and playbooks without needing to run the test suite. The repo scripts is in dev/ to setup and teardown this environment.
 This docker-compose dev environment is really useful, including a few different services:
--	a Conjur Open Source instance
--	an Ansible control node
--	managed nodes to push tasks to
+-	A Conjur Open Source instance
+-	An Ansible control node
+-	Managed nodes to push tasks to
 
 ## Setup a Conjur OSS Environment
 
