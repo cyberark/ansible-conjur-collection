@@ -1,4 +1,4 @@
-dev-env/start.sh shebang
+bin/start.sh shebang
 Jenkinsfile shebang
 tests/conjur_variable/test.sh shebang
 tests/conjur_variable/policy/root.yml yamllint:unparsable-with-libyaml
