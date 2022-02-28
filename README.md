@@ -195,7 +195,7 @@ in `ansible_ssh_private_key_file`.
 ## Conjur Ansible Collection Dev Environment
 
 For developers, it is easy-to-use development environment, so that they can work on the collection, roles, plugins, and playbooks without needing to run the test suite. The repo scripts is in dev/ to setup and teardown this environment.
-A docker-compose environment would be really useful, including a few different services:
+This docker-compose dev environment is really useful, including a few different services:
 -	a Conjur Open Source instance
 -	an Ansible control node
 -	managed nodes to push tasks to
