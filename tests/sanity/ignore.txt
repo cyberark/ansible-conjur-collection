@@ -1,1 +1,1 @@
-Jenkinsfile shebang
+Jenkinsfile!skip
