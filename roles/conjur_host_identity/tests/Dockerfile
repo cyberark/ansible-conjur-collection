@@ -38,5 +38,5 @@ RUN apt-get update && \
 
 # install ruby
 RUN apt-get update && apt-get install -y gcc build-essential
-RUN apt-add-repository -y ppa:brightbox/ruby-ng && apt-get update && apt-get install -y ruby2.4 ruby2.4-dev
+RUN apt-add-repository -y ppa:brightbox/ruby-ng && apt-get update && apt-get install -y ruby2.7 ruby2.7-dev
 RUN gem install conjur-cli
