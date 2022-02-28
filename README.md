@@ -33,105 +33,6 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 http://ecotrust-canada.github.io/markdown-toc/ -->
 
 
-## Setup Conjur identity on managed host
-- Build, create, and start containers for OSS Conjur service
-- Uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
-- Deploy Conjur Lookup Plugin for Ansible
-- Prepare and run Conjur Policy as [root.yml](#Conjur-Policy-example:)
-     ```sh
-     docker exec Conjur_client Conjur policy load root /policy/root.yml
-    ```
-- Centralise the secrets
-- Setup Conjur identity on managed host
-    - [Check Conjur identity](#Check-Conjur-identity)
-    - [Set up Conjur identity](#Set-up-Conjur-identity)
-    - [Set up Summon-Conjur](#Set-up-Summon-Conjur)
-
-## Check Conjur identity
-- Check if /etc/Conjur.identity already exists
-- Set variable "Conjurized"
-- Ensure all required variables are set-
-    - Conjur_account
-    - Conjur_appliance_url
-    - Conjur_host_name
-- Set variable "ssl_configuration"
-- Ensure all required ssl variables are set-
-    - Conjur_ssl_certificate
-    - Conjur_validate_certs
- - Set variable "ssl file path" at a path like "/etc/Conjur.pem"
- - Set variable when non ssl configuration
-    - Conjur_ssl_certificate_path: ""
-    - Conjur_validate_certs: no
-- Ensure "Conjur_host_factory_token" is set (if node is not already Conjurized)
-
-## Set up Conjur identity
-- Install "ca-certificates" ,in case of any issue it retries 10 times on every 2 seconds of delay
-- Place Conjur public SSL certificate
-- Symlink Conjur public SSL certificate into /etc/ssl/certs
-- Install openssl-perl Package when ansible_os_family is ‘RedHat’, in case of any issue it retries 10 times on every 2 seconds of delay
-- copy files from the Ansible to the hosts  into /etc/Conjur.conf
-- Request identity from Conjur
-- Place identity file /etc/Conjur.identity when not Conjurized .
-
-## Set up Summon-Conjur
-- Download and unpack Summon
-- Create folder for Summon-Conjur to be installed into
-- Download and unpack Summon-Conjur
-
-## Running the source
-```sh
- ./start.sh
-```
-
-## Conjur Policy example
-
-```sh
-- !policy
-  id: ansible
-  annotations:
-    description: Policy for Ansible master and remote hosts
-  body:
-
-  - !host
-    id: ansible-master
-    annotations:
-      description: Host for running Ansible on remote targets
-
-  - !layer &remote_hosts_layer
-    id: remote_hosts
-    annotations:
-      description: Layer for Ansible remote hosts
-
-  - !host-factory
-    id: ansible-factory
-    annotations:
-      description: Factory to create new hosts for ansible
-    layer: [ *remote_hosts_layer ]
-
-  - !variable
-    id: target-password
-    annotations:
-      description: Password needed by the Ansible remote machine
-
-  - !permit
-    role: *remote_hosts_layer
-    privileges: [ execute ]
-    resources: [ !variable target-password ]
-```
-
-## Useful links
-
-| Source  | URLs |
-| ------ | ------ |
-| CyberArk Conjur |[https://docs.conjur.org/Latest/en/Content/Integrations/ansible.html]|
-| GitHub | [https://github.com/cyberark/ansible-conjur-collection]|
-| Ansible Galaxy | [https://galaxy.ansible.com/cyberark/conjur_collection]|
-| Ansible Doc| [https://docs.ansible.com/ansible/latest/collections/cyberark/conjur/index.html]|
-
-
-===============
-
-
 ## Certification Level
 
 ![](https://img.shields.io/badge/Certification%20Level-Community-28A745?link=https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md)
@@ -290,6 +191,114 @@ ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'pat
 ```
 **Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written
 in `ansible_ssh_private_key_file`.
+
+## Conjur Ansible Collection Dev Environment
+
+For developers, it is easy-to-use development environment, so that they can work on the collection, roles, plugins, and playbooks without needing to run the test suite. The repo scripts is in dev/ to setup and teardown this environment.
+A docker-compose environment would be really useful, including a few different services:
+-	a Conjur Open Source instance
+-	an Ansible control node
+-	managed nodes to push tasks to
+
+## Setup Conjur identity on managed host
+
+- Build, create, and start containers for OSS Conjur service
+- Uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
+- Deploy Conjur Lookup Plugin for Ansible
+- Prepare and run Conjur Policy as [root.yml](#Conjur-Policy-example:)
+     ```sh
+     docker exec Conjur_client Conjur policy load root /policy/root.yml
+    ```
+- Centralise the secrets
+- Setup Conjur identity on managed host
+    - [Check Conjur identity](#Check-Conjur-identity)
+    - [Set up Conjur identity](#Set-up-Conjur-identity)
+    - [Set up Summon-Conjur](#Set-up-Summon-Conjur)
+
+## Check Conjur identity
+
+- Check if /etc/Conjur.identity already exists
+- Set variable "Conjurized"
+- Ensure all required variables are set-
+    - Conjur_account
+    - Conjur_appliance_url
+    - Conjur_host_name
+- Set variable "ssl_configuration"
+- Ensure all required ssl variables are set-
+    - Conjur_ssl_certificate
+    - Conjur_validate_certs
+ - Set variable "ssl file path" at a path like "/etc/Conjur.pem"
+ - Set variable when non ssl configuration
+    - Conjur_ssl_certificate_path: ""
+    - Conjur_validate_certs: no
+- Ensure "Conjur_host_factory_token" is set (if node is not already Conjurized)
+
+## Set up Conjur identity
+
+- Install "ca-certificates" ,in case of any issue it retries 10 times on every 2 seconds of delay
+- Place Conjur public SSL certificate
+- Symlink Conjur public SSL certificate into /etc/ssl/certs
+- Install openssl-perl Package when ansible_os_family is ‘RedHat’, in case of any issue it retries 10 times on every 2 seconds of delay
+- copy files from the Ansible to the hosts  into /etc/Conjur.conf
+- Request identity from Conjur
+- Place identity file /etc/Conjur.identity when not Conjurized .
+
+## Set up Summon-Conjur
+
+- Download and unpack Summon
+- Create folder for Summon-Conjur to be installed into
+- Download and unpack Summon-Conjur
+
+## Running the source
+
+```sh
+ ./start.sh
+```
+
+## Conjur Policy example
+
+```sh
+- !policy
+  id: ansible
+  annotations:
+    description: Policy for Ansible master and remote hosts
+  body:
+
+  - !host
+    id: ansible-master
+    annotations:
+      description: Host for running Ansible on remote targets
+
+  - !layer &remote_hosts_layer
+    id: remote_hosts
+    annotations:
+      description: Layer for Ansible remote hosts
+
+  - !host-factory
+    id: ansible-factory
+    annotations:
+      description: Factory to create new hosts for ansible
+    layer: [ *remote_hosts_layer ]
+
+  - !variable
+    id: target-password
+    annotations:
+      description: Password needed by the Ansible remote machine
+
+  - !permit
+    role: *remote_hosts_layer
+    privileges: [ execute ]
+    resources: [ !variable target-password ]
+```
+
+## Useful links
+
+| Source  | URLs |
+| ------ | ------ |
+| CyberArk Conjur |[https://docs.conjur.org/Latest/en/Content/Integrations/ansible.html]|
+| GitHub | [https://github.com/cyberark/ansible-conjur-collection]|
+| Ansible Galaxy | [https://galaxy.ansible.com/cyberark/conjur_collection]|
+| Ansible Doc| [https://docs.ansible.com/ansible/latest/collections/cyberark/conjur/index.html]|
 
 ## Contributing
 
