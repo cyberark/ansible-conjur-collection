@@ -156,7 +156,6 @@ compatibility. When possible, upgrade your Conjur version to match the
 [latest suite release](https://docs.conjur.org/Latest/en/Content/ReleaseNotes/ConjurOSS-suite-RN.htm);
 when using integrations, choose the latest suite release that matches your Conjur version. For any
 questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/c/conjur/5).
-
 ## Installation
 
 From terminal, run the following command:
@@ -273,7 +272,6 @@ None.
 ### Examples
 
 #### Retrieve a secret in a Playbook
-
 ```yaml
 ---
 - hosts: localhost
@@ -290,7 +288,6 @@ None.
 ansible_host: <host>
 ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'path/to/secret-id', as_file=True) }}"
 ```
-
 **Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written
 in `ansible_ssh_private_key_file`.
 
