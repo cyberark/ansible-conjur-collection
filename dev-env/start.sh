@@ -11,10 +11,9 @@ docker-compose down -v
 rm -rf inventory.tmp
 }
 
-
-
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
+
 COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 echo "${COMPOSE_PROJECT_NAME}" > compose_project_name
 
@@ -24,6 +23,7 @@ declare cli_cid=''
 declare conjur_cid=''
 declare ansible_cid=''
 
+# get conjur client auth api key
 function api_key_for {
   local role_id=$1
   if [ -n "$role_id" ]
@@ -35,6 +35,7 @@ function api_key_for {
   fi
   }
 
+# get HFTOKEN
 function hf_token {
   docker exec "${cli_cid}" bash -c 'conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r ".[0].token"'
   }
@@ -47,12 +48,14 @@ function setup_conjur {
   docker exec "${cli_cid}" bash -ec 'conjur variable values add ansible/target-password target_secret_password'
   }
 
+# scale up inventory nodes and setup the conjur identity there .
 function setup_conjur_identities {
   for conjur_identity in config_conjur_identity/*; do
   teardown_and_setup
   setup_conjur_identity "$(basename -- "$conjur_identity")"
   done
   }
+
 # configure_conjur_identity
 function setup_conjur_identity {
   echo "---- testing ${conjur_identity} ----"
@@ -67,7 +70,7 @@ function setup_conjur_identity {
   exit 1
   fi
   }
-
+ # Scale up inventory nodes
 function teardown_and_setup {
   docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
   docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
@@ -100,16 +103,21 @@ function main() {
   clean
   docker-compose up -d --build
   generate_inventory
+
   conjur_cid=$(docker-compose ps -q conjur)
   cli_cid=$(docker-compose ps -q conjur_cli)
   fetch_ssl_cert
   wait_for_server
+
   CLI_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:user:admin')
   docker-compose up -d conjur_cli
+
   cli_cid=$(docker-compose ps -q conjur_cli)
   setup_conjur
+
   ANSIBLE_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:host:ansible/ansible-master')
   docker-compose up -d ansible
+
   ansible_cid=$(docker-compose ps -q ansible)
   setup_conjur_identities
   }
