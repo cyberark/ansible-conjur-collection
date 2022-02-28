@@ -20,12 +20,12 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
   + [Examples](#examples)
     - [Retrieve a secret in a Playbook](#retrieve-a-secret-in-a-playbook)
     - [Retrieve a private key in an Inventory file](#retrieve-a-private-key-in-an-inventory-file)
-* [Conjur Ansible Collection Dev Environment](#Conjur-Ansible-Collection-Dev-Environment)
-  + [Setup a Conjur OSS Environment](#Setup-a-Conjur-OSS-Environment)
-  + [Setup Conjur identity on managed host](#Setup-Conjur-identity-on-managed-host)
-    - [Check Conjur identity](#Check-Conjur-identity)
-    - [Set up Conjur identity](#Set-up-Conjur-identity)
-    - [Set up Summon-Conjur](#Set-up-Summon-Conjur)
+* [Conjur Ansible Collection Dev Environment](#conjur-ansible-collection-dev-environment)
+  + [Setup a Conjur OSS Environment](#setup-a-conjur-oss-environment)
+  + [Setup Conjur identity on managed host](#setup-conjur-identity-on-managed-host)
+    - [Check Conjur identity](#check-conjur-identity)
+    - [Set up Conjur identity](#set-up-conjur-identity)
+    - [Set up Summon-Conjur](#set-up-summon-conjur)
 * [Contributing](#contributing)
 * [License](#license)
 
@@ -200,6 +200,17 @@ This docker-compose dev environment is really useful, including a few different 
 -	an Ansible control node
 -	managed nodes to push tasks to
 
+## Setup a Conjur OSS Environment
+
+- Build, create, and start containers for OSS Conjur service
+- Uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
+- Deploy Conjur Lookup Plugin for Ansible
+- Prepare and run Conjur Policy as [root.yml](#Conjur-Policy-example:)
+     ```sh
+     docker exec conjur_client conjur policy load root /policy/root.yml
+    ```
+- Centralise the secrets
+- 
 ## Setup Conjur identity on managed host
 
 - Build, create, and start containers for OSS Conjur service
