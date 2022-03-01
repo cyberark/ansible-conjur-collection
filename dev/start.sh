@@ -11,7 +11,7 @@ function clean {
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
 
-COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+COMPOSE_PROJECT_NAME=Conjur-Collection-Dev-Environment
 export COMPOSE_PROJECT_NAME
 
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
