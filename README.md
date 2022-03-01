@@ -203,25 +203,16 @@ This docker-compose dev environment is really useful, including a few different 
 ## Setup a Conjur OSS Environment
 
 - Build, create, and start containers for OSS Conjur service
-- Uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
+- Use .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
 - Deploy Conjur Lookup Plugin for Ansible
 - Prepare and run Conjur Policy as [root.yml](#Conjur-Policy-example:)
      ```sh
      docker exec conjur_client conjur policy load root /policy/root.yml
     ```
 - Centralise the secrets
-- 
+
 ## Setup Conjur identity on managed host
 
-- Build, create, and start containers for OSS Conjur service
-- Uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
-- Deploy Conjur Lookup Plugin for Ansible
-- Prepare and run Conjur Policy as [root.yml](#Conjur-Policy-example:)
-     ```sh
-     docker exec Conjur_client Conjur policy load root /policy/root.yml
-    ```
-- Centralise the secrets
-- Setup Conjur identity on managed host
     - [Check Conjur identity](#Check-Conjur-identity)
     - [Set up Conjur identity](#Set-up-Conjur-identity)
     - [Set up Summon-Conjur](#Set-up-Summon-Conjur)
@@ -306,10 +297,10 @@ This docker-compose dev environment is really useful, including a few different 
 
 | Source  | URLs |
 | ------ | ------ |
-| CyberArk Conjur |[https://docs.conjur.org/Latest/en/Content/Integrations/ansible.html]|
-| GitHub | [https://github.com/cyberark/ansible-conjur-collection]|
-| Ansible Galaxy | [https://galaxy.ansible.com/cyberark/conjur_collection]|
-| Ansible Doc| [https://docs.ansible.com/ansible/latest/collections/cyberark/conjur/index.html]|
+| CyberArk Conjur |https://docs.conjur.org/Latest/en/Content/Integrations/ansible.html|
+| GitHub | https://github.com/cyberark/ansible-conjur-collection|
+| Ansible Galaxy | https://galaxy.ansible.com/cyberark/conjur_collection|
+| Ansible Doc| https://docs.ansible.com/ansible/latest/collections/cyberark/conjur/index.html|
 
 ## Contributing
 
