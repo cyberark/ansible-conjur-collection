@@ -213,9 +213,9 @@ This docker-compose dev environment is really useful, including a few different 
 
 ## Setup Conjur identity on managed host
 
-    - [Check Conjur identity](#check-conjur-identity)
-    - [Set up Conjur identity](#set-up-conjur-identity)
-    - [Set up Summon-Conjur](#set-up-summon-conjur)
+- [Check Conjur identity](#check-conjur-identity)
+- [Set up Conjur identity](#set-up-conjur-identity)
+- [Set up Summon-Conjur](#set-up-summon-conjur)
 
 ## Check Conjur identity
 
