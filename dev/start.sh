@@ -2,17 +2,17 @@
 set -ex
 
 function clean {
-echo 'Removing test environment'
-echo '---'
-docker-compose down -v
-rm -rf inventory.tmp
+  echo 'Removing test environment'
+  echo '---'
+  docker-compose down -v
+  rm -rf inventory.tmp
 }
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
 
 COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
-echo "${COMPOSE_PROJECT_NAME}" > compose_project_name
+export COMPOSE_PROJECT_NAME
 
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
@@ -25,10 +25,10 @@ function api_key_for {
   local role_id=$1
   if [ -n "$role_id" ]
   then
-  docker exec "${conjur_cid}" rails r "print Credentials['${role_id}'].api_key"
+    docker exec "${conjur_cid}" rails r "print Credentials['${role_id}'].api_key"
   else
-  echo ERROR: api_key_for called with no argument 1>&2
-  exit 1
+     echo ERROR: api_key_for called with no argument 1>&2
+     exit 1
   fi
   }
 
@@ -41,30 +41,31 @@ function setup_conjur {
   echo "---- setting up conjur ----"
   # run policy
   docker exec "${cli_cid}" conjur policy load root /policy/root.yml
+
   # set secret values
   docker exec "${cli_cid}" bash -ec 'conjur variable values add ansible/target-password target_secret_password'
   }
 
 # scale up inventory nodes and setup the conjur identity there .
 function setup_conjur_identities {
-  for conjur_identity in config_conjur_identity/*; do
-  teardown_and_setup
-  setup_conjur_identity "$(basename -- "$conjur_identity")"
+  for conjur_identity in conjur-identity/*; do
+    teardown_and_setup
+    setup_conjur_identity "$(basename -- "$conjur_identity")"
   done
   }
 
 # configure_conjur_identity
 function setup_conjur_identity {
-  echo "---- testing ${conjur_identity} ----"
+  echo "---- setting up conjur identity on remote nodes ----"
   local conjur_identity=$1
   if [ -n "$conjur_identity" ]
   then
-  docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
-  cd dev
-  ansible-playbook config_conjur_identity/${conjur_identity}/playbook.yml"
+    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
+      cd dev
+      ansible-playbook conjur-identity/conjur-identity-role-playbook.yml"
   else
-  echo ERROR: run_test called with no argument 1>&2
-  exit 1
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
   fi
   }
  # Scale up inventory nodes
@@ -117,5 +118,6 @@ function main() {
 
   ansible_cid=$(docker-compose ps -q ansible)
   setup_conjur_identities
+  rm -rf compose_project_name
   }
   main
