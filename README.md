@@ -205,7 +205,7 @@ This docker-compose dev environment is really useful, including a few different 
 - Build, create, and start containers for OSS Conjur service
 - Use .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
 - Deploy Conjur Lookup Plugin for Ansible
-- Prepare and run Conjur Policy as [root.yml](#Conjur-Policy-example:)
+- Prepare and run Conjur Policy as [root.yml](#conjur-policy-example)
      ```sh
      docker exec conjur_client conjur policy load root /policy/root.yml
     ```
@@ -213,9 +213,9 @@ This docker-compose dev environment is really useful, including a few different 
 
 ## Setup Conjur identity on managed host
 
-    - [Check Conjur identity](#Check-Conjur-identity)
-    - [Set up Conjur identity](#Set-up-Conjur-identity)
-    - [Set up Summon-Conjur](#Set-up-Summon-Conjur)
+    - [Check Conjur identity](#check-conjur-identity)
+    - [Set up Conjur identity](#set-up-conjur-identity)
+    - [Set up Summon-Conjur](#set-up-summon-conjur)
 
 ## Check Conjur identity
 
