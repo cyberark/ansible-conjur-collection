@@ -43,7 +43,7 @@ see [RubyMine IDE Debugging](#rubymine-ide-debugging) or [Visual Studio Code IDE
 The `dev` directory contains a `docker-compose` file which creates a development
 environment with a database container (`pg`, short for *postgres*), and a
 `conjur` server container with source code mounted into the directory
-`/src/conjur-server`.
+`/cyberark/dev/`.
 
 To use it:
 
@@ -55,7 +55,7 @@ To use it:
    $ cd dev
    $ ./start
    ...
-   root@f39015718062:/src/conjur-server#
+   root@f75015718049:/cyberark/dev/#
    ```
 
    Once the `start` script finishes, you're in a Bash shell inside the Conjur
@@ -64,31 +64,15 @@ To use it:
    After starting Conjur, your instance will be configured with the following:
    * Account: `cucumber`
    * User: `admin`
-   * Password: Run `conjurctl role retrieve-key cucumber:user:admin` inside the container shell to retrieve the admin user API key (which is also the password)
+   * Password: Run `cat conjur.identity` inside the container shell to display the current logged-in identity (which is also the password)
 
-1. Run the server
+1. Debug the server
 
    ```sh-session
-   root@f39015718062:/src/conjur-server# conjurctl server
+   root@f39015718062:docker-compose exec <server-image-name> bash
    <various startup messages, then finally:>
-   * Listening on tcp://localhost:3000
-   Use Ctrl-C to stop
+   Use exit to stop
    ```
-
-   The `conjurctl server` script performs the following:
-
-   * wait for the database to be available
-   * create and/or upgrade the database schema according to the `db/migrate`
-     directory
-   * find or create the token-signing key
-   * start the web server
-
-   You may choose to debug Conjur using `pry.byebug`, RubyMine or Visual Studio Code IDEs. This will
-   allow you to work in the debugger without the server timing out. To do so,
-   run the following command instead of `conjurctl server`:
-   - `pry.byebug`: `rails server -b 0.0.0.0 webrick`
-   - RubyMine and VS Code IDE, make sure you are in `/src/conjur-server` and run the following command: `rdebug-ide --port 1234 --dispatcher-port 26162 --host 0.0.0.0 -- bin/rails s -b 0.0.0.0 -u webrick`
-      - Now that the server is listening, debug the code via [RubyMine's](#rubymine-ide-debugging) or [VC Code's](#visual-studio-code-ide-debugging) debuggers.
 
 1. Cleanup
 
