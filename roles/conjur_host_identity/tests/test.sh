@@ -56,15 +56,17 @@ function setup_conjur {
 function run_test_cases {
   for test_case in test_cases/*; do
     teardown_and_setup
+    echo "---- testing1 ${test_case} ----"
     run_test_case "$(basename -- "$test_case")"
   done
 }
 
 function run_test_case {
-  echo "---- testing ${test_case} ----"
+  echo "---- testing2 ${test_case} ----"
   local test_case=$1
   if [ -n "$test_case" ]
   then
+  echo "---- testing3 ${test_case} ----"
     docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
       ansible-playbook test_cases/${test_case}/playbook.yml
