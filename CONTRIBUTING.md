@@ -133,12 +133,6 @@ To use it:
 - Create folder for Summon-Conjur to be installed into
 - Download and unpack Summon-Conjur
 
-## Running the source
-
-```sh
- ./start.sh
-```
-
 ## Conjur Policy example
 
 ```sh
