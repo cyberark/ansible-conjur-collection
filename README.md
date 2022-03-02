@@ -20,7 +20,7 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
   + [Examples](#examples)
     - [Retrieve a secret in a Playbook](#retrieve-a-secret-in-a-playbook)
     - [Retrieve a private key in an Inventory file](#retrieve-a-private-key-in-an-inventory-file)
-* [Conjur Ansible Collection Dev Environment](#conjur-ansible-collection-dev-environment)
+* [Conjur Ansible Collection Dev Environment](#set-up-a-development-environment)
   + [Setup a Conjur OSS Environment](#setup-a-conjur-oss-environment)
   + [Setup Conjur identity on managed host](#setup-conjur-identity-on-managed-host)
     - [Check Conjur identity](#check-conjur-identity)
@@ -192,13 +192,44 @@ ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'pat
 **Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written
 in `ansible_ssh_private_key_file`.
 
-## Conjur Ansible Collection Dev Environment
+## Set up a development environment
 
-For developers, it is easy-to-use development environment, so that they can work on the collection, roles, plugins, and playbooks without needing to run the test suite. The repo scripts is in dev/ to setup and teardown this environment.
-This docker-compose dev environment is really useful, including a few different services:
--	A Conjur Open Source instance
--	An Ansible control node
--	Managed nodes to push tasks to
+**Note**: If you are going to debug Conjur using [RubyMine IDE](https://www.jetbrains.com/ruby/) or [Visual Studio Code IDE](https://code.visualstudio.com),
+see [RubyMine IDE Debugging](#rubymine-ide-debugging) or [Visual Studio Code IDE debugging](#visual-studio-code-ide-debugging) respectively before setting up the development environment.
+
+The `dev` directory contains a `docker-compose` file which creates a development
+environment with a database container (`pg`, short for *postgres*), and a
+`conjur` server container with source code mounted into the directory
+`/cyberark/dev/`.
+
+To use it:
+
+1. Install dependencies (as above)
+
+2. Start the container (and optional extensions):
+
+  ```sh-session
+   $ cd dev
+   $ ./start.sh
+   ...
+   root@f75015718049:/cyberark/dev/#
+  ```
+
+   Once the `start` script finishes, you're in a Bash shell inside the Conjur
+   server container.  To
+
+   After starting Conjur, your instance will be configured with the following:
+   * Account: `cucumber`
+   * User: `admin`
+   * Password: Run `cat conjur.identity` inside the container shell to display the current logged-in identity (which is also the password)
+
+3. Debug the server
+
+  ```sh-session
+   root@f39015718062:docker-compose exec <container-service-name> bash
+   <various startup messages, then finally:>
+   Use exit to stop
+   ```
 
 ## Setup a Conjur OSS Environment
 
@@ -206,9 +237,9 @@ This docker-compose dev environment is really useful, including a few different 
 - Use .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
 - Deploy Conjur Lookup Plugin for Ansible
 - Prepare and run Conjur Policy as [root.yml](#conjur-policy-example)
-     ```sh
-     docker exec conjur_client conjur policy load root /policy/root.yml
-    ```
+```sh
+ docker exec conjur_client conjur policy load root /policy/root.yml
+```
 - Centralise the secrets
 
 ## Setup Conjur identity on managed host
