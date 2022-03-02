@@ -219,8 +219,7 @@ This docker-compose dev environment is really useful, including a few different 
 
 ## Check Conjur identity
 
-- Check if /etc/Conjur.identity already exists
-- Set variable "Conjurized"
+- Set variable "Conjurized" ,if /etc/Conjur.identity already exists
 - Ensure all required variables are set-
     - Conjur_account
     - Conjur_appliance_url
