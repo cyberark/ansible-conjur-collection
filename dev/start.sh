@@ -102,5 +102,6 @@ function main() {
 
   ansible_cid=$(docker-compose ps -q ansible)
   setup_conjur_identities
+  rm -rf compose_project_name
   }
   main
