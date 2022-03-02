@@ -69,18 +69,10 @@ To use it:
 1. Debug the server
 
    ```sh-session
-   root@f39015718062:docker-compose exec <server-image-name> bash
+   root@f39015718062:docker-compose exec <container-service-name> bash
    <various startup messages, then finally:>
    Use exit to stop
    ```
-
-1. Cleanup
-
-    ```sh-session
-    $ ./stop
-    ```
-    Running `stop` removes the running Docker Compose containers and the data key.
-
 
 ## Setup a Conjur OSS Environment
 
@@ -101,8 +93,7 @@ To use it:
 
 ## Check Conjur identity
 
-- Check if /etc/Conjur.identity already exists
-- Set variable "Conjurized"
+- Set variable "Conjurized", if /etc/Conjur.identity already exists
 - Ensure all required variables are set-
     - Conjur_account
     - Conjur_appliance_url
