@@ -49,6 +49,7 @@ function setup_conjur_identities {
 function teardown_and_setup {
   docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
   docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
+  docker-compose up -d --force-recreate --scale dev_ubuntu_node=2 dev_ubuntu_node
 }
 
 function wait_for_server {
@@ -71,6 +72,20 @@ function generate_inventory {
   docker-compose exec -T ansible bash -ec '
     cd dev
     ansible-playbook playbooks/inventory-setup/inventory-playbook.yml
+  '
+}
+
+function test_conjur_host_identity_role {
+  docker-compose exec -T ansible bash -exc '
+  cd dev/playbooks
+
+  # If env vars were provided, load them
+  if [ -e 'test_conjur_host_identity_role/env' ]; then
+  ../. ./. ./test_conjur_host_identity_role/env
+  fi
+
+  # You can add -vvvv here for debugging
+  ansible-playbook test_conjur_host_identity_role/playbook.yml
   '
 }
 
@@ -102,6 +117,7 @@ function main() {
 
   ansible_cid=$(docker-compose ps -q ansible)
   setup_conjur_identities
-  rm -rf compose_project_name
+
+  test_conjur_host_identity_role
 }
   main

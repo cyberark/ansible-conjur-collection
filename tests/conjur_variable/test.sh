@@ -5,10 +5,10 @@ set -o pipefail
 function cleanup {
   echo 'Removing test environment'
   echo '---'
-  docker-compose down -v
+  #docker-compose down -v
 }
 
-trap cleanup EXIT
+#trap cleanup EXIT
 
 cleanup
 
