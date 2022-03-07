@@ -38,9 +38,7 @@ function api_key_for {
 }
 
 function hf_token {
-  docker exec ${cli_cid} bash -c 'conjur hostfactory tokens create \
-    --duration-days=5 \
-    ansible/ansible-factory | jq -r ".[0].token"'
+  docker exec ${cli_cid} bash -c 'conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r ".[0].token"'
 }
 
 function setup_conjur {
