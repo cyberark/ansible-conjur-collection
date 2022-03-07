@@ -46,6 +46,8 @@ services:
       CONJUR_AUTHN_API_KEY: ${CLI_CONJUR_AUTHN_API_KEY}
     volumes:
       - ./policy:/policy
+    networks:
+      - default
     links:
       - conjur
 

@@ -2,6 +2,7 @@
 set -ex
 
 function clean {
+
   echo 'Removing test environment'
   echo '---'
   docker-compose down -v
@@ -37,9 +38,9 @@ function api_key_for {
 }
 
 function hf_token {
-  docker exec ${cli_cid} conjur hostfactory tokens create \
+  docker exec ${cli_cid} bash -c 'conjur hostfactory tokens create \
     --duration-days=5 \
-    ansible/ansible-factory | jq -r '.[0].token'
+    ansible/ansible-factory | jq -r ".[0].token"'
 }
 
 function setup_conjur {
@@ -56,12 +57,13 @@ function setup_conjur {
 function run_test_cases {
   for test_case in test_cases/*; do
     teardown_and_setup
+    echo "---- ${test_case} ----"
     run_test_case "$(basename -- "$test_case")"
   done
 }
 
 function run_test_case {
-  echo "---- testing ${test_case} ----"
+  echo "---- ${test_case} ----"
   local test_case=$1
   if [ -n "$test_case" ]
   then
@@ -72,6 +74,10 @@ function run_test_case {
     docker exec "${ansible_cid}" bash -ec "
       cd tests
       py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+    "
+    docker exec "${ansible_cid}" bash -ec "
+      cd tests
+      ansible-playbook test_cases/${test_case}/check-identity.yml
     "
   else
     echo ERROR: run_test called with no argument 1>&2
@@ -126,7 +132,6 @@ function main() {
   ansible_cid=$(docker-compose ps -q ansible)
 
   run_test_cases
-  rm -rf compose_project_name
 }
 
 main
