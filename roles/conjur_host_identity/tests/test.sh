@@ -15,7 +15,7 @@ function finish {
 trap finish EXIT
 clean
 
-# normalises project name by filtering non alphanumeric characters and transforming to lowercase
+# normalises project name by filtering non alphanumeric characters and transforming to lowercase -testing
 declare -x COMPOSE_PROJECT_NAME
 COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
