@@ -12,7 +12,7 @@
 
 name: CI
 on:
-# Run CI against all pushes (direct commits) and Pull Requests -testing
+# Run CI against all pushes (direct commits) and Pull Requests -testin g
 - push
 - pull_request
 
