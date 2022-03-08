@@ -65,6 +65,7 @@ function run_test_case {
   then
     docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
+      chmod 777 test_cases/${test_case}/playbook.yml
       ansible-playbook test_cases/${test_case}/playbook.yml
     "
     docker exec "${ansible_cid}" bash -ec "
@@ -73,6 +74,7 @@ function run_test_case {
     "
     docker exec "${ansible_cid}" bash -ec "
       cd tests
+      chmod 777 test_cases/${test_case}/check-identity.yml
       ansible-playbook test_cases/${test_case}/check-identity.yml
     "
   else
