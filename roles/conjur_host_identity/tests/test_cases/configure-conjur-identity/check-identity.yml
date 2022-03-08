@@ -6,14 +6,11 @@
       file:
         state: absent
         path: /etc/conjur.identity
-
     - name: Check conjur.identity
       stat:
         path: /etc/conjur.identity
       register: info
-
     - name: Tell if the file is there
       debug:
         msg: Conjur.identity file does not exist
       when: not info.stat.exists
-
