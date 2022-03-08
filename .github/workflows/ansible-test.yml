@@ -12,7 +12,7 @@
 
 name: CI
 on:
-# Run CI against all pushes (direct commits) and Pull Requests
+# Run CI against all pushes (direct commits) and Pull Requests -testing
 - push
 - pull_request
 
@@ -32,7 +32,7 @@ jobs:
           # Testing against `devel` may fail as new tests are added.
           - stable-2.9
           - stable-2.10
-          - devel
+          #- devel
         python:
           - 3.8
     runs-on: ubuntu-latest
