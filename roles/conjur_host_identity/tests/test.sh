@@ -37,9 +37,7 @@ function api_key_for {
 }
 
 function hf_token {
-  docker exec ${cli_cid} conjur hostfactory tokens create \
-    --duration-days=5 \
-    ansible/ansible-factory | jq -r '.[0].token'
+  docker exec "${cli_cid}" bash -c 'conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r ".[0].token"'
 }
 
 function setup_conjur {
@@ -72,6 +70,10 @@ function run_test_case {
     docker exec "${ansible_cid}" bash -ec "
       cd tests
       py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+    "
+    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
+      cd tests
+      ansible-playbook test_cases/${test_case}/check-identity.yml
     "
   else
     echo ERROR: run_test called with no argument 1>&2
