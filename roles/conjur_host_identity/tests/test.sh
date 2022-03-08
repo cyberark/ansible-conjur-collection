@@ -128,7 +128,7 @@ function main() {
   ansible_cid=$(docker-compose ps -q ansible)
 
   run_test_cases
-  rm -rf compose_project_name
+  #rm -rf compose_project_name
 }
 
 main
