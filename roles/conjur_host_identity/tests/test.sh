@@ -59,7 +59,7 @@ function run_test_cases {
 }
 
 function run_test_case {
-  echo "---- ${test_case} ----"
+  echo "---- testing ${test_case} ----"
   local test_case=$1
   if [ -n "$test_case" ]
   then
@@ -124,7 +124,7 @@ function main() {
   ansible_cid=$(docker-compose ps -q ansible)
 
   run_test_cases
-  #rm -rf compose_project_name
+  rm -rf compose_project_name
 }
 
 main
