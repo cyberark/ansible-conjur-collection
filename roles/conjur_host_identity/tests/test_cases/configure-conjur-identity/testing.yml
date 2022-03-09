@@ -1,0 +1,17 @@
+---
+- name: check if the directory exists
+  hosts: ansible
+  vars:
+    directory: "cyberark.conjur.conjur-host-identity"
+  tasks:
+    - name: Check if conjur role exists
+      stat:
+        path: "{{ directory }}"
+      register: info
+    - name: Move foo to bar
+      command: sudo rm -rf cyberark.conjur.conjur-host-identity
+      when: info.stat.exists
+    - name: Tell if conjur role does not exist
+      debug:
+        msg: Conjur.identity file does not exist
+      when: not info.stat.exists
