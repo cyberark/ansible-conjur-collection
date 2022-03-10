@@ -4,3 +4,6 @@
 
 [ansible]
 {{ lookup('env','COMPOSE_PROJECT_NAME') }}-ansible-1 ansible_connection=docker
+
+[ansible_role_misconfiguration]
+{{ lookup('env','COMPOSE_PROJECT_NAME') }}-ansible-2 ansible_connection=docker
