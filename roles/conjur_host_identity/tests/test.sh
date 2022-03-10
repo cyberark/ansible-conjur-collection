@@ -4,7 +4,7 @@ set -ex
 function clean {
   echo 'Removing test environment'
   echo '---'
-  #docker-compose down -v
+  docker-compose down -v
   rm -rf inventory.tmp
 }
 function finish {
@@ -12,7 +12,7 @@ function finish {
   clean || true
   exit $rv
 }
-#trap finish EXIT
+trap finish EXIT
 clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
@@ -109,10 +109,6 @@ function generate_inventory {
 function ansible_role_misconfiguration {
     docker exec "${ansible_role_misconfiguration_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
-      ansible-playbook test_cases/configure-conjur-identity/playbook.yml
-    "
-    docker exec "${ansible_role_misconfiguration_cid}" env HFTOKEN="$(hf_token)" bash -ec "
-      cd tests
       ansible-playbook test_cases/configure-conjur-identity/role_with_bad_path.yml
     "
 }
@@ -138,11 +134,9 @@ function main() {
   docker-compose up -d ansible_role_misconfiguration
   ansible_role_misconfiguration_cid=$(docker-compose ps -q ansible_role_misconfiguration)
 
-  #ansible_role_misconfiguration
-
   run_test_cases
-  #ansible_role_misconfiguration
-  #rm -rf compose_project_name
+  ansible_role_misconfiguration
+  rm -rf compose_project_name
 }
 
 main
