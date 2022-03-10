@@ -1,12 +1,12 @@
 ---
 - name: check if the cyberark.conjur.conjur-host-identity configured correctly
-  hosts: ansible
+  hosts: localhost
   vars:
     directory: "cyberark.conjur.conjur-host-identity"
   tasks:
     - name: Check if conjur role exists
       stat:
-        path: "{{ directory }}"
+        path: cyberark.conjur.conjur-host-identity
       register: info
     - name: Tell if conjur role does not exist
       debug:

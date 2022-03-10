@@ -113,7 +113,7 @@ function ansible_role_misconfiguration {
     "
     docker exec "${ansible_role_misconfiguration_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
-      ansible-playbook test_cases/configure-conjur-identity/testing.yml
+      ansible-playbook test_cases/configure-conjur-identity/role_with_bad_path.yml
     "
 }
 
