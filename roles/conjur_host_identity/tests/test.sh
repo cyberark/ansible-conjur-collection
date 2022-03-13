@@ -4,7 +4,7 @@ set -ex
 function clean {
   echo 'Removing test environment'
   echo '---'
-  docker-compose down -v
+  #docker-compose down -v
   rm -rf inventory.tmp
 }
 function finish {
@@ -12,7 +12,7 @@ function finish {
   clean || true
   exit $rv
 }
-trap finish EXIT
+#trap finish EXIT
 clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
@@ -37,9 +37,7 @@ function api_key_for {
 }
 
 function hf_token {
-  docker exec ${cli_cid} conjur hostfactory tokens create \
-    --duration-days=5 \
-    ansible/ansible-factory | jq -r '.[0].token'
+docker exec "${cli_cid}" bash -c 'conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r ".[0].token"'
 }
 
 function setup_conjur {
@@ -72,6 +70,10 @@ function run_test_case {
     docker exec "${ansible_cid}" bash -ec "
       cd tests
       py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+    "
+    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
+      cd tests
+      ansible-playbook test_cases/${test_case}/bad-conjur-identity-path.yml
     "
   else
     echo ERROR: run_test called with no argument 1>&2

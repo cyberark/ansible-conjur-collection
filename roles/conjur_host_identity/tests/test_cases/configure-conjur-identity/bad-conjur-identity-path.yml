@@ -1,0 +1,27 @@
+---
+- name: check if the cyberark.conjur.conjur-host-identity configured correctly
+  hosts: testapp
+  vars:
+      conjur_identity_dir:
+      - - /etc/conjur.identity
+        - /etc/conjur.pem
+        - /etc/conjur.conf
+        - /etc/ssl/certs/conjur.crt
+  tasks:
+    - name: Remove dir
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items: "{{ conjur_identity_dir }}"
+
+    - name: Ensure all required variables are set
+      debug:
+        msg: "Error: '{{ item }}' is not available"
+      when: item.stat.exists is undefined
+      with_items: "{{ conjur_identity_dir }}"
+
+    - name: Ensure all required variables are set
+      fail:
+        msg: "'{{ item }}' is not available"
+      when: item.stat.exists is undefined
+      with_items: "{{ conjur_identity_dir }}"
