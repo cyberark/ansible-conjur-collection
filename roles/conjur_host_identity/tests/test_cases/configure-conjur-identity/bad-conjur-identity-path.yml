@@ -8,20 +8,25 @@
         - /etc/conjur.conf
         - /etc/ssl/certs/conjur.crt
   tasks:
-    - name: Remove dir
-      file:
-        path: "{{ item }}"
-        state: absent
-      with_items: "{{ conjur_identity_dir }}"
+    - block:
+        - name: Remove dir
+          file:
+            path: "{{ item }}"
+            state: absent
+          with_items: "{{ conjur_identity_dir }}"
 
-    - name: Ensure all required variables are set
-      debug:
-        msg: "Error: '{{ item }}' is not available"
-      when: item.stat.exists is undefined
-      with_items: "{{ conjur_identity_dir }}"
+        - name: Ensure all required variables are set
+          debug:
+            msg: "Error: '{{ item }}' is not available"
+          when: item.stat.exists is undefined
+          with_items: "{{ conjur_identity_dir }}"
 
-    - name: Ensure all required variables are set
-      fail:
-        msg: "'{{ item }}' is not available"
-      when: item.stat.exists is undefined
-      with_items: "{{ conjur_identity_dir }}"
+      rescue:
+        - name: Issue in bad-conjur-identity-path Playbook
+          debug:
+            msg: "Error: Playbook bad-conjur-identity-path could not execute on '{{ inventory_hostname }}' "
+
+      always:
+        - name: Come end of the bad-conjur-identity-path Playbook
+          debug:
+            msg: "Playbook bad-conjur-identity-path came out from '{{ inventory_hostname }}' "

@@ -4,7 +4,7 @@ set -ex
 function clean {
   echo 'Removing test environment'
   echo '---'
-  #docker-compose down -v
+  docker-compose down -v
   rm -rf inventory.tmp
 }
 function finish {
@@ -12,7 +12,7 @@ function finish {
   clean || true
   exit $rv
 }
-#trap finish EXIT
+trap finish EXIT
 clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
