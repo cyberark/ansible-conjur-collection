@@ -13,8 +13,8 @@ DOCUMENTATION = """
     version_added: "2.5"
     short_description: Fetch credentials from CyberArk Conjur.
     author:
-      - CyberArk BizDev (@cyberark-bizdev)
-      - CyberArk Community and Integrations Team (@cyberark/community-and-integrations-team)
+      - CyberArk BizDev (cyberark-bizdev)
+      - CyberArk Community and Integrations Team (cyberark/community-and-integrations-team)
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity
       or environment variables.
