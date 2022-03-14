@@ -10,7 +10,7 @@ RUN apt-get update && \
 
 # install python 3
 RUN apt-get update && \
-    apt-get install -y python3-pip && \
+    apt-get install -y python3.6-pip && \
     pip3 install --upgrade pip==9.0.3
 
 # install ansible and its test tool
