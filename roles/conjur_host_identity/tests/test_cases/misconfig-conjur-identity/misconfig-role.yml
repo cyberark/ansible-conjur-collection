@@ -13,8 +13,9 @@
           conjur_validate_certs: yes
         register: command_result
         ignore_errors: True
+
       - block:
           - name: Fail if the role did not succeed
-            fail:
+            debug:
               msg: " Ansible Conjur Role cyberark.conjur.conjur-host-identity failed  "
         when: command_result is undefined
