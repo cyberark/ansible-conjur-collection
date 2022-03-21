@@ -65,15 +65,11 @@ function run_test_case {
   then
     docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
-      ansible-playbook test_cases/${test_case}/playbook.yml
+      ansible-playbook test_cases/configure-conjur-identity/playbook.yml
     "
     docker exec "${ansible_cid}" bash -ec "
       cd tests
-      py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
-    "
-    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
-      cd tests
-      ansible-playbook test_cases/${test_case}/bad-conjur-identity-path.yml
+      py.test --junitxml=./junit/misconfig-conjur-identity --connection docker -v test_cases/configure-conjur-identity/tests/test_default.py
     "
   else
     echo ERROR: run_test called with no argument 1>&2
@@ -109,6 +105,45 @@ function generate_inventory {
   '
 }
 
+function run_misconfig_test_cases {
+  clean
+  echo "---- testing1 ----"
+  docker-compose up -d --build
+  echo "---- testing2 ----"
+  generate_inventory
+
+  conjur_cid=$(docker-compose ps -q conjur)
+  cli_cid=$(docker-compose ps -q conjur_cli)
+  echo "---- testing3 ----"
+  fetch_ssl_cert
+  wait_for_server
+
+  echo "---- testing4 ----"
+  CLI_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:user:admin')
+  docker-compose up -d conjur_cli
+  cli_cid=$(docker-compose ps -q conjur_cli)
+  setup_conjur
+
+  echo "---- testing5 ----"
+  ANSIBLE_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:host:ansible/ansible-master')
+  docker-compose up -d ansible
+  ansible_cid=$(docker-compose ps -q ansible)
+
+  run_misconfig_test_case
+  rm -rf compose_project_name
+}
+
+function run_misconfig_test_case {
+  echo "---- testing7 ----"
+    teardown_and_setup
+    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
+      cd tests
+      ansible-playbook test_cases/misconfig-conjur-identity/misconfig-role.yml
+    "
+}
+
+
+
 function main() {
   docker-compose up -d --build
   generate_inventory
@@ -128,7 +163,8 @@ function main() {
   ansible_cid=$(docker-compose ps -q ansible)
 
   run_test_cases
-  rm -rf compose_project_name
+  run_misconfig_test_cases
+
 }
 
 main
