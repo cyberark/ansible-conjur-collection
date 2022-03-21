@@ -14,7 +14,7 @@
         register: command_result
         ignore_errors: True
       - block:
-          - name: fail the play if the previous command did not succeed
+          - name: Fail if the role did not succeed
             fail:
-              msg: " Ansible Role failed  "
+              msg: " Ansible Conjur Role cyberark.conjur.conjur-host-identity failed  "
         when: command_result is undefined
