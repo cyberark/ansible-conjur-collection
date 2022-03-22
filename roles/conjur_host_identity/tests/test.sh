@@ -12,8 +12,8 @@ function finish {
   clean || true
   exit $rv
 }
-trap finish EXIT
-clean
+#trap finish EXIT
+#clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
@@ -159,7 +159,7 @@ function main() {
   ansible_cid=$(docker-compose ps -q ansible)
 
   run_test_cases
-  run_misconfig_test_cases
+  #run_misconfig_test_cases
 
 }
 
