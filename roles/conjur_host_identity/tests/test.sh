@@ -106,39 +106,13 @@ function generate_inventory {
 }
 
 function run_misconfig_test_cases {
-  clean
-
-  docker-compose up -d --build
-  generate_inventory
-
-  conjur_cid=$(docker-compose ps -q conjur)
-  cli_cid=$(docker-compose ps -q conjur_cli)
-
-  fetch_ssl_cert
-  wait_for_server
-
-  CLI_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:user:admin')
-  docker-compose up -d conjur_cli
-  cli_cid=$(docker-compose ps -q conjur_cli)
-  setup_conjur
-
-  ANSIBLE_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:host:ansible/ansible-master')
-  docker-compose up -d ansible
-  ansible_cid=$(docker-compose ps -q ansible)
-
-  run_misconfig_test_case
+  teardown_and_setup
+  docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
+    cd tests
+    ansible-playbook test_cases/misconfig-conjur-identity/misconfig-role.yml
+  "
   rm -rf compose_project_name
 }
-
-function run_misconfig_test_case {
-    teardown_and_setup
-    docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
-      cd tests
-      ansible-playbook test_cases/misconfig-conjur-identity/misconfig-role.yml
-    "
-}
-
-
 
 function main() {
   docker-compose up -d --build
