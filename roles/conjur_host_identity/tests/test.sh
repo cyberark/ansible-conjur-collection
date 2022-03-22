@@ -52,17 +52,11 @@ function setup_conjur {
 }
 
 function run_test_cases {
-  for test_case in test_cases/*; do
     teardown_and_setup
-    run_test_case "$(basename -- "$test_case")"
-  done
+    run_test_case
 }
 
 function run_test_case {
-  echo "---- testing ${test_case} ----"
-  local test_case=$1
-  if [ -n "$test_case" ]
-  then
     docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
       cd tests
       ansible-playbook test_cases/configure-conjur-identity/playbook.yml
@@ -71,10 +65,6 @@ function run_test_case {
       cd tests
       py.test --junitxml=./junit/misconfig-conjur-identity --connection docker -v test_cases/configure-conjur-identity/tests/test_default.py
     "
-  else
-    echo ERROR: run_test called with no argument 1>&2
-    exit 1
-  fi
 }
 
 function teardown_and_setup {
