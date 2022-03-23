@@ -36,28 +36,3 @@ class DisconnectedMockLPass(MockLPass):
 class LoggedOutMockLPass(MockLPass):
 
     _mock_logged_out = True
-
-
-class TestLPass(unittest.TestCase):
-
-    def test_lastpass_cli_path(self):
-        lp = MockLPass(path='/dev/null')
-        self.assertEqual('/dev/null', lp.cli_path)
-
-    def test_lastpass_build_args_logout(self):
-        lp = MockLPass()
-        self.assertEqual(['logout', '--color=never'], lp._build_args("logout"))
-
-    def test_lastpass_logged_in_true(self):
-        lp = MockLPass()
-        self.assertTrue(lp.logged_in)
-
-    def test_lastpass_logged_in_false(self):
-        lp = LoggedOutMockLPass()
-        self.assertFalse(lp.logged_in)
-
-    def test_lastpass_show_disconnected(self):
-        lp = DisconnectedMockLPass()
-
-        with self.assertRaises(LPassException):
-            lp.get_field('0123456789', 'username')
