@@ -61,3 +61,64 @@ jobs:
       - name: Run sanity tests
         run: ansible-test sanity --docker -v --color --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
+
+# Unit tests (OPTIONAL)
+
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
+
+  units:
+    runs-on: ubuntu-latest
+    name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
+    strategy:
+      # As soon as the first unit test fails, cancel the others to free up the CI queue
+      fail-fast: true
+      matrix:
+        ansible:
+          # - stable-2.9 # Only if your collection supports Ansible 2.9
+          - stable-2.10
+          - devel
+        python:
+          - 2.6
+          - 2.7
+          - 3.5
+          - 3.6
+          - 3.7
+          - 3.8
+          - 3.9
+        exclude:
+          - ansible: stable-2.9
+            python: 3.9
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/community/skydive
+
+      - name: Set up Python ${{ matrix.ansible }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      # OPTIONAL If your unit test requires Python libraries from other collections
+      # Install them like this
+      - name: Install collection dependencies
+        run: ansible-galaxy collection install ansible.netcommon -p .
+
+      # Run the unit tests
+      - name: Run unit test
+        run: ansible-test units -v --color --python ${{ matrix.python }} --docker --coverage
+        working-directory: ./ansible_collections/cyberark/conjur
+
+        # ansible-test support producing code coverage date
+      - name: Generate coverage report
+        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+        working-directory: ./ansible_collections/cyberark/conjur
+
+      # See the reports at https://codecov.io/gh/ansible_collections/GITHUBORG/REPONAME
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
