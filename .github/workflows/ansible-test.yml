@@ -87,7 +87,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          path: ansible_collections/community/skydive
+          path: ansible_collections/cyberark/conjur
 
       - name: Set up Python ${{ matrix.ansible }}
         uses: actions/setup-python@v2
