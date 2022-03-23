@@ -8,7 +8,7 @@ import os.path
 import socket
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
-from cyberark.ansible_conjur_collection.plugins.lookup import LookupModule, LPass, LPassException
+from cyberark.ansible_conjur_collection.plugins.lookup.conjur_variable import LookupModule
 from base64 import b64encode
 from netrc import netrc
 from os import environ
@@ -23,14 +23,27 @@ from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
 import ssl
 
-class MockLPass(LPass):
+MOCK_ENTRIES = [{'CONJUR_APPLIANCE_URL': [os.environ['https://conjur-https']],
+                 'CONJUR_ACCOUNT': [os.environ['cucumber']],
+                 'CONJUR_AUTHN_LOGIN': [os.environ['host/ansible/ansible-master']],
+                 'CONJUR_AUTHN_API_KEY': [os.environ['ANSIBLE_MASTER_AUTHN_API_KEY']],
+                 'COMPOSE_PROJECT_NAME': [os.environ['COMPOSE_PROJECT_NAME']]}]
+
+# MOCK_ENTRIES = [{'username': 'user',
+#                  'name': 'Mock Entry',
+#                  'password': 't0pS3cret passphrase entry!',
+#                  'url': 'https://localhost/login',
+#                  'notes': 'Test\nnote with multiple lines.\n',
+#                  'id': '0123456789'}]
+
+class MockLPass(LookupModule):
     _mock_logged_out = False
     _mock_disconnected = False
 
-class DisconnectedMockLPass(MockLPass):
+class DisconnectedMockLPass(LookupModule):
 
     _mock_disconnected = True
 
-class LoggedOutMockLPass(MockLPass):
+class LoggedOutMockLPass(LookupModule):
 
     _mock_logged_out = True
