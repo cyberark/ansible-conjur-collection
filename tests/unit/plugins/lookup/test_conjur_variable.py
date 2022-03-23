@@ -27,11 +27,9 @@ class MockLPass(LPass):
     _mock_logged_out = False
     _mock_disconnected = False
 
-
 class DisconnectedMockLPass(MockLPass):
 
     _mock_disconnected = True
-
 
 class LoggedOutMockLPass(MockLPass):
 
