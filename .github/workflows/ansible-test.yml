@@ -76,10 +76,9 @@ jobs:
         ansible:
           # - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
-          - devel
+         # - devel
         python:
           - 3.8
-          - 3.9
         exclude:
           - ansible: stable-2.9
             python: 3.9
@@ -98,22 +97,7 @@ jobs:
       - name: Install ansible-base (${{ matrix.ansible }})
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
-      # OPTIONAL If your unit test requires Python libraries from other collections
-      # Install them like this
-      - name: Install collection dependencies
-        run: ansible-galaxy collection install ansible.netcommon -p .
-
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units -v --color --python ${{ matrix.python }} --docker --coverage
+        run: ansible-test units --docker default -v
         working-directory: ./ansible_collections/cyberark/conjur
-
-        # ansible-test support producing code coverage date
-      - name: Generate coverage report
-        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
-        working-directory: ./ansible_collections/cyberark/conjur
-
-      # See the reports at https://codecov.io/gh/ansible_collections/GITHUBORG/REPONAME
-      - uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: false
