@@ -1,21 +1,42 @@
-# (c) 2020 CyberArk Software Ltd. All rights reserved.
-# (c) 2018 Ansible Project
+# -*- coding: utf-8 -*-
+# (c) 2020, Adam Migus <adam@migus.org>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-from __future__ import (absolute_import, division, print_function)
+
+# Make coding more python3-ish
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
-import os.path
-import socket
-from base64 import b64encode
-from netrc import netrc
-from os import environ
-from time import time, sleep
-import ssl
+from cyberark.ansible_conjur_collection.tests.unit.compat.unittest import TestCase
+from cyberark.ansible_conjur_collection.tests.unit.compat.mock import (
+    patch,
+    MagicMock,
+)
+from cyberark.ansible_conjur_collection.plugins.lookup import conjur_variable
+from ansible.plugins.loader import lookup_loader
 
-MOCK_ENTRIES = [{'CONJUR_APPLIANCE_URL': [os.environ['https://conjur-https']],
-                 'CONJUR_ACCOUNT': [os.environ['cucumber']],
-                 'CONJUR_AUTHN_LOGIN': [os.environ['host/ansible/ansible-master']],
-                 'CONJUR_AUTHN_API_KEY': [os.environ['ANSIBLE_MASTER_AUTHN_API_KEY']],
-                 'COMPOSE_PROJECT_NAME': [os.environ['COMPOSE_PROJECT_NAME'] + '_ansible_1']}]
-print(" MOCK_ENTRIES ")
-print(MOCK_ENTRIES)
+
+class MockSecretsVault(MagicMock):
+    RESPONSE = '{"foo": "bar"}'
+
+    def get_secret_json(self, path):
+        return self.RESPONSE
+
+
+class TestLookupModule(TestCase):
+    def setUp(self):
+        self.lookup = lookup_loader.get("cyberark.ansible_conjur_collection.conjur_variable")
+
+    @patch(
+        "cyberark.ansible_conjur_collection.plugins.lookup.conjur_variable.LookupModule",
+        MockSecretsVault(),
+    )
+    def test_get_secret_json(self):
+        self.assertListEqual(
+            [MockSecretsVault.RESPONSE],
+            self.lookup.run(
+                ["/dummy"],
+                [],
+                **{"terms[0]": "dummy", "token": "dummy", "conf['appliance_url']": "dummy", "conf['account']": "dummy", "validate_certs": "dummy", "cert_file": "dummy", }
+            ),
+        )
