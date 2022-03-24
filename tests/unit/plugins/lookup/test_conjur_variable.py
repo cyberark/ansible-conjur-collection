@@ -7,14 +7,13 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from cyberark.ansible_conjur_collection.tests.unit.compat.unittest import TestCase
-from cyberark.ansible_conjur_collection.tests.unit.compat.mock import (
+from ansible_collections.cyberark.conjur.tests.unit.compat.unittest import TestCase
+from ansible_collections.cyberark.conjur.tests.unit.compat.mock import (
     patch,
     MagicMock,
 )
-from cyberark.ansible_conjur_collection.plugins.lookup import conjur_variable
+from ansible_collections.cyberark.conjur.plugins.lookup import conjur_variable
 from ansible.plugins.loader import lookup_loader
-
 
 class MockSecretsVault(MagicMock):
     RESPONSE = '{"foo": "bar"}'
@@ -25,10 +24,10 @@ class MockSecretsVault(MagicMock):
 
 class TestLookupModule(TestCase):
     def setUp(self):
-        self.lookup = lookup_loader.get("cyberark.ansible_conjur_collection.conjur_variable")
+        self.lookup = lookup_loader.get("ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable")
 
     @patch(
-        "cyberark.ansible_conjur_collection.plugins.lookup.conjur_variable.LookupModule",
+        "ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable",
         MockSecretsVault(),
     )
     def test_get_secret_json(self):
