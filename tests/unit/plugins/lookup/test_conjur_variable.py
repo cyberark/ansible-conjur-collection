@@ -1,41 +1,34 @@
-# -*- coding: utf-8 -*-
-# (c) 2020, Adam Migus <adam@migus.org>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-# Make coding more python3-ish
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-from ansible_collections.cyberark.conjur.tests.unit.compat.unittest import TestCase
-from ansible_collections.cyberark.conjur.tests.unit.compat.mock import (
-    patch,
-    MagicMock,
+import unittest
+from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
+    LookupModule,
 )
-from ansible_collections.cyberark.conjur.plugins.lookup import conjur_variable
-from ansible.plugins.loader import lookup_loader
 
-class MockSecretsVault(MagicMock):
-    RESPONSE = '{"foo": "bar"}'
-
-    def get_secret_json(self, path):
-        return self.RESPONSE
-
-
-class TestLookupModule(TestCase):
+class TestStringMethods(unittest.TestCase):
     def setUp(self):
-        self.lookup = lookup_loader.get("ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable")
+        self._lp = LookupModule()
+        #self._lp._load_name = "conjur_variable"
 
-    @patch(
-        "ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable",
-        MockSecretsVault(),
-    )
-    def test_get_secret_json(self):
-        self.assertListEqual(
-            [MockSecretsVault.RESPONSE],
-            self.lookup.run(
-                ["/dummy"],
-                [],
-                **{"terms[0]": "dummy", "token": "dummy", "conf['appliance_url']": "dummy", "conf['account']": "dummy", "validate_certs": "dummy", "cert_file": "dummy", }
-            ),
-        )
+    def test_upper(self):
+        self.assertEqual('foo'.upper(), 'FOO')
+
+    def test_isupper(self):
+        self.assertTrue('FOO'.isupper())
+        self.assertFalse('Foo'.isupper())
+
+    def test_split(self):
+        s = 'hello world'
+        self.assertEqual(s.split(), ['hello', 'world'])
+        # check that s.split fails when the separator is not a string
+        with self.assertRaises(TypeError):
+            s.split(2)
+
+    #def test_valid_data(self):
+    #    """Check passing valid data as per criteria"""
+    #    terms = ['ansible/test-secret']
+    #    kwargs = {}
+    #    #variables = 'None'
+    #    result = self._lp.run(terms, variables=None, **kwargs)
+    #    self.assertEquals(result, ['test_secret_password'])
+
+if __name__ == '__main__':
+    unittest.main()
