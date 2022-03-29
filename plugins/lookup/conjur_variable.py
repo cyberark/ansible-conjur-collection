@@ -268,6 +268,11 @@ def _store_secret_in_file(value):
 class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
+        if terms == []:
+            raise AnsibleError("Invalid secret path: no secret path provided.")
+        elif not terms[0] or terms[0].isspace():
+            raise AnsibleError("Invalid secret path: empty secret path not accepted.")
+
         self.set_options(direct=kwargs)
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
