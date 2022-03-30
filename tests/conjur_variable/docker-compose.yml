@@ -1,6 +1,7 @@
 version: '3'
 services:
   ansible:
+    container_name: ${COMPOSE_PROJECT_NAME}-ansible
     build:
       context: .
       dockerfile: Dockerfile

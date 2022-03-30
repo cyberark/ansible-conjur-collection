@@ -5,7 +5,7 @@ __metaclass__ = type
 import os
 import testinfra.utils.ansible_runner
 
-testinfra_hosts = [os.environ['COMPOSE_PROJECT_NAME'] + '_ansible_1']
+testinfra_hosts = [os.environ['COMPOSE_PROJECT_NAME'] + '-ansible']
 
 
 def test_retrieved_secret(host):
