@@ -6,11 +6,13 @@ from ansible_collections.cyberark.conjur.tests.unit.compat.mock import patch, Ma
 from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _merge_dictionaries
 from ansible.plugins.loader import lookup_loader
 
+
 class MockSecretsVault(MagicMock):
     RESPONSE = {'id': 'host/ansible/ansible-master', 'api_key': '1j8t1rx2ghwhx7392wt1h14qn3c22yp4w2y395yk9d2hz8gvb1nbh6yg'}
 
     def get_secret_json(self, path):
         return self.RESPONSE
+
 
 class Test(TestCase):
     def setUp(self):
