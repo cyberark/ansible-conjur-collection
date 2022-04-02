@@ -4,14 +4,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /cyberark
 
-# install ansible
-RUN apt-get update && \
-    apt-get install -y ansible
-
 # install python 3
 RUN apt-get update && \
     apt-get install -y python3-pip && \
-    pip3 install --upgrade pip==9.0.3
+    pip3 install --upgrade pip
 
 # install ansible and its test tool
 RUN pip3 install ansible pytest-testinfra
