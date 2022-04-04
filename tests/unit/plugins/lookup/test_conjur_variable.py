@@ -62,8 +62,7 @@ class Test(TestCase):
     def test_fetch_conjur_variable(self, mock_repeat_open_url):
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
-        mock_response.read.decode("utf-8").return_value = "response body"
-       # mock_response.read.decode().return_value = "response body"
+        mock_response.read.return_value = "response body".encode("utf-8")
         mock_repeat_open_url.return_value = mock_response
         result = _fetch_conjur_variable("variable", b'{"protected":"eykhRJ"}', "url", "account", True, "cert_file")
         mock_repeat_open_url.assert_called_with("url/secrets/account/variable/variable",
@@ -71,7 +70,7 @@ class Test(TestCase):
                                                 method="GET",
                                                 validate_certs=True,
                                                 ca_path="cert_file")
-        # self.assertEquals("response body", result)
+        self.assertEquals(['response body'], result)
 
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupBase')
