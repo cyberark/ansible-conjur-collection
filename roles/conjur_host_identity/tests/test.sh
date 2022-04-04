@@ -100,11 +100,18 @@ function fetch_ssl_cert {
 }
 
 function generate_inventory {
+  # Use a different inventory file for docker-compose v1 and v2 or later
+  playbook_file="inventory-playbook-v2.yml"
+  compose_ver=$(docker-compose version --short)
+  if [[ $compose_ver == "1"* ]]; then
+    playbook_file="inventory-playbook.yml"
+  fi
+
   # uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
-  docker-compose exec -T ansible bash -ec '
+  docker-compose exec -T ansible bash -ec "
     cd tests
-    ansible-playbook inventory-playbook.yml
-  '
+    ansible-playbook $playbook_file
+  "
 }
 
 function main() {
