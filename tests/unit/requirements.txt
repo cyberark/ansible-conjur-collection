@@ -4,6 +4,7 @@ pytest-mock
 pytest-xdist
 pytest-forked
 pyyaml  # required by the collection loader (only needed for collections)
+coverage==4.5.4
 
 bcrypt ; python_version >= '3.8'  # controller only
 passlib ; python_version >= '3.8'  # controller only

@@ -36,7 +36,14 @@ pipeline {
 
         stage("Run conjur_variable unit tests") {
           steps {
-            sh './dev/test_unit.sh'
+            sh './dev/test_unit.sh -r'
+            publishHTML (target : [allowMissing: false,
+              alwaysLinkToLastBuild: false,
+              keepAll: true,
+              reportDir: 'tests/output/reports/coverage=units/',
+              reportFiles: 'index.html',
+              reportName: 'Ansible Coverage Report',
+              reportTitles: 'Conjur Ansible Collection report'])
           }
         }
       }
