@@ -10,7 +10,7 @@ from ansible.plugins.loader import lookup_loader
 from ansible.plugins.lookup import LookupBase
 
 class MockMergeDictionaries(MagicMock):
-    RESPONSE = {'id': 'host/ansible/ansible-master', 'api_key': '1j8t1rx2ghwhx7392wt1h14qn3c22yp4w2y395yk9d2hz8gvb1nbh6yg'}
+    RESPONSE = {'id': 'host/ansible/ansible-fake', 'api_key': 'fakekey'}
 
 class MockFileload(MagicMock):
     RESPONSE = {}
@@ -20,16 +20,15 @@ class TestConjurLookup(TestCase):
         self.lookup = lookup_loader.get("conjur_variable")
         assert(self.lookup != None)
 
-    #@patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._merge_dictionaries',MockSecretsVault())
     def test_merge_dictionaries(self):
         functionOutput= _merge_dictionaries(
             {},
-            {'id': 'host/ansible/ansible-master', 'api_key': '1j8t1rx2ghwhx7392wt1h14qn3c22yp4w2y395yk9d2hz8gvb1nbh6yg'}
+            {'id': 'host/ansible/ansible-fake', 'api_key': 'fakekey'}
         )
         self.assertEquals(MockMergeDictionaries.RESPONSE,functionOutput)
 
     def test_load_identity_from_file(self):
-        load_identity= _load_identity_from_file("/etc/conjur.identity","https://conjur-https")
+        load_identity= _load_identity_from_file("/etc/conjur.identity","https://conjur-fake")
         self.assertEquals(MockFileload.RESPONSE,load_identity)
 
     def test_load_conf_from_file(self):
@@ -57,9 +56,9 @@ class TestConjurLookup(TestCase):
         mock_response.getcode.return_value = 200
         mock_response.read.return_value = "response body".encode("utf-8")
         mock_repeat_open_url.return_value = mock_response
-        result = _fetch_conjur_variable("variable", b'{"protected":"eykhRJ"}', "url", "account", True, "cert_file")
+        result = _fetch_conjur_variable("variable", b'{"protected":"fakeid"}', "url", "account", True, "cert_file")
         mock_repeat_open_url.assert_called_with("url/secrets/account/variable/variable",
-                                                headers={'Authorization': 'Token token="eyJwcm90ZWN0ZWQiOiJleWtoUkoifQ=="'},
+                                                headers={'Authorization': 'Token token="eyJwcm90ZWN0ZWQiOiJmYWtlaWQifQ=="'},
                                                 method="GET",
                                                 validate_certs=True,
                                                 ca_path="cert_file")
@@ -75,20 +74,20 @@ class TestConjurLookup(TestCase):
         mock_fetch_conjur_variable):
 
         mock_fetch_conjur_token.return_value = "token"
-        mock_fetch_conjur_variable.return_value = 'test_secret_password'
+        mock_fetch_conjur_variable.return_value = 'conjur_variable'
 
         mock_merge_dictionaries.side_effect = [
-            {'account': 'cucumber', 'appliance_url': 'https://conjur-https', 'cert_file': './conjur.pem'},
-            {'id': 'host/ansible/ansible-master', 'api_key': '37rdyqz56b2dd2v4px501zfqxb18xxbpw339rtav11rdzmv25ck70b'}
+            {'account': 'fakeaccount', 'appliance_url': 'https://conjur-fake', 'cert_file': './conjurfake.pem'},
+            {'id': 'host/ansible/ansible-fake', 'api_key': 'fakekey'}
         ]
 
-        terms = ['ansible/test-secret']
+        terms = ['ansible/fake-secret']
         kwargs = {'as_file': False, 'conf_file': 'conf_file', 'validate_certs': False}
         result = self.lookup.run(terms, **kwargs)
 
-        self.assertEquals(result, 'test_secret_password')
-        mock_fetch_conjur_token.assert_called_with('https://conjur-https', 'cucumber', 'host/ansible/ansible-master', '37rdyqz56b2dd2v4px501zfqxb18xxbpw339rtav11rdzmv25ck70b', False, './conjur.pem')
-        mock_fetch_conjur_variable.assert_called_with('ansible/test-secret', 'token', 'https://conjur-https', 'cucumber', False, './conjur.pem')
+        self.assertEquals(result, 'conjur_variable')
+        mock_fetch_conjur_token.assert_called_with('https://conjur-fake', 'fakeaccount', 'host/ansible/ansible-fake', 'fakekey', False, './conjurfake.pem')
+        mock_fetch_conjur_variable.assert_called_with('ansible/fake-secret', 'token', 'https://conjur-fake', 'fakeaccount', False, './conjurfake.pem')
         mock_merge_dictionaries.assert_has_calls([
             call({}, {}, {}, {}),
             call({}, {})
