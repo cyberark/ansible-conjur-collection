@@ -4,9 +4,11 @@ from unittest import result
 __metaclass__ = type
 
 from ansible_collections.cyberark.conjur.tests.unit.compat.unittest import TestCase
-from ansible_collections.cyberark.conjur.tests.unit.compat.mock import patch , MagicMock, call
-from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _merge_dictionaries, _fetch_conjur_token, _fetch_conjur_variable, _load_identity_from_file, _load_conf_from_file
+from ansible_collections.cyberark.conjur.tests.unit.compat.mock import patch, MagicMock, call
+from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _load_identity_from_file, _load_conf_from_file
+from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _merge_dictionaries, _fetch_conjur_token, _fetch_conjur_variable
 from ansible.plugins.loader import lookup_loader
+
 
 class MockMergeDictionaries(MagicMock):
     RESPONSE = {'id': 'host/ansible/ansible-fake', 'api_key': 'fakekey'}
@@ -28,7 +30,7 @@ class TestConjurLookup(TestCase):
         self.assertEquals(MockMergeDictionaries.RESPONSE, functionOutput)
 
     def test_load_identity_from_file(self):
-        load_identity = _load_identity_from_file("/etc/conjur.identity","https://conjur-fake")
+        load_identity = _load_identity_from_file("/etc/conjur.identity", "https://conjur-fake")
         self.assertEquals(MockFileload.RESPONSE, load_identity)
 
     def test_load_conf_from_file(self):
@@ -81,7 +83,4 @@ class TestConjurLookup(TestCase):
         self.assertEquals(result, 'conjur_variable')
         mock_fetch_conjur_token.assert_called_with('https://conjur-fake', 'fakeaccount', 'host/ansible/ansible-fake', 'fakekey', False, './conjurfake.pem')
         mock_fetch_conjur_variable.assert_called_with('ansible/fake-secret', 'token', 'https://conjur-fake', 'fakeaccount', False, './conjurfake.pem')
-        mock_merge_dictionaries.assert_has_calls([
-            call({}, {}, {}, {}),
-            call({}, {})
-        ],any_order = False)
+        mock_merge_dictionaries.assert_has_calls([call({}, {}, {}, {}), call({}, {})], any_order=False)
