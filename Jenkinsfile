@@ -35,7 +35,11 @@ pipeline {
         }
       }
     }
-
+    stage('Report Test Code Coverage'){
+          steps {
+            sh './dev/ansibletest.sh'
+           }
+}
     stage('Build Release Artifacts') {
       when {
         anyOf {

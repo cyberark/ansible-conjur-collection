@@ -63,3 +63,38 @@ jobs:
       - name: Run sanity tests
         run: ansible-test sanity --docker -v --color --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
+
+# Unit tests (OPTIONAL)
+
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
+
+  units:
+    name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
+    strategy:
+      matrix:
+        ansible:
+          - stable-2.10
+          - stable-2.11
+          - stable-2.12
+          - devel
+        python:
+          - 3.8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/cyberark/conjur
+
+      - name: Set up Python ${{ matrix.ansible }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      # Run the unit tests
+      - name: Run unit test
+        run: ansible-test units --docker default -v --python ${{ matrix.python }} tests/unit/plugins/lookup/test_conjur_variable.py
+        working-directory: ./ansible_collections/cyberark/conjur
