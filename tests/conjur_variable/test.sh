@@ -22,14 +22,10 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
   docker-compose up -d --build conjur \
-                               conjur_https \
                                conjur_cli \
 
   echo "Waiting for Conjur server to come up"
   wait_for_conjur
-
-  echo "Fetching SSL certs"
-  fetch_ssl_certs
 
   echo "Fetching admin API key"
   CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
@@ -56,10 +52,6 @@ function main() {
 
 function wait_for_conjur {
   docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
-}
-
-function fetch_ssl_certs {
-  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
 }
 
 function setup_conjur {
