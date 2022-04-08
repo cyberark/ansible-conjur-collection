@@ -1,0 +1,38 @@
+// stage('Report Test Coverage to Code Climate'){
+
+// steps {
+
+// dir('src/main/java'){
+
+// ccCoverage('jacoco')
+
+// }
+
+// publishHTML (target : [allowMissing: false,
+
+// alwaysLinkToLastBuild: false,
+
+// keepAll: true,
+
+// reportDir: 'target/site/jacoco/',
+
+// reportFiles: 'index.html',
+
+// reportName: 'Coverage Report',
+
+// reportTitles: 'Conjur Spring Boot SDK Code Coverage Jacoco report'])
+
+// }
+
+// }
+
+
+// =======
+
+// dir ('SpringBootExample') {
+
+// sh './build-sampleapp-image.sh'
+
+// sh './start'
+
+// }

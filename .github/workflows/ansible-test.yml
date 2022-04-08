@@ -107,8 +107,8 @@ jobs:
 
       # ansible-test support producing code coverage date
       - name: Generate coverage report
-        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+        run: ansible-test coverage html -v --requirements --group-by command --group-by version
+        working-directory: ./ansible_collections/cyberark/conjur
 
       # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
       - uses: codecov/codecov-action@v2
