@@ -43,8 +43,8 @@ pipeline {
             publishHTML (target : [allowMissing: false,
             alwaysLinkToLastBuild: false,
             keepAll: true,
-            reportDir: 'target/site/jacoco/',
-            reportFiles: 'tests/output/reports/coverage=units=python-3.8/index.html',
+            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+            reportFiles: 'index.html',
             reportName: 'Ansible Coverage Report',
             reportTitles: 'Conjur Ansible Collection report'])
            }
