@@ -1,0 +1,10 @@
+version: '3'
+services:
+  ansible:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/sleep 1d
+    volumes:
+      - ..:/ansible_collections/cyberark/conjur/
+      - /var/run/docker.sock:/var/run/docker.sock
