@@ -2,7 +2,7 @@ FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /cyberark
+WORKDIR /ansible_collections/cyberark/conjur
 
 # install python 3
 RUN apt-get update && \
