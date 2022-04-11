@@ -7,7 +7,7 @@ git clone --single-branch --branch deleteitansibletest https://github.com/cybera
 mv ansible-conjur-collection conjur
 cd conjur
 # pip install --user git+https://github.com/pygobject/pycairo.git
-pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check
+pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz
 ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v
 # ansible-test coverage html -v --requirements --group-by command --group-by version
