@@ -29,14 +29,14 @@ pipeline {
 
         stage("Test conjur_host_identity role") {
           steps {
-            sh './ci/test.sh -d conjur_host_identity'
-            junit 'roles/conjur_host_identity/tests/junit/*'
+            // sh './ci/test.sh -d conjur_host_identity'
+            // junit 'roles/conjur_host_identity/tests/junit/*'
             sh 'tests/ansibletest.sh'
           }
         }
       }
     }
-    stage('Report Test Coverage to Code Climate'){
+    stage('Report Test Code Coverage'){
           steps {
             // dir('src/main/java'){
             // ccCoverage('jacoco')

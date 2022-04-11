@@ -42,13 +42,13 @@ function run_role_test {
 # Handles input to dictate wether all tests should be ran, or just one set
 function handle_input {
     if [[ -n ${target} ]]; then
-        for test_dir in "${test_directories[@]}"; do 
+        for test_dir in "${test_directories[@]}"; do
             if [[ ${target} == "${test_dir}" ]]; then
                 run_test ${target}
                 exit 0
             fi
         done
-        for test_dir in "${role_directories[@]}"; do 
+        for test_dir in "${role_directories[@]}"; do
             if [[ ${target} == "${test_dir}" ]]; then
                 run_role_test ${target}
                 exit 0
@@ -59,10 +59,10 @@ function handle_input {
         help
     else
         echo "Running all tests..."
-        for test_dir in "${test_directories[@]}"; do 
+        for test_dir in "${test_directories[@]}"; do
             run_test "${test_dir}"
         done
-        for test_dir in "${role_directories[@]}"; do 
+        for test_dir in "${role_directories[@]}"; do
             run_role_test "${test_dir}"
         done
         exit 0
