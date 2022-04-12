@@ -29,8 +29,8 @@ pipeline {
 
         stage("Test conjur_host_identity role") {
           steps {
-            // sh './ci/test.sh -d conjur_host_identity'
-            // junit 'roles/conjur_host_identity/tests/junit/*'
+            sh './ci/test.sh -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
             sh 'chmod +x ./tests/ansibletest.sh'
           }
         }
@@ -38,8 +38,7 @@ pipeline {
     }
     stage('Report Test Code Coverage'){
           steps {
-            // dir('src/main/java'){
-            // ccCoverage('jacoco')
+
             publishHTML (target : [allowMissing: false,
             alwaysLinkToLastBuild: false,
             keepAll: true,
