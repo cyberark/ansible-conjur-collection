@@ -8,13 +8,13 @@ mv ansible-conjur-collection conjur
 cd conjur
 # pip install --user git+https://github.com/pygobject/pycairo.git
 
-export PATH="${PATH}:/Users/caio.hc.oliveira/Library/Python/3.7/bin"
-export PYTHONPATH="${PYTHONPATH}:/Users/caio.hc.oliveira/Library/Python/3.7/bin"
+# export PATH="${PATH}:/Users/caio.hc.oliveira/Library/Python/3.7/bin"
+# export PYTHONPATH="${PYTHONPATH}:/Users/caio.hc.oliveira/Library/Python/3.7/bin"
 
 pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check
 
 # sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
-# pip3 install pycairo
+pip install pycairo
 # pip3 install PyGObject
 
 # ansible-galaxy collection install ansible.netcommon ansible.utils -p .
