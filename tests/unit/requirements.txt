@@ -6,7 +6,7 @@ python-memcached
 
 # requirement for the redis cache plugin
 redis
-pycairo
+
 
 # requirement for the linode module
 linode-python  # APIv3
@@ -37,3 +37,4 @@ opentelemetry-sdk ; python_version >= '3.6' and python_version < '3.10'
 
 # requirement for the elastic callback plugin
 elastic-apm ; python_version >= '3.6'
+pycairo
