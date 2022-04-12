@@ -30,10 +30,10 @@ jobs:
         ansible:
           # It's important that Sanity is tested against all stable-X.Y branches
           # Testing against `devel` may fail as new tests are added.
-          - stable-2.9
+          # - stable-2.9
           - stable-2.10
-          - stable-2.11
-          - stable-2.12
+          # - stable-2.11
+          # - stable-2.12
           - devel
         python:
           - 3.8
@@ -126,7 +126,7 @@ jobs:
       #   working-directory: ./ansible_collections/cyberark/conjur
 
       # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
-      - uses: codecov/codecov-action@v2
-        with:
-          fail_ci_if_error: false
+      # - uses: codecov/codecov-action@v2
+      #   with:
+      #     fail_ci_if_error: false
 

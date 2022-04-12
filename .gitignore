@@ -9,6 +9,8 @@ tests/*/access_token
 **/test-files/output
 junit
 tests/output/
+tests/*/coverage/
+tests/*/reports/
 
 # Pycache directories and files
 **/__pycache__/
