@@ -6,6 +6,7 @@ python-memcached
 
 # requirement for the redis cache plugin
 redis
+pycairo
 
 # requirement for the linode module
 linode-python  # APIv3
