@@ -39,7 +39,7 @@ pipeline {
     stage('Report Test Code Coverage'){
           steps {
             // dir('src/main/java'){
-            ccCoverage('jacoco')
+            // ccCoverage('jacoco')
             publishHTML (target : [allowMissing: false,
             alwaysLinkToLastBuild: false,
             keepAll: true,
