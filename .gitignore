@@ -15,7 +15,10 @@ bot
 coverage
 junit
 reports
+tests/output
 output/
+**/output
+
 
 
 # Pycache directories and files
