@@ -3,13 +3,13 @@
 .idea/
 
 # Test output
-tests/*/coverage/
+# tests/*/coverage/
 tests/*/junit/
 tests/*/reports/
 tests/*/conjur.pem
 tests/*/access_token
 **/test-files/output
-coverage
+# coverage
 junit
 reports
 
