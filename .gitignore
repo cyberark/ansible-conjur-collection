@@ -4,13 +4,16 @@
 
 # Test output
 tests/*/junit/
+tests/*/coverage/
+tests/*/reports/
+tests/*/bot/
 tests/*/conjur.pem
 tests/*/access_token
 **/test-files/output
 junit
-tests/output/
-tests/*/coverage/
-tests/*/reports/
+reports
+coverage
+bot
 
 # Pycache directories and files
 **/__pycache__/
