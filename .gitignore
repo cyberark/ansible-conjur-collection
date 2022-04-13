@@ -15,9 +15,6 @@ bot
 coverage
 junit
 reports
-
-*.js
-*.html
 output/
 
 
@@ -35,4 +32,6 @@ vendor/
 .cache
 *.retry
 *.tmp
+*.js
+*.html
 conjur.pem
