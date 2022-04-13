@@ -31,7 +31,7 @@ pipeline {
           steps {
             // sh './ci/test.sh -d conjur_host_identity'
             // junit 'roles/conjur_host_identity/tests/junit/*'
-            sh 'tests/ansibletest.sh'
+            sh 'chmod +x ./tests/ansibletest.sh'
           }
         }
       }
