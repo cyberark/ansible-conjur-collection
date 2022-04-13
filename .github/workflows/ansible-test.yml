@@ -82,9 +82,9 @@ jobs:
           # - devel
         python:
           - 3.8
-        # exclude:
-        #   - ansible: stable-2.9
-        #     python: 3.9
+        exclude:
+          - ansible: stable-2.9
+            python: 3.9
 
     steps:
       - name: Check out code

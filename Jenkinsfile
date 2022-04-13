@@ -52,7 +52,7 @@ pipeline {
     stage('Build Release Artifacts') {
       when {
         anyOf {
-            branch 'delete_it'
+            branch 'master'
             buildingTag()
         }
       }
