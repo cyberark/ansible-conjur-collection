@@ -1,5 +1,4 @@
-#!/bin/bash
-set -ex
+#!/bin/bash -eu
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
