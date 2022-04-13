@@ -3,17 +3,19 @@
 .idea/
 
 # Test output
-tests/*/junit/
-tests/*/coverage/
-tests/*/reports/
 tests/*/bot/
+tests/*/coverage/
+tests/*/junit/
+tests/*/reports/
+
 tests/*/conjur.pem
 tests/*/access_token
 **/test-files/output
+bot
+coverage
 junit
 reports
-coverage
-bot
+
 *.js
 *.html
 output/
