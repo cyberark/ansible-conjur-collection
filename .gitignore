@@ -13,7 +13,7 @@ tests/*/access_token
 bot
 coverage
 junit
-
+output
 # Pycache directories and files
 **/__pycache__/
 .pytest_cache
