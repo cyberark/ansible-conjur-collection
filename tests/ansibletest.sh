@@ -2,7 +2,7 @@
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch delete_it https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch deleteit_1 https://github.com/cyberark/ansible-conjur-collection.git
 
 mv ansible-conjur-collection conjur
 cd conjur
