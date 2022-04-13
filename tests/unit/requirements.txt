@@ -22,7 +22,7 @@ lxml < 4.3.0 ; python_version < '2.7' # lxml 4.3.0 and later require python 2.7 
 lxml ; python_version >= '2.7'
 semantic_version
 
-pycairo
+# pycairo
 
 # requirement for datadog_downtime module
 datadog-api-client >= 1.0.0b3 ; python_version >= '3.6'
