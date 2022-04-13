@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
