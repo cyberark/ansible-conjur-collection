@@ -1,6 +1,4 @@
-#!/bin/bash -e
-
-set -o pipefail
+#!/bin/bash -ex
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
