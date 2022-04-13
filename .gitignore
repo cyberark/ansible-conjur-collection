@@ -14,6 +14,10 @@ junit
 reports
 coverage
 bot
+*.js
+*.html
+output/
+
 
 # Pycache directories and files
 **/__pycache__/
