@@ -32,19 +32,20 @@ pipeline {
             sh './ci/test.sh -d conjur_host_identity'
             junit 'roles/conjur_host_identity/tests/junit/*'
             sh 'chmod +x ./tests/ansibletest.sh'
+            sh './tests/ansibletest.sh'
           }
         }
       }
     }
-    stage('Report Test Code Coverage'){
+    stage('Test code coverage report '){
           steps {
             publishHTML (target : [allowMissing: false,
             alwaysLinkToLastBuild: false,
             keepAll: true,
-            reportDir: 'tests/',
-            reportFiles: 'output',
-            // reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            // reportFiles: 'index.html',
+            // reportDir: 'tests/',
+            // reportFiles: 'output',
+            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+            reportFiles: 'index.html',
             reportName: 'Ansible Coverage Report',
             reportTitles: 'Conjur Ansible Collection report'])
            }
