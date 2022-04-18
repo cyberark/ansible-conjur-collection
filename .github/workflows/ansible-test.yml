@@ -102,7 +102,17 @@ jobs:
       - name: Install ansible-base (${{ matrix.ansible }})
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
+      # # Run the unit tests
+      # - name: Run unit test
+      #   run: ansible-test units --docker default -v --python ${{ matrix.python }}
+      #   working-directory: ./ansible_collections/cyberark/conjur
+
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units --docker default -v --python ${{ matrix.python }}
+        run: ansible-test units --docker default -v --python 3.8 --coverage
+        working-directory: ./ansible_collections/cyberark/conjur
+
+              # Run the unit tests
+      - name: Run unit test
+        run: ansible-test coverage html -v --requirements --group-by command --group-by version
         working-directory: ./ansible_collections/cyberark/conjur
