@@ -77,7 +77,6 @@ jobs:
       fail-fast: true
       matrix:
         ansible:
-          - stable-2.9
           - stable-2.10
           - stable-2.11
           - stable-2.12
@@ -109,10 +108,10 @@ jobs:
 
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units --docker default -v --python 3.8 --coverage
+        run: ansible-test units --docker default -v --python ${{ matrix.python }} --coverage
         working-directory: ./ansible_collections/cyberark/conjur
 
-              # Run the unit tests
+      # Run the unit tests
       - name: Run unit test
         run: ansible-test coverage html -v --requirements --group-by command --group-by version
         working-directory: ./ansible_collections/cyberark/conjur
