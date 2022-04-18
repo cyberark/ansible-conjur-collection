@@ -7,7 +7,7 @@ git clone --single-branch --branch deleteit https://github.com/cyberark/ansible-
 mv ansible-conjur-collection conjur
 cd conjur
 
-# pip install pycairo
+pip install pycairo
 pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check
 
 ansible-test units --docker default -v --python 3.8 --coverage
