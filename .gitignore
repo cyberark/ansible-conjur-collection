@@ -3,10 +3,14 @@
 .idea/
 
 # Test output
+tests/*/coverage/
+tests/*/reports/
 tests/*/junit/
 tests/*/conjur.pem
 tests/*/access_token
 **/test-files/output
+coverage
+reports
 junit
 
 # Pycache directories and files
