@@ -39,7 +39,7 @@ pipeline {
     }
     stage('Report Test Code Coverage'){
           steps {
-            sh "docker run --rm ubuntu:latest /bin/bash"
+            sh "docker run --rm ubuntu"
             // sh "docker run --rm -v tests/output/reports/coverage=units=python-3.8:ubuntu-test coverage html -v --requirements --group-by command --group-by version"
             // dir('src/main/java'){
             // ccCoverage('jacoco')
