@@ -1,4 +1,6 @@
-FROM ubuntu:latest
+ARG VERSION=latest
+
+FROM ubuntu:$VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 
