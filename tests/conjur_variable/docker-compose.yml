@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VERSION: latest
     entrypoint: sleep
     command: infinity
     environment:
