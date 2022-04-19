@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-# ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /ansible_collections/cyberark/conjur
 
@@ -31,10 +31,10 @@ RUN apt-get update && \
 
 COPY . /ansible_collections/cyberark
 
-COPY /ansible_collections/cyberark/ansible-conjur-collection /ansible_collections/cyberark/conjur
+# COPY /ansible_collections/cyberark/ansible-conjur-collection /ansible_collections/cyberark/conjur
 
-RUN rm -r /ansible_collections/cyberark/ansible-conjur-collection
+# RUN rm -r /ansible_collections/cyberark/ansible-conjur-collection
 
-RUN pip install https://github.com/ansible/ansible/archive/stable-2.9.tar.gz --disable-pip-version-check
-RUN ansible-test units --docker default -v --python 3.8 —coverage
-RUN ansible-test coverage html -v --requirements --group-by command --group-by version
+# RUN pip install https://github.com/ansible/ansible/archive/stable-2.9.tar.gz --disable-pip-version-check
+# RUN ansible-test units --docker default -v --python 3.8 —coverage
+# RUN ansible-test coverage html -v --requirements --group-by command --group-by version
