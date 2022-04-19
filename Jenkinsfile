@@ -37,22 +37,22 @@ pipeline {
         // }
       }
     }
-    stage('Report Test Code Coverage'){
-          steps {
-            sh "docker run --rm ubuntu"
-            // sh "docker run --rm -v tests/output/reports/coverage=units=python-3.8:ubuntu-test coverage html -v --requirements --group-by command --group-by version"
-            // dir('src/main/java'){
-            // ccCoverage('jacoco')
+    // stage('Report Test Code Coverage'){
+    //       steps {
+    //         sh "docker run --rm ubuntu"
+    //         // sh "docker run --rm -v tests/output/reports/coverage=units=python-3.8:ubuntu-test coverage html -v --requirements --group-by command --group-by version"
+    //         // dir('src/main/java'){
+    //         // ccCoverage('jacoco')
 
-            publishHTML (target : [allowMissing: false,
-            alwaysLinkToLastBuild: false,
-            keepAll: true,
-            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            reportFiles: 'index.html',
-            reportName: 'Ansible Coverage Report',
-            reportTitles: 'Conjur Ansible Collection report'])
-           }
-    }
+    //         publishHTML (target : [allowMissing: false,
+    //         alwaysLinkToLastBuild: false,
+    //         keepAll: true,
+    //         reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+    //         reportFiles: 'index.html',
+    //         reportName: 'Ansible Coverage Report',
+    //         reportTitles: 'Conjur Ansible Collection report'])
+    //        }
+    // }
 
 
     stage('Build Release Artifacts') {
