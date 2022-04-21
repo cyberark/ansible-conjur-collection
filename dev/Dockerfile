@@ -10,8 +10,6 @@ RUN apt-get update && \
     apt-get install -y python3-pip && \
     pip3 install --upgrade pip
 
-RUN echo "Pooja Gangwar $ANSIBLE_VERSION "
-
 # install ansible and its test tool
 RUN pip3 install ansible==$ANSIBLE_VERSION pytest-testinfra
 
