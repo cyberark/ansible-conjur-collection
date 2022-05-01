@@ -1,10 +1,11 @@
 #!/bin/bash -eu
 
+set +x
 
 DIR="/tests/output"
 if [ -d "$DIR" ]; then
    echo "'$DIR' found , please delete it ..."
-   # rm -rf tests/output
+   rm -rf tests/output
 else
    echo "Warning: '$DIR' NOT found."
 fi
@@ -26,11 +27,11 @@ pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disa
 # ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 
-# cp -r /tests/output  /ansible-conjur-collection/tests/
 echo "Step first"
 pwd
 ls
 cd ..
+
 echo "Step second"
 pwd
 # cd ..
@@ -42,4 +43,4 @@ echo "Step Third"
 cd ..
 pwd
 cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
-# rm -rf ansible_collections
+rm -rf ansible_collections
