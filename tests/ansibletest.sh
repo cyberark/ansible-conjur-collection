@@ -4,7 +4,7 @@
 DIR="/tests/output"
 if [ -d "$DIR" ]; then
    echo "'$DIR' found , please delete it ..."
-   rm -rf tests/output
+   # rm -rf tests/output
 else
    echo "Warning: '$DIR' NOT found."
 fi
@@ -34,7 +34,6 @@ cd ..
 echo "Step second"
 pwd
 # cd ..
-
 ls
 echo "Step third "
 cd ..
@@ -43,4 +42,4 @@ echo "Step Third"
 cd ..
 pwd
 cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
-rm -rf ansible_collections
+# rm -rf ansible_collections
