@@ -24,6 +24,7 @@ cd conjur
 echo " know the variable 1"
 pwd
 ls
+export PATH=/var/lib/jenkins/.local/bin:$PATH
 pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check
 ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
