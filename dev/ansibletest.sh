@@ -18,16 +18,16 @@ cd conjur
 
 # pip install pycairo
 pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check
-# ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py
-ansible-test coverage html -v --requirements --group-by command --group-by version
-echo " know the variable 1"
-pwd
-ls
-echo " know the variable 2"
-cd ../../../
-echo " know the variable 4"
-pwd
-ls
-echo " know the variable 5"
-cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
+ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py
+# ansible-test coverage html -v --requirements --group-by command --group-by version
+# echo " know the variable 1"
+# pwd
+# ls
+# echo " know the variable 2"
+# cd ../../../
+# echo " know the variable 4"
+# pwd
+# ls
+# echo " know the variable 5"
+# cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
 # rm -rf ansible_collections
