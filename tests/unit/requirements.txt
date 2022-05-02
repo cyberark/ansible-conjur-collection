@@ -11,13 +11,15 @@ redis
 linode-python  # APIv3
 linode_api4 ; python_version > '2.6'  # APIv4
 
-pycairo = "< 1.19"
-pygobject = "*"
+# pycairo = "< 1.19"
+# pygobject = "*"
 
 # requirement for the gitlab and github modules
 python-gitlab
 PyGithub
 httmock
+
+pycairo
 
 # requirement for maven_artifact module
 lxml < 4.3.0 ; python_version < '2.7' # lxml 4.3.0 and later require python 2.7 or later
