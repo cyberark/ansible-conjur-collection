@@ -20,8 +20,15 @@ cd conjur
 pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py
 # ansible-test coverage html -v --requirements --group-by command --group-by version
+echo " Testing 1 "
+ansible-test coverage erase
+echo " Testing 2 "
+ansible-test units --coverage apt
+echo " Testing 3 "
+ansible-test coverage html
+
 echo " know the variable 1"
-pwd
+pwd   # /var/lib/jenkins/ansible_collections/cyberark/conjur
 ls
 # echo " know the variable 2"
 # cd ../../../
