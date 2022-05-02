@@ -23,7 +23,7 @@ ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/te
 echo " Testing 1 "
 ansible-test coverage erase
 echo " Testing 2 "
-ansible-test units --coverage apt
+ansible-test units --coverage
 echo " Testing 3 "
 ansible-test coverage html
 
