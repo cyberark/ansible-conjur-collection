@@ -7,7 +7,7 @@ if [ -d "$DIR" ]; then
    rm -rf ansible-conjur-collection/tests/output
    echo "'$DIR' Directory has been deleted"
 else
-   echo "Warning: '$DIR' NOT found."
+   echo "Warning: '$DIR' NOT found. "
 fi
 
 mkdir -p ansible_collections/cyberark/
