@@ -1,15 +1,5 @@
 #!/bin/bash -eu
 
-# echo "Step 1"
-# pwd # /var/lib/jenkins/workspace/ur-collection_TestingPurposeOnly
-# ls
-# echo "Step 2"
-# cd tests
-# echo "Step 3"
-# pwd # /var/lib/jenkins/workspace/ur-collection_TestingPurposeOnly/tests
-# ls
-# echo "Step 4"
-
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
@@ -22,7 +12,7 @@ fi
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch ONYX-15263 https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch TestingPurposeOnly https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
 echo "Warning: Pooja 1"
