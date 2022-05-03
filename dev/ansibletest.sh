@@ -1,11 +1,10 @@
 #!/bin/bash -eu
 
 echo "Step 1"
-pwd
+pwd # /var/lib/jenkins/workspace/ur-collection_TestingPurposeOnly
 ls
 echo "Step 2"
-cd ../../
-cd ansible-conjur-collection/tests
+cd tests
 echo "Step 3"
 pwd
 ls
