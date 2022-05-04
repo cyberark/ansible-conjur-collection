@@ -28,7 +28,7 @@ cd ../../../
 
 DIR="workspace"
 if [ -d "$DIR" ]; then
-   cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
+   cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263/tests
 else
    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 fi
