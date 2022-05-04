@@ -27,12 +27,16 @@ ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 
 cd ../../../
+cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
 
-DIR="workspace"
-if [ -d "$DIR" ]; then
-   cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
-else
-   cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
-fi
+# DIR="workspace"
+# if [ -d "$DIR" ]; then
+#    echo "Existing '$DIR' found"
+#    cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
+#    echo "'$DIR' Directory data exist here "
+# else
+#    echo "Warning: '$DIR' found locally "
+#    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/dev/tests
+# fi
 
 rm -rf ansible_collections
