@@ -17,15 +17,23 @@ cd ansible_collections/cyberark/
 git clone --single-branch --branch ONYX-15263 https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
-
+echo "Step q"
+pwd
+ls
 # pip install pycairo
 export PATH=/var/lib/jenkins/.local/bin:$PATH
+echo "Step p"
 pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+echo "Step a"
 ansible-test units --docker default -v --python 3.8 --coverage
+echo "Step b"
 ansible-test coverage html -v --requirements --group-by command --group-by version
-
-cd ../../../
+cd ..
 echo "Step 1"
+pwd
+ls
+cd ../../
+echo "Step 2"
 pwd
 ls
 # DIR="workspace"
