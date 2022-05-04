@@ -12,7 +12,7 @@ fi
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch TestingPurposeOnly https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch ONYX-15263_withJenkinServerIssue https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
 
