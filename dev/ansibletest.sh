@@ -38,7 +38,7 @@ pwd
 ls
 
 echo "Step 3"
-cd var/lib/jenkins/workspace
+cd workspace
 pwd
 ls
 
