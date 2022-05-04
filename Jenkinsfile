@@ -29,7 +29,7 @@ pipeline {
 
         stage("Test conjur_host_identity role") {
           steps {
-            sh 'chmod +x ./dev/ansibletest.sh'
+            // sh 'chmod +x ./dev/ansibletest.sh'
             sh './dev/ansibletest.sh'
           }
         }
