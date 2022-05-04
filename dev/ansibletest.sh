@@ -24,7 +24,12 @@ ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/te
 
 ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
-
+echo "Step 1"
+pwd
+ls
 cd ../../../
+echo "Step 2"
+pwd
+ls
 cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
 rm -rf ansible_collections
