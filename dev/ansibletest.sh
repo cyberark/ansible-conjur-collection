@@ -27,9 +27,17 @@ ansible-test coverage html -v --requirements --group-by command --group-by versi
 echo "Step 1"
 pwd
 ls
-cd ../../../
+cd ..
 echo "Step 2"
 pwd
 ls
-cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
+cd ..
+echo "Step 3"
+pwd
+ls
+cd ..
+echo "Step 4"
+pwd
+ls
+# cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
 rm -rf ansible_collections
