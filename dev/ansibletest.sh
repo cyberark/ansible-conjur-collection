@@ -1,12 +1,8 @@
 #!/bin/bash -eu
 
-echo "Step a"
-pwd  # /var/lib/jenkins/workspace/ONYX-15263_withJenkinServerIssue
-ls
+
 cd ../../
-echo "Step b"
-pwd # /var/lib/jenkins
-ls
+
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
@@ -24,33 +20,12 @@ cd conjur
 
 # pip install pycairo
 export PATH=/var/lib/jenkins/.local/bin:$PATH
-# pip install https://github.com/pygobject/pycairo/releases/download/v1.13.1/pycairo-1.13.1.tar.gz
 pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py
 
 ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
-echo "Step 1"
-pwd # /var/lib/jenkins/ansible_collections/cyberark/conjur
-ls
-cd ..
-echo "Step 2"
-pwd # /var/lib/jenkins/ansible_collections/cyberark
-ls
-cd ..
-echo "Step 3"
-pwd # /var/lib/jenkins/ansible_collections
-ls
-cd ..
-echo "Step 4"
-pwd # /var/lib/jenkins
-ls
+
+cd ../../../
 cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
-echo "Step 5"
-pwd # /var/lib/jenkins
-ls
 rm -rf ansible_collections
-
-# /var/lib/jenkins/workspace/ONYX-15263_withJenkinServerIssue
-
-# var/lib/jenkins/ansible_collections/cyberark/conjur/tests/output/reports
