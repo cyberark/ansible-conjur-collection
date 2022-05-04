@@ -36,6 +36,12 @@ cd ../../
 echo "Step 2"
 pwd
 ls
+
+echo "Step 3"
+cd var/lib/jenkins/workspace
+pwd
+ls
+
 # DIR="workspace"
 # if [ -d "$DIR" ]; then
 #    cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263/tests
