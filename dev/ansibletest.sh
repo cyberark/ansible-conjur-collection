@@ -46,6 +46,11 @@ echo "Step 4"
 pwd # /var/lib/jenkins
 ls
 cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
+echo "Step 5"
+pwd # /var/lib/jenkins
+ls
 rm -rf ansible_collections
 
 # /var/lib/jenkins/workspace/ONYX-15263_withJenkinServerIssue
+
+# var/lib/jenkins/ansible_collections/cyberark/conjur/tests/output/reports
