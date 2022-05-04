@@ -25,12 +25,14 @@ ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 
 cd ../../../
+echo "Step 1"
+pwd
+ls
+# DIR="workspace"
+# if [ -d "$DIR" ]; then
+#    cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263/tests
+# else
+#    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
+# fi
 
-DIR="workspace"
-if [ -d "$DIR" ]; then
-   cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263/tests
-else
-   cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
-fi
-
-rm -rf ansible_collections
+# rm -rf ansible_collections
