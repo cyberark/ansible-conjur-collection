@@ -1,11 +1,11 @@
 #!/bin/bash -eu
 
 echo "Step a"
-pwd
+pwd  # /var/lib/jenkins/workspace/ONYX-15263_withJenkinServerIssue
 ls
 cd ../../
 echo "Step b"
-pwd
+pwd # /var/lib/jenkins
 ls
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
@@ -31,19 +31,21 @@ ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/te
 ansible-test units --docker default -v --python 3.8 --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 echo "Step 1"
-pwd
+pwd # /var/lib/jenkins/ansible_collections/cyberark/conjur
 ls
 cd ..
 echo "Step 2"
-pwd
+pwd # /var/lib/jenkins/ansible_collections/cyberark
 ls
 cd ..
 echo "Step 3"
-pwd
+pwd # /var/lib/jenkins/ansible_collections
 ls
 cd ..
 echo "Step 4"
-pwd
+pwd # /var/lib/jenkins
 ls
-# cp -r ansible_collections/cyberark/conjur/tests/output  ansible-conjur-collection/tests/
+cp -r ansible_collections/cyberark/conjur/tests/output workspace/ONYX-15263_withJenkinServerIssue/tests
 rm -rf ansible_collections
+
+# /var/lib/jenkins/workspace/ONYX-15263_withJenkinServerIssue
