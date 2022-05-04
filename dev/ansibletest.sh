@@ -1,6 +1,12 @@
 #!/bin/bash -eu
 
+echo "Step a"
+pwd
+ls
 cd ../../
+echo "Step b"
+pwd
+ls
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
