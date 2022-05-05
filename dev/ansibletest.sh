@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 
-cd ../
+cd ../../
 
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
@@ -23,14 +23,22 @@ export PATH=/var/lib/jenkins/.local/bin:$PATH
 pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
+cd ../../../
+
 echo "Step 1"
 pwd
 ls
-cd ../../../
-echo "Step 2"
-pwd
-ls
+# cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 
-cp -r ansible_collections/cyberark/conjur/tests/output tests
+DIR="workspace"
+if [ -d "$DIR" ]; then
+   currentbranch=$(git branch | grep \* |cut -d ' ' -f2)
+   rootdir="ansible-conjur-collection_"
+   Combinedstring=$rootdir$currentbranch
+   get32characters=${Combinedstring: -32}
+   echo " Value is $get32characters "
+   cp -r ansible_collections/cyberark/conjur/tests/output workspace/$get32characters/tests
+else
+   cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
+fi
 rm -rf ansible_collections
-
