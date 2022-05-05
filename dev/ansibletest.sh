@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+currentbranch="ONYX-15264_ToReview"
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
