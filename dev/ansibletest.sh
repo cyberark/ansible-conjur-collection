@@ -1,9 +1,8 @@
 #!/bin/bash -eu
 
+currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 
 cd ../../
-
-currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
