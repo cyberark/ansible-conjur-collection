@@ -31,24 +31,23 @@ pipeline {
           steps {
             // sh './ci/test.sh -d conjur_host_identity'
             // junit 'roles/conjur_host_identity/tests/junit/*'
-            sh 'chmod +x ./tests/ansibletest.sh'
+            sh 'chmod +x ./dev/ansibletest.sh'
+            sh './dev/ansibletest.sh'
           }
         }
       }
     }
-    stage('Report Test Code Coverage'){
-          steps {
-            // dir('src/main/java'){
-            // ccCoverage('jacoco')
-            publishHTML (target : [allowMissing: false,
-            alwaysLinkToLastBuild: false,
-            keepAll: true,
-            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            reportFiles: 'index.html',
-            reportName: 'Ansible Coverage Report',
-            reportTitles: 'Conjur Ansible Collection report'])
-           }
-}
+//     stage('Report Test Code Coverage'){
+//           steps {
+//             publishHTML (target : [allowMissing: false,
+//             alwaysLinkToLastBuild: false,
+//             keepAll: true,
+//             reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+//             reportFiles: 'index.html',
+//             reportName: 'Ansible Coverage Report',
+//             reportTitles: 'Conjur Ansible Collection report'])
+//            }
+// }
 
     stage('Build Release Artifacts') {
       when {
