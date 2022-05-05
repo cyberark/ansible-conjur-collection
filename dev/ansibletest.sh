@@ -3,7 +3,7 @@
 
 cd ../../
 
-currentbranch="ONYX-15264_ToReview"
+currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
@@ -25,10 +25,6 @@ pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pi
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 cd ../../../
-
-echo "Step 1"
-pwd
-ls
 
 CURRENTDIR="workspace"
 if [ -d "$CURRENTDIR" ]; then

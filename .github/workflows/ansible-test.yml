@@ -105,11 +105,6 @@ jobs:
         run: ansible-test units --docker default -v --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
 
-      # ansible-test support producing code coverage date
-      - name: Generate coverage report
-        run: ansible-test coverage html -v --requirements --group-by command --group-by version
-        working-directory: ./ansible_collections/cyberark/conjur
-
       # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
       - uses: codecov/codecov-action@v2
         with:
