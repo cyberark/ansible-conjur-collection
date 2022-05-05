@@ -15,7 +15,7 @@ fi
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch $currentbranch https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch "$currentbranch" https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
 
@@ -31,8 +31,8 @@ if [ -d "$CURRENTDIR" ]; then
    rootdir="_-ansible-conjur-collection_"
    Combinedstring=$rootdir$currentbranch
    get32characters=${Combinedstring: -32}
-   echo " Value is $get32characters "
-   cp -r ansible_collections/cyberark/conjur/tests/output workspace/$get32characters/tests
+   echo " Combined string is '$get32characters' "
+   cp -r ansible_collections/cyberark/conjur/tests/output workspace/"$get32characters"/tests
 else
    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 fi
