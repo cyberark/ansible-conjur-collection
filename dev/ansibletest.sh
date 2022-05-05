@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-currentbranch="ONYX-15264_ToReview"
+currentbranch=$BRANCH_NAME
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
