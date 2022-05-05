@@ -1,7 +1,8 @@
 #!/bin/bash -eu
 
-currentbranch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+# currentbranch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
+currentbranch=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/")
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
