@@ -3,6 +3,7 @@
 
 cd ../../
 
+currentbranch="ONYX-15264_ToReview"
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
@@ -14,7 +15,7 @@ fi
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch ONYX-15264_ToReview https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch $currentbranch https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
 
@@ -32,8 +33,7 @@ ls
 
 DIR="workspace"
 if [ -d "$DIR" ]; then
-   currentbranch=$(git branch | grep \* |cut -d ' ' -f2)
-   rootdir="ansible-conjur-collection_"
+   rootdir="_-ansible-conjur-collection_"
    Combinedstring=$rootdir$currentbranch
    get32characters=${Combinedstring: -32}
    echo " Value is $get32characters "
@@ -42,3 +42,8 @@ else
    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 fi
 rm -rf ansible_collections
+
+# ansible-conjur-collection_ONYX-15264_ToReview
+
+# ansible-conjur-collection_main
+# _-ansible-conjur-collection_main
