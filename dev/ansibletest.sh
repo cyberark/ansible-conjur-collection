@@ -29,10 +29,9 @@ cd ../../../
 echo "Step 1"
 pwd
 ls
-# cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 
-DIR="workspace"
-if [ -d "$DIR" ]; then
+CURRENTDIR="workspace"
+if [ -d "$CURRENTDIR" ]; then
    rootdir="_-ansible-conjur-collection_"
    Combinedstring=$rootdir$currentbranch
    get32characters=${Combinedstring: -32}
@@ -41,9 +40,5 @@ if [ -d "$DIR" ]; then
 else
    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 fi
+
 rm -rf ansible_collections
-
-# ansible-conjur-collection_ONYX-15264_ToReview
-
-# ansible-conjur-collection_main
-# _-ansible-conjur-collection_main
