@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+currentbranch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
