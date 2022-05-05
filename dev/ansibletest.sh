@@ -1,10 +1,10 @@
 #!/bin/bash -eu
 
-# currentbranch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
-
-# currentbranch=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/")
-currentbranch="deletenow"
-# currentbranch=$(git branch 2>/dev/null | grep '^*' | colrm 1 2)
+currentbranch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+echo "Step 1'$currentbranch' found"
+currentbranch2=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/")
+# currentbranch="deletenow"
+currentbranch3=$(git branch 2>/dev/null | grep '^*' | colrm 1 2)
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
@@ -15,9 +15,13 @@ else
    echo "Warning: '$DIR' NOT found. "
 fi
 
+echo "Step 2 '$currentbranch' found"
+echo "Step 3 '$currentbranch2' found"
+echo "Step 4 '$currentbranch3' found"
+
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch "$currentbranch" https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch "${currentbranch}" https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
 
