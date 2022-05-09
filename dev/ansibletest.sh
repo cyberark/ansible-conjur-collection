@@ -1,11 +1,16 @@
 #!/bin/bash -eu
 
-currentbranch=$BRANCH_NAME
-echo "Existing '$BRANCH_NAME' found"
+
+filepath=$(pwd)
+firstfour=${filepath:1:5}
+if [ "$firstfour" == Users ]; then
 currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 echo "Existing '$currentbranch' found"
-pwd
-ls
+else
+currentbranch=$BRANCH_NAME
+echo "Existing '$currentbranch' found"
+fi
+
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
