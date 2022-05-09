@@ -2,15 +2,12 @@
 
 
 filepath=$(pwd)
-echo "Existing '$filepath' found"
 firstfour=${filepath:1:3}
+
 if [ "$firstfour" == var ]; then
    currentbranch=$BRANCH_NAME
-   echo "Existing 1 '$currentbranch' found "
 else
-   # currentbranch=$(git branch | grep '^*' | colrm 1 2)
    currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-   echo "Existing 2 '$currentbranch' found"
 fi
 
 
@@ -19,9 +16,8 @@ DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
    rm -rf ansible-conjur-collection/tests/output
-   echo "'$DIR' Directory has been deleted"
 else
-   echo "Warning: '$DIR' NOT found. "
+   echo "'$DIR' NOT found. "
 fi
 
 mkdir -p ansible_collections/cyberark/
@@ -42,7 +38,6 @@ if [ -d "$CURRENTDIR" ]; then
    rootdir="_-ansible-conjur-collection_"
    Combinedstring=$rootdir$currentbranch
    get32characters=${Combinedstring: -32}
-   echo " Combined string is '$get32characters' "
    cp -r ansible_collections/cyberark/conjur/tests/output workspace/"$get32characters"/tests
 else
    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
