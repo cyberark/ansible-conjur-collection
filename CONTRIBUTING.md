@@ -38,7 +38,7 @@ The `dev` directory contains a `docker-compose` file which creates a development
 environment :
 -  A Conjur Open Source instance
 -  An Ansible control node
--  Managed nodes to push tasks to
+-  A number of managed nodes
 
 To use it:
 
