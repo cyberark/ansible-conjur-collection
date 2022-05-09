@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 ARG ANSIBLE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
