@@ -29,13 +29,17 @@ pipeline {
 
         stage("Test conjur_host_identity role") {
           steps {
-            // sh 'chmod +x ./dev/ansibletest.sh'
-            sh './dev/ansibletest.sh'
+            sh './ci/test.sh -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
       }
     }
-
+    stage('Report Test Code Coverage'){
+          steps {
+            sh './dev/ansibletest.sh'
+           }
+}
     stage('Build Release Artifacts') {
       when {
         anyOf {
