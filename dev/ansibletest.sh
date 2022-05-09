@@ -1,10 +1,16 @@
 #!/bin/bash -eu
 
 currentbranch=$BRANCH_NAME
+echo "Existing '$BRANCH_NAME' found"
+currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+echo "Existing '$currentbranch' found"
+pwd
+ls
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
+   currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
    echo "Existing '$DIR' found"
    rm -rf ansible-conjur-collection/tests/output
    echo "'$DIR' Directory has been deleted"
