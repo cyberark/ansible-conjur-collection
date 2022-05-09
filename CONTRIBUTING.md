@@ -12,11 +12,11 @@ For general contribution and community guidelines, please see the [community rep
   - [Testing](#testing)
   - [Releasing](#releasing)
 - Ansible Conjur Collection Quick Start
-    1. [Set up Conjur Open Source and Ansible control node](#set-up-conjur-open-source-and-ansible-control-node)
-    2. [Load policy to set up Conjur Ansible integration](#load-policy-to-set-up-conjur-ansible-integration)
-    3. [Create Ansible managed nodes](#create-ansible-managed-nodes)
-    4. [Use `conjur_host_identity` to set up Conjur identity on managed nodes](#use-conjur-host-identity-to-set-up-conjur-identity-on-managed-nodes)
-    5. [Use `conjur_variable` lookup plugin to provide secrets to Ansible Playbooks](#use-conjur-variable-lookup-plugin-to-provide-secrets-to-ansible-playbooks)
+  1. [Set up Conjur Open Source and Ansible control node](#set-up-conjur-open-source-and-ansible-control-node)
+  2. [Load policy to set up Conjur Ansible integration](#load-policy-to-set-up-conjur-ansible-integration)
+  3. [Create Ansible managed nodes](#create-ansible-managed-nodes)
+  4. [Use `conjur_host_identity` to set up Conjur identity on managed nodes](#use-conjur-host-identity-to-set-up-conjur-identity-on-managed-nodes)
+  5. [Use `conjur_variable` lookup plugin to provide secrets to Ansible Playbooks](#use-conjur-variable-lookup-plugin-to-provide-secrets-to-ansible-playbooks)
 
 
  ## Prerequisites
@@ -24,9 +24,9 @@ For general contribution and community guidelines, please see the [community rep
 To start developing and testing using our development scripts ,
 the following tools need to be installed:
 
-1. [Git][get-git] to manage source code
-2. [Docker][get-docker] to manage dependencies and runtime environments
-3. [Docker Compose][get-docker-compose] to orchestrate Docker environments
+  1. [Git][get-git] to manage source code
+  2. [Docker][get-docker] to manage dependencies and runtime environments
+  3. [Docker Compose][get-docker-compose] to orchestrate Docker environments
 
 [get-docker]: https://docs.docker.com/engine/installation
 [get-docker-compose]: https://docs.docker.com/compose/install
@@ -148,6 +148,43 @@ of this plugin:
   ```sh
     docker exec conjur_client conjur policy load root /policy/root.yml
   ```
+
+### Conjur Policy example
+
+  ```sh
+  - !policy
+    id: ansible
+    annotations:
+      description: Policy for Ansible master and remote hosts
+    body:
+
+    - !host
+      id: ansible-master
+      annotations:
+        description: Host for running Ansible on remote targets
+
+    - !layer &remote_hosts_layer
+      id: remote_hosts
+      annotations:
+        description: Layer for Ansible remote hosts
+
+    - !host-factory
+      id: ansible-factory
+      annotations:
+        description: Factory to create new hosts for ansible
+      layer: [ *remote_hosts_layer ]
+
+    - !variable
+      id: target-password
+      annotations:
+        description: Password needed by the Ansible remote machine
+
+    - !permit
+      role: *remote_hosts_layer
+      privileges: [ execute ]
+      resources: [ !variable target-password ]
+  ```
+
 ## Create Ansible managed nodes
 
   Set all required variables, ensure `Conjur_host_factory_token` is set . Install `ca-certificates` and place Conjur public SSL certificate. Symlink Conjur public SSL certificate into /etc/ssl/certs .
