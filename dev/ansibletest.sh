@@ -8,7 +8,8 @@ if [ "$firstfour" == var ]; then
    currentbranch=$BRANCH_NAME
    echo "Existing 1 '$currentbranch' found "
 else
-   currentbranch=$(git branch | grep '^*' | colrm 1 2)
+   # currentbranch=$(git branch | grep '^*' | colrm 1 2)
+   currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
    echo "Existing 2 '$currentbranch' found"
 fi
 
