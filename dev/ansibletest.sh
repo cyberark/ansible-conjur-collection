@@ -2,6 +2,7 @@
 
 
 filepath=$(pwd)
+echo "Existing '$filepath' found"
 firstfour=${filepath:1:5}
 if [ "$firstfour" == Users ]; then
 currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
