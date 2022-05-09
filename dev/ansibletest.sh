@@ -3,20 +3,19 @@
 
 filepath=$(pwd)
 echo "Existing '$filepath' found"
-firstfour=${filepath:1:5}
-if [ "$firstfour" == Users ]; then
-currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-echo "Existing '$currentbranch' found"
+firstfour=${filepath:1:3}
+if [ "$firstfour" == var ]; then
+   currentbranch=$BRANCH_NAME
+   echo "Existing 1 '$currentbranch' found "
 else
-currentbranch=$BRANCH_NAME
-echo "Existing '$currentbranch' found"
+   currentbranch=$(git branch | grep '^*' | colrm 1 2)
+   echo "Existing 2 '$currentbranch' found"
 fi
 
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
-   currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
    echo "Existing '$DIR' found"
    rm -rf ansible-conjur-collection/tests/output
    echo "'$DIR' Directory has been deleted"
