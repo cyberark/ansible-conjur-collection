@@ -1,7 +1,8 @@
 #!/bin/bash -eu
 
-cd ../../
+currentbranch=$BRANCH_NAME
 
+cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
    echo "Existing '$DIR' found"
@@ -13,7 +14,7 @@ fi
 
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
-git clone --single-branch --branch ONYX-15263 https://github.com/cyberark/ansible-conjur-collection.git
+git clone --single-branch --branch "$currentbranch" https://github.com/cyberark/ansible-conjur-collection.git
 mv ansible-conjur-collection conjur
 cd conjur
 
