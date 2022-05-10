@@ -5,7 +5,7 @@ set -e
 # Script to run SpringBootExample against Conjur Enterprise (appliance)
 
 # Ensure conjur-intro submodule is checked out
-git submodule update --init --recursive
+# git submodule update --init --recursive
 
 pushd ./conjur-intro
   pwd
