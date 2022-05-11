@@ -1,6 +1,6 @@
 #!/bin/bash
-set -x
-set -e
+# set -x
+# set -e
 
 # Script to run SpringBootExample against Conjur Enterprise (appliance)
 
@@ -10,6 +10,8 @@ echo " step 1 "
 # pushd ./conjur-intro
 #   pwd
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+pwd
+ls
 echo " step 2 "
 cd conjur-intro
 echo " step 3 "
