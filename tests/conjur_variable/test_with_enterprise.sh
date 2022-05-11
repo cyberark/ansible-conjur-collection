@@ -38,7 +38,13 @@ echo " Step 2 "
 pwd
 ls
 echo " Setup Policy "
-  cp ../policy/root.yml .
+  # cp ../policy/root.yml .
+
+  cd ..
+
+  # cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
+  cp -r policy/root.yml conjur-intro
+  cd conjur-intro
 echo " Step 2 "
 pwd
 ls
