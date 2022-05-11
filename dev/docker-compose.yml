@@ -52,6 +52,18 @@ services:
     links:
       - conjur
 
+  # client:
+  #   image: cyberark/conjur-cli:5
+  #   depends_on:
+  #     - conjur
+  #   entrypoint: /bin/bash
+  #   environment:
+  #     CONJUR_APPLIANCE_URL: http://conjur
+  #     CONJUR_ACCOUNT: dev
+  #     CONJUR_AUTHN_LOGIN: admin
+  #     CONJUR_AUTHN_API_KEY:
+
+
   test_app_ubuntu:
     build: ./test_app_ubuntu
     entrypoint: sleep

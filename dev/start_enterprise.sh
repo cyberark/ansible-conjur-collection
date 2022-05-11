@@ -7,8 +7,10 @@ set -e
 # Ensure conjur-intro submodule is checked out
 # git submodule update --init --recursive
 
-pushd ./conjur-intro
-  pwd
+# pushd ./conjur-intro
+#   pwd
+
+  cd conjur-intro
 
   # Provision master and follower
   ./bin/dap --provision-master
@@ -17,14 +19,22 @@ pushd ./conjur-intro
   # Load policy required by SpringBootExample
   # conjur.yml must be in the conjur-intro folder for access
   # via docker-compose exec
-  cp ../conjur.yml .
-  ./bin/cli conjur policy load --replace root conjur.yml
+  cp ../policy/root.yml .
+  # cp ../conjur.yml .
+  ./bin/cli conjur policy load --replace root root.yml
 
   # # # Set variable values
-  ./bin/cli conjur variable values add db/password secret
-  ./bin/cli conjur variable values add db/dbuserName 123456
-  ./bin/cli conjur variable values add db/dbpassWord 7890123
-  ./bin/cli conjur variable values add db/key 456789
+#   ./bin/cli conjur variable values add db/password secret
+#   ./bin/cli conjur variable values add db/dbuserName 123456
+#   ./bin/cli conjur variable values add db/dbpassWord 7890123
+#   ./bin/cli conjur variable values add db/key 456789
+
+#   ./bin/cli conjur policy load root /policy/root.yml
+  ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+  ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+  ./bin/cli conjur variable values add ansible/target-password target_secret_password
+#   ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+
 
   # Retrieve pem
   docker-compose  \
@@ -36,13 +46,16 @@ pushd ./conjur-intro
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
   cp conjur-enterprise.pem ../
 
+
+
   # Retrieve Admin API Key
   admin_api_key="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
   echo "admin api key: ${admin_api_key}"
   echo "${admin_api_key}" > api_key
   cp api_key ../
 
-popd
+cd ..
+# popd
 pwd
 
 
