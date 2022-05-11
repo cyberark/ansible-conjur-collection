@@ -96,6 +96,11 @@ ls
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
+  cd tests
+echo " Step 9 "
+pwd
+ls
+
   echo "Fetching SSL certs"
   fetch_ssl_certs
 
