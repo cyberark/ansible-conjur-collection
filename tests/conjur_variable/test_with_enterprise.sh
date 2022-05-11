@@ -25,15 +25,23 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 # #                                conjur_https \
 # #                                conjur_cli \
 
+echo " Step 1 "
+pwd
+ls
+
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 cd conjur-intro
 echo " Provision Master"
   ./bin/dap --provision-master
   ./bin/dap --provision-follower
-
+echo " Step 2 "
+pwd
+ls
 echo " Setup Policy "
   cp ../policy/root.yml .
-
+echo " Step 2 "
+pwd
+ls
   ./bin/cli conjur policy load --replace root root.yml
   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
