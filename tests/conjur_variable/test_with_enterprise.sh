@@ -60,12 +60,12 @@ ls
 
 echo " Setup CLI "
 
-  docker-compose  \
+    docker-compose  \
     run \
     --rm \
     -w /src/cli \
     --entrypoint /bin/bash \
-    conjur_cli \
+    client \
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
   cp conjur-enterprise.pem ../
 
