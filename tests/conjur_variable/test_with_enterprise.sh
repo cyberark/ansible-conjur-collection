@@ -53,13 +53,24 @@ ls
 echo " Step 5 "
 pwd
 ls
-  ./bin/cli conjur policy load --replace root root.yml
-  echo " =======1====="
-  ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-   echo " =======2====="
-  ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-   echo " =======3====="
-  ./bin/cli conjur variable values add ansible/target-password target_secret_password
+  # ./bin/cli conjur policy load --replace root root.yml
+  # echo " =======1====="
+  # ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+  #  echo " =======2====="
+  # ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+  #  echo " =======3====="
+  # ./bin/cli conjur variable values add ansible/target-password target_secret_password
+
+    echo " =======1====="
+    ./bin/cli conjur policy load root /policy/root.yml
+    echo " =======2====="
+    ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+    echo " =======3====="
+    ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+    echo " =======4====="
+    ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+
+
 
 echo " Setup CLI "
 
