@@ -96,7 +96,7 @@ ls
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
-  cd tests
+  cd tests/conjur_variable
 echo " Step 9 "
 pwd
 ls
