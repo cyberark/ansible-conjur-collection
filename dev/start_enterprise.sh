@@ -66,7 +66,16 @@ ls
   echo "${admin_api_key}" > api_key
   cp api_key ../
 
+echo " step 8 "
+pwd
+ls
+
 cd ..
+echo " step 7 "
+pwd
+ls
+
+
 # popd
 pwd
 
