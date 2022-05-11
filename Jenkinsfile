@@ -49,6 +49,7 @@ pipeline {
 // }
     stage('Report Test Code Coverage'){
           steps {
+            sh 'chmod +x ./tests/conjur_variable/test_with_enterprise.sh'
             sh './tests/conjur_variable/test_with_enterprise.sh'
             // publishHTML (target : [allowMissing: false,
             // alwaysLinkToLastBuild: false,
