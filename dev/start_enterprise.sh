@@ -71,7 +71,7 @@ pwd
 ls
 
 cd ..
-echo " step 7 "
+echo " step 9 "
 pwd
 ls
 
@@ -99,6 +99,9 @@ else
    echo "'$DIR' NOT found. "
 fi
 
+echo " step 10 "
+pwd
+ls
 mkdir -p ansible_collections/cyberark/
 cd ansible_collections/cyberark/
 git clone --single-branch --branch "$currentbranch" https://github.com/cyberark/ansible-conjur-collection.git
@@ -112,6 +115,10 @@ ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/te
 ansible-test coverage html -v --requirements --group-by command --group-by version
 cd ../../../
 
+echo " step 11 "
+pwd
+ls
+
 CURRENTDIR="workspace"
 if [ -d "$CURRENTDIR" ]; then
    rootdir="_-ansible-conjur-collection_"
@@ -119,6 +126,9 @@ if [ -d "$CURRENTDIR" ]; then
    get32characters=${Combinedstring: -32}
    cp -r ansible_collections/cyberark/conjur/tests/output workspace/"$get32characters"/tests
 else
+echo " step 12 "
+pwd
+ls
    cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
 fi
 
