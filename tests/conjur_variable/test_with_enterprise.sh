@@ -45,7 +45,7 @@ echo " Step 3 "
 pwd
 ls
   # cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
-  cp -r policy/root.yml conjur-intro
+  cp -r tests/conjur_variable/policy/root.yml conjur-intro
   echo " Step 4 "
 pwd
 ls
