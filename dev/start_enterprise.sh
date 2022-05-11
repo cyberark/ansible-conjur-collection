@@ -9,6 +9,8 @@
 echo " step 1 "
 # pushd ./conjur-intro
 #   pwd
+cd dev   # only added later
+
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 pwd
 ls

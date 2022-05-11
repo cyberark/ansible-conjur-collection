@@ -2,6 +2,48 @@
 set -ex
 
 
+
+
+# [2022-05-11T05:03:23.357Z] Cloning into 'conjur-intro'...
+
+# [2022-05-11T05:03:23.357Z] /var/lib/jenkins/workspace/ble-conjur-collection_ONYX-15266
+
+# [2022-05-11T05:03:23.357Z] CHANGELOG.md
+
+# [2022-05-11T05:03:23.357Z] CONTRIBUTING.md
+
+# [2022-05-11T05:03:23.357Z] Jenkinsfile
+
+# [2022-05-11T05:03:23.357Z] LICENSE
+
+# [2022-05-11T05:03:23.357Z] README.md
+
+# [2022-05-11T05:03:23.357Z] SECURITY.md
+
+# [2022-05-11T05:03:23.357Z] ci
+
+# [2022-05-11T05:03:23.357Z] conjur-intro
+
+# [2022-05-11T05:03:23.357Z] dev
+
+# [2022-05-11T05:03:23.357Z] examples
+
+# [2022-05-11T05:03:23.357Z] galaxy.yml
+
+# [2022-05-11T05:03:23.357Z] meta
+
+# [2022-05-11T05:03:23.357Z] plugins
+
+# [2022-05-11T05:03:23.357Z] requirements.txt
+
+# [2022-05-11T05:03:23.357Z] roles
+
+
+
+
+
+
+
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
 declare cli_cid=''
