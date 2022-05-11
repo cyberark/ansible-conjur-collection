@@ -62,7 +62,7 @@ ls
   # ./bin/cli conjur variable values add ansible/target-password target_secret_password
 
     echo " =======1====="
-    ./bin/cli conjur policy load root /policy/root.yml
+    ./bin/cli conjur policy load root root.yml
     echo " =======2====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
     echo " =======3====="
