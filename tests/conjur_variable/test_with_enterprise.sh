@@ -54,8 +54,11 @@ echo " Step 5 "
 pwd
 ls
   ./bin/cli conjur policy load --replace root root.yml
+  echo " =======1====="
   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+   echo " =======2====="
   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+   echo " =======3====="
   ./bin/cli conjur variable values add ansible/target-password target_secret_password
 
 echo " Setup CLI "
@@ -67,8 +70,9 @@ echo " Setup CLI "
     --entrypoint /bin/bash \
     client \
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
+  echo " =======4====="
   cp conjur-enterprise.pem ../
-
+echo " =======5====="
   admin_api_key="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
   echo "admin api key: ${admin_api_key}"
   echo "${admin_api_key}" > api_key
