@@ -9,8 +9,8 @@ set -e
 
 # pushd ./conjur-intro
 #   pwd
-
-  cd conjur-intro
+git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+cd conjur-intro
 
   # Provision master and follower
   ./bin/dap --provision-master
