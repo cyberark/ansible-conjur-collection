@@ -11,7 +11,7 @@ echo " step 1 "
 pwd
 ls
 
-cd dev   # only added later
+# cd dev   # only added later
 
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 pwd
