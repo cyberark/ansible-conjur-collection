@@ -6,36 +6,37 @@ set -e
 
 # Ensure conjur-intro submodule is checked out
 # git submodule update --init --recursive
-
+echo " step 1 "
 # pushd ./conjur-intro
 #   pwd
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+echo " step 2 "
 cd conjur-intro
-
+echo " step 3 "
   # Provision master and follower
   ./bin/dap --provision-master
   ./bin/dap --provision-follower
-
+echo " step 4 "
   # Load policy required by SpringBootExample
   # conjur.yml must be in the conjur-intro folder for access
   # via docker-compose exec
   cp ../policy/root.yml .
   # cp ../conjur.yml .
   ./bin/cli conjur policy load --replace root root.yml
-
+echo " step 5 "
   # # # Set variable values
 #   ./bin/cli conjur variable values add db/password secret
 #   ./bin/cli conjur variable values add db/dbuserName 123456
 #   ./bin/cli conjur variable values add db/dbpassWord 7890123
 #   ./bin/cli conjur variable values add db/key 456789
-
+echo " step 6 "
 #   ./bin/cli conjur policy load root /policy/root.yml
   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
   ./bin/cli conjur variable values add ansible/target-password target_secret_password
 #   ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
-
+echo " step 7 "
   # Retrieve pem
   docker-compose  \
     run \
