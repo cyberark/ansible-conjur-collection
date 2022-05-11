@@ -49,14 +49,14 @@ pipeline {
 // }
     stage('Report Test Code Coverage'){
           steps {
-            sh './dev/start_enterprise.sh'
-            publishHTML (target : [allowMissing: false,
-            alwaysLinkToLastBuild: false,
-            keepAll: true,
-            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            reportFiles: 'index.html',
-            reportName: 'Ansible Coverage Report',
-            reportTitles: 'Conjur Ansible Collection report'])
+            sh './tests/test_with_enterprise.sh'
+            // publishHTML (target : [allowMissing: false,
+            // alwaysLinkToLastBuild: false,
+            // keepAll: true,
+            // reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+            // reportFiles: 'index.html',
+            // reportName: 'Ansible Coverage Report',
+            // reportTitles: 'Conjur Ansible Collection report'])
            }
 }
     stage('Build Release Artifacts') {
