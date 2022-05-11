@@ -1,0 +1,1 @@
+error: Failed to open TCP connection to conjur-master.mycompany.local:443 (getaddrinfo: Temporary failure in name resolution)

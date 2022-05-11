@@ -8,14 +8,19 @@
 # git submodule update --init --recursive
 echo " step 1 "
 # pushd ./conjur-intro
-#   pwd
-cd dev   # only added later
+pwd
+ls
+
+# cd dev   # only added later
 
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 pwd
 ls
 echo " step 2 "
-cd conjur-intro
+
+cd conjur-intro  # later 2
+
+
 echo " step 3 "
   # Provision master and follower
   ./bin/dap --provision-master
@@ -41,6 +46,8 @@ echo " step 6 "
 #   ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
 echo " step 7 "
+pwd
+ls
   # Retrieve pem
   docker-compose  \
     run \
