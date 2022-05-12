@@ -104,8 +104,8 @@ ls
   echo "Fetching SSL certs"
   fetch_ssl_certs
 
-  # echo "Fetching admin API key"
-  # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+  echo "Fetching admin API key"
+  CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
 
   # echo "Recreating conjur CLI with admin credentials"
   # docker-compose up -d conjur_cli
@@ -155,7 +155,7 @@ echo "Running fetch_ssl_certs"
 # }
 
 function setup_access_token {
-  docker-compose exec -T conjur_cli bash -c "
+  docker-compose exec -T client bash -c "
     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
     conjur authn authenticate
