@@ -84,6 +84,9 @@ echo " Setup CLI "
   echo " =======4====="
   cp conjur-enterprise.pem ../
 echo " =======5====="
+# CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+  CONJUR_ADMIN_AUTHN_API_KEY=$(./bin/cli conjur conjurctl role retrieve-key cucumber:user:admin)
+  echo " =======55== ${CONJUR_ADMIN_AUTHN_API_KEY}==="
   admin_api_key="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
   echo "admin api key: ${admin_api_key}"
   echo "${admin_api_key}" > api_key
@@ -108,7 +111,7 @@ ls
   # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
 
   # echo "Recreating conjur CLI with admin credentials"
-  docker-compose up -d client
+  # docker-compose up -d client
 
   # echo "Configuring Conjur via CLI"
   # # setup_conjur
