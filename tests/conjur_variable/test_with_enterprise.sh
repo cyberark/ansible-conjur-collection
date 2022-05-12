@@ -125,7 +125,7 @@ ls
 
   # echo "Fetching Ansible master host credentials"
   # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  # ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
 
   # echo "Get Access Token"
   # setup_access_token
@@ -193,16 +193,16 @@ function run_test_cases {
     cd tests/conjur_variable
 
     # If env vars were provided, load them
-    if [ -e 'test_cases/retrieve-variable/env' ]; then
-      . ./test_cases/retrieve-variable/env
+    if [ -e 'test_cases/retrieve-variable-disable-verify-certs/env' ]; then
+      . ./test_cases/retrieve-variable-disable-verify-certs/env
     fi
 
     # You can add -vvvv here for debugging
-    ansible-playbook 'test_cases/retrieve-variable/playbook.yml'
+    ansible-playbook 'test_cases/retrieve-variable-disable-verify-certs/playbook.yml'
 
-    py.test --junitxml='./junit/retrieve-variable' \
-      --connection docker \
-      -v 'test_cases/retrieve-variable/tests/test_default.py'
+    # py.test --junitxml='./junit/retrieve-variable-disable-verify-certs' \
+    #   --connection docker \
+    #   -v 'test_cases/retrieve-variable-disable-verify-certs/tests/test_default.py'
   "
 
   # docker-compose exec -T ansible bash -exc "
