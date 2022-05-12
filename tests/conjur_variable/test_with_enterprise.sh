@@ -133,14 +133,16 @@ function wait_for_conjur {
 
 function fetch_ssl_certs {
 echo "Running fetch_ssl_certs"
-    docker-compose  \
-    run \
-    --rm \
-    --entrypoint /bin/bash \
-    conjur_https \
-      -c "cat cert.crt > conjur.pem"
-echo "fetch_ssl_certs end "
-  # docker-compose exec -T conjur_https cat cert.crt > conjur.pem
+#     docker-compose  \
+#     run \
+#     --rm \
+#     --entrypoint /bin/bash \
+#     conjur_https \
+#       -c "cat cert.crt > conjur.pem"
+
+ docker-compose up -d --build conjur_https
+ docker-compose exec -T conjur_https cat cert.crt > conjur.pem
+ echo "fetch_ssl_certs end "
 }
 
 # function setup_conjur {
