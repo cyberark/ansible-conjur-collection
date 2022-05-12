@@ -26,8 +26,7 @@ function main() {
 #                                conjur_cli \
 
 echo " Step 1 "
-pwd
-ls
+
 
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 cd conjur-intro
@@ -35,24 +34,18 @@ echo " Provision Master"
   ./bin/dap --provision-master
   ./bin/dap --provision-follower
 echo " Step 2 "
-pwd
-ls
+
 echo " Setup Policy "
   # cp ../policy/root.yml .
 
   cd ..
 echo " Step 3 "
-pwd
-ls
-  # cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
-  cp -r tests/conjur_variable/policy/root.yml conjur-intro
+  cp -r tests/conjur_variable/policy/root.yml conjur-intro/
   echo " Step 4 "
-pwd
-ls
+
   cd conjur-intro
 echo " Step 5 "
-pwd
-ls
+
   # ./bin/cli conjur policy load --replace root root.yml
   # echo " =======1====="
   # ./bin/cli conjur variable values add ansible/test-secret test_secret_password
@@ -101,15 +94,12 @@ echo " =======5====="
 
   cd ..
 echo " Step 7 "
-pwd
-ls
+
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
   cd tests/conjur_variable
 echo " Step 9 "
-pwd
-ls
 
   echo "Fetching SSL certs"
   fetch_ssl_certs
@@ -174,36 +164,9 @@ function setup_access_token {
 }
 
 
-# function run_test_cases {
-#   for test_case in test_cases/*; do
-#     run_test_case "$(basename -- "$test_case")"
-#   done
-# }
 
 function run_test_cases {
-  # local test_case=$1
-  # echo "---- testing ${test_case} ----"
 
-  # if [ -z "$test_case" ]; then
-  #   echo ERROR: run_test called with no argument 1>&2
-  #   exit 1
-  # fi
-
-  #   docker-compose exec -T ansible bash -exc "
-  #   cd tests/conjur_variable
-
-  #   # If env vars were provided, load them
-  #   if [ -e 'test_cases/retrieve-variable-disable-verify-certs/env' ]; then
-  #     . ./test_cases/retrieve-variable-disable-verify-certs/env
-  #   fi
-
-  #   # You can add -vvvv here for debugging
-  #   ansible-playbook 'test_cases/retrieve-variable-disable-verify-certs/playbook.yml'
-
-  #   # py.test --junitxml='./junit/retrieve-variable-disable-verify-certs' \
-  #   #   --connection docker \
-  #   #   -v 'test_cases/retrieve-variable-disable-verify-certs/tests/test_default.py'
-  # "
 
   test_case="retrieve-variable-disable-verify-certs"
   docker-compose exec -T ansible bash -exc "
