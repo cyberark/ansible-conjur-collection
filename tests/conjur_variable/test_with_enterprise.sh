@@ -136,7 +136,6 @@ echo "Running fetch_ssl_certs"
     docker-compose  \
     run \
     --rm \
-    --workdir "/repo" \
     --entrypoint /bin/bash \
     conjur_https \
       -c "cat cert.crt > conjur.pem"
