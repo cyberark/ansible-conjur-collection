@@ -104,27 +104,27 @@ ls
   echo "Fetching SSL certs"
   fetch_ssl_certs
 
-  echo "Fetching admin API key"
-  CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+  # echo "Fetching admin API key"
+  # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
 
-  echo "Recreating conjur CLI with admin credentials"
-  docker-compose up -d conjur_cli
+  # echo "Recreating conjur CLI with admin credentials"
+  # docker-compose up -d conjur_cli
 
-  echo "Configuring Conjur via CLI"
-  # setup_conjur
+  # echo "Configuring Conjur via CLI"
+  # # setup_conjur
 
-  echo "Fetching Ansible master host credentials"
-  ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+  # echo "Fetching Ansible master host credentials"
+  # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+  # ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
 
-  echo "Get Access Token"
-  setup_access_token
+  # echo "Get Access Token"
+  # setup_access_token
 
-  echo "Preparing Ansible for test run"
-  docker-compose up -d --build ansible
+  # echo "Preparing Ansible for test run"
+  # docker-compose up -d --build ansible
 
-  echo "Running tests"
-  run_test_cases
+  # echo "Running tests"
+  # run_test_cases
 }
 
 function wait_for_conjur {
