@@ -85,15 +85,11 @@ echo " Setup CLI "
   cp conjur-enterprise.pem ../
 
 
-
-
-
-
     # ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
 echo " =======5====="
 # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
   # CONJUR_ADMIN_AUTHN_API_KEY=$(./bin/cli conjur role retrieve-key cucumber:user:admin)
-  ANSIBLE_MASTER_AUTHN_API_KEY=$(./bin/cli conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+  ANSIBLE_MASTER_AUTHN_API_KEY=$(./bin/cli client conjur host rotate_api_key --host ansible/ansible-master)
   echo " =======55== ${ANSIBLE_MASTER_AUTHN_API_KEY}==="
 
   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
