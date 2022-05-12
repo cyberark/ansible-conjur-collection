@@ -85,9 +85,9 @@ echo " Setup CLI "
   cp conjur-enterprise.pem ../
 echo " =======5====="
 # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
-  CONJUR_ADMIN_AUTHN_API_KEY=$(./bin/cli conjur conjurctl role retrieve-key cucumber:user:admin)
+  # CONJUR_ADMIN_AUTHN_API_KEY=$(./bin/cli conjur role retrieve-key cucumber:user:admin)
   echo " =======55== ${CONJUR_ADMIN_AUTHN_API_KEY}==="
-  admin_api_key="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+  CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
   echo "admin api key: ${admin_api_key}"
   echo "${admin_api_key}" > api_key
   cp api_key ../
@@ -124,7 +124,7 @@ ls
   # setup_access_token
 
   # echo "Preparing Ansible for test run"
-  # docker-compose up -d --build ansible
+  docker-compose up -d --build ansible
 
   # echo "Running tests"
   # run_test_cases
