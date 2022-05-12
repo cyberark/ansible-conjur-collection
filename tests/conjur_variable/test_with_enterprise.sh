@@ -88,8 +88,8 @@ echo " =======5====="
   # CONJUR_ADMIN_AUTHN_API_KEY=$(./bin/cli conjur role retrieve-key cucumber:user:admin)
   echo " =======55== ${CONJUR_ADMIN_AUTHN_API_KEY}==="
   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-  echo "admin api key: ${admin_api_key}"
-  echo "${admin_api_key}" > api_key
+  echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+  echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
   cp api_key ../
 
   cd ..
