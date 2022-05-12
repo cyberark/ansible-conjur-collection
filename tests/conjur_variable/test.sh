@@ -52,6 +52,9 @@ function main() {
 
   echo "Running tests"
   run_test_cases
+
+
+
 }
 
 function wait_for_conjur {
