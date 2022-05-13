@@ -3,8 +3,9 @@
 
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
-# declare -x COMPOSE_PROJECT_NAME
-# COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+declare -x COMPOSE_PROJECT_NAME
+COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+export COMPOSE_PROJECT_NAME
 
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
