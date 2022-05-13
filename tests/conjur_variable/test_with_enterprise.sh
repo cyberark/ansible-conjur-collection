@@ -52,7 +52,6 @@ echo " Setup CLI "
     client \
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem
       conjur host rotate_api_key --host ansible/ansible-master
-      export COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-pluging-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
       "
 
   cp conjur-enterprise.pem ../
