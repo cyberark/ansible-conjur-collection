@@ -16,8 +16,8 @@ echo " stage 1 "
 pwd
 ls
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-pushd ./conjur-intro
-# cd conjur-intro
+# pushd ./conjur-intro
+cd conjur-intro
 echo " stage 2 "
 pwd
 ls
@@ -71,13 +71,13 @@ echo " Setup CLI "
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
   cp api_key ../
 
-popd
-  # cd ..
+# popd
+  cd ..
 
 echo " stage 5 "
 pwd
 ls
-  cd tests/conjur_variable
+  # cd tests/conjur_variable
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
