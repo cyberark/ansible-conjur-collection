@@ -29,7 +29,7 @@ echo " Setup Policy "
 pwd
 ls
 
-cp ../policy/root.yml .
+cp ../tests/conjur_variable/policy/root.yml .
 
 #   cd ..
 # echo " stage 3 "
