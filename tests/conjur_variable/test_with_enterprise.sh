@@ -14,6 +14,7 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 function main() {
 
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+# pushd ./conjur-intro
 cd conjur-intro
 echo " Provision Master"
   ./bin/dap --provision-master
@@ -22,12 +23,15 @@ echo " Provision Master"
 echo " Setup Policy "
   # cp ../policy/root.yml .
 
-  cd ..
-  cp -r tests/conjur_variable/policy/root.yml conjur-intro/
-  cd conjur-intro
+  # cd ..
+  # cp -r tests/conjur_variable/policy/root.yml conjur-intro/
+  # cd conjur-intro
 
+    cp ../tests/conjur_variable/policy/root.yml .
+    
     echo " ========load policy====="
-    ./bin/cli conjur policy load root root.yml
+    # ./bin/cli conjur policy load root root.yml
+    ./bin/cli conjur policy load --replace root root.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
      echo " =======Set Variable value ansible/test-secret-in-file ====="
@@ -59,7 +63,7 @@ echo " Setup CLI "
   cp api_key ../
 
   cd ..
-
+  # popd
   cd tests/conjur_variable
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
@@ -128,7 +132,7 @@ function setup_access_token {
 
 function run_test_cases {
 
-  test_case="retrieve-variable-disable-verify-certs"
+  test_case="retrieve-variable-bad-cert-path"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
