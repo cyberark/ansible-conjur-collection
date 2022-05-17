@@ -77,7 +77,7 @@ echo " Setup CLI "
 echo " stage 5 "
 pwd
 ls
-  # cd tests/conjur_variable
+  cd tests/conjur_variable
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
