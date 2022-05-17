@@ -16,7 +16,8 @@ echo " stage 1 "
 pwd
 ls
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-cd conjur-intro
+pushd ./conjur-intro
+# cd conjur-intro
 echo " stage 2 "
 pwd
 ls
@@ -25,14 +26,14 @@ echo " Provision Master"
   ./bin/dap --provision-follower
 
 echo " Setup Policy "
-  # cp ../policy/root.yml .
+cp ../policy/root.yml .
 
-  cd ..
-echo " stage 3 "
-pwd
-ls
-  cp -r tests/conjur_variable/policy/root.yml conjur-intro/
-  cd conjur-intro
+#   cd ..
+# echo " stage 3 "
+# pwd
+# ls
+#   cp -r tests/conjur_variable/policy/root.yml conjur-intro/
+#   cd conjur-intro
 
 echo " stage 4 "
 pwd
@@ -45,8 +46,6 @@ ls
     ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
      echo " =======Set Variable value ansible/var with spaces ====="
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-
-
 
 echo " Setup CLI "
 
@@ -69,7 +68,8 @@ echo " Setup CLI "
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
   cp api_key ../
 
-  cd ..
+popd
+  # cd ..
 
 echo " stage 5 "
 pwd
@@ -148,9 +148,9 @@ function run_test_cases {
   # retrieve-variable-with-authn-token-bad-cert works
   # retrieve-variable-with-authn-token-bad-cert works
   # retrieve-variable-no-cert-provided works
+  # retrieve-variable-disable-verify-certs not works
 
-  test_case="retrieve-variable-disable-verify-certs"
-
+  test_case="retrieve-variable-bad-cert-path"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
     # If env vars were provided, load them
