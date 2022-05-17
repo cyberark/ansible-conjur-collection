@@ -29,7 +29,7 @@ echo " Setup Policy "
 pwd
 ls
 
-cp ../tests/conjur_variable/policy/root.yml .
+cp ../tests/conjur_variable/conjur.pem .
 
 #   cd ..
 # echo " stage 3 "
@@ -152,6 +152,7 @@ function setup_access_token {
 
 function run_test_cases {
 
+echo " Running test cases with errors "
   # retrieve-variable-bad-cert-path works
   # retrieve-variable-bad-certs works
   # retrieve-variable does not work
@@ -160,7 +161,7 @@ function run_test_cases {
   # retrieve-variable-no-cert-provided works
   # retrieve-variable-disable-verify-certs not works
 
-  test_case="retrieve-variable-bad-cert-path"
+  test_case="retrieve-variable-disable-verify-certs"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
     # If env vars were provided, load them
