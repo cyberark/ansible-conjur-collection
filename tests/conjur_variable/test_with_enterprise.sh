@@ -103,6 +103,13 @@ ls
   # echo "Preparing Ansible for test run"
   docker-compose up -d --build ansible
 
+    docker-compose exec -T ansible bash -exc "
+    cd tests
+    pwd
+    ls
+
+  "
+
   echo "Running tests"
   run_test_cases
   echo " End of the tests "
