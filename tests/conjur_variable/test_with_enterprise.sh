@@ -143,27 +143,15 @@ function setup_access_token {
 function run_test_cases {
 
   # test_case="retrieve-variable-disable-verify-certs"
-
-  test_case="retrieve-variable
-echo " stage 3 "
-pwd
-ls
+  test_case="retrieve-variable"
   docker-compose exec -T ansible bash -exc "
-    echo " stage 4 "
-    pwd
-    ls
     cd tests/conjur_variable
-    echo " stage 5 "
-    pwd
-    ls
     # If env vars were provided, load them
     if [ -e 'test_cases/${test_case}/env' ]; then
       . ./test_cases/${test_case}/env
     fi
-
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
-
     py.test --junitxml='./junit/${test_case}' \
       --connection docker \
       -v 'test_cases/${test_case}/tests/test_default.py'
