@@ -167,12 +167,12 @@ echo "fetch_ssl_certs end "
 # }
 
 function run_test_cases {
-
+echo "Running tests cases "
   test_case="retrieve-variable"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
-    If env vars were provided, load them
+    # If env vars were provided, load them
     if [ -e 'test_cases/${test_case}/env' ]; then
       . ./test_cases/${test_case}/env
     fi
