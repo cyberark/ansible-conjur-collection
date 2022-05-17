@@ -34,7 +34,7 @@ ls
   cp -r tests/conjur_variable/policy/root.yml conjur-intro/
   cd conjur-intro
 
-echo " stage 3 "
+echo " stage 4 "
 pwd
 ls
     echo " ========load policy====="
@@ -71,7 +71,7 @@ echo " Setup CLI "
 
   cd ..
 
-echo " stage 3 "
+echo " stage 5 "
 pwd
 ls
   cd tests/conjur_variable
@@ -142,7 +142,9 @@ function setup_access_token {
 
 function run_test_cases {
 
-  test_case="retrieve-variable-disable-verify-certs"
+  # test_case="retrieve-variable-disable-verify-certs"
+
+  test_case="retrieve-variable
 echo " stage 3 "
 pwd
 ls
