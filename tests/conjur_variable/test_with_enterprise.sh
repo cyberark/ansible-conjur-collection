@@ -100,9 +100,9 @@ echo " Setup CLI "
   echo " End of the tests "
 }
  
-function wait_for_conjur {
-  docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
-}
+# function wait_for_conjur {
+#  docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
+# }
  
 function fetch_ssl_certs {
 echo "Running fetch_ssl_certs"
@@ -114,7 +114,7 @@ echo "Running fetch_ssl_certs"
 #       -c "cat cert.crt > conjur.pem"
  
 docker-compose up -d --build conjur_https
-docker-compose exec -T conjur_https cat cert.crt > conjur.pem
+# docker-compose exec -T conjur_https cat cert.crt > conjur.pem
 echo "fetch_ssl_certs end "
 }
  
@@ -138,13 +138,13 @@ CONJUR_CERT_FILE=conjur-master.mycompany.local.pem
 CONJUR_KEY_FILE=conjur-master.mycompany.local.key
 ENV
  
-function setup_access_token {
-  docker-compose exec -T client bash -c "
-    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-    conjur authn authenticate
-  " > access_token
-}
+# function setup_access_token {
+# docker-compose exec -T client bash -c "
+#  export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+# export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+#  conjur authn authenticate
+# " > access_token
+# }
  
 function run_test_cases {
  
