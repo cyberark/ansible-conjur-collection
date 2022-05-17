@@ -1,1 +1,1 @@
-export CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+export CONJUR_CERT_FILE=./conjur.pem

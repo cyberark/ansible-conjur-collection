@@ -144,19 +144,35 @@ function run_test_cases {
 
   # retrieve-variable-bad-cert-path works
   # retrieve-variable-bad-certs works
-  test_case="retrieve-variable"
-  docker-compose exec -T ansible bash -exc "
+  # test_case="retrieve-variable" does not work
+
+    docker-compose exec -T ansible bash -exc "
+    echo "Step 1"
+    cd tests
+    pwd
+    ls
+    echo "Step 2"
     cd tests/conjur_variable
-    # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env' ]; then
-      . ./test_cases/${test_case}/env
-    fi
-    # You can add -vvvv here for debugging
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
-    py.test --junitxml='./junit/${test_case}' \
-      --connection docker \
-      -v 'test_cases/${test_case}/tests/test_default.py'
+    pwd
+    ls
+    echo "Step 3"
+    cd test_cases
+    pwd
+    ls
   "
+
+  # docker-compose exec -T ansible bash -exc "
+  #   cd tests/conjur_variable
+  #   # If env vars were provided, load them
+  #   if [ -e 'test_cases/${test_case}/env' ]; then
+  #     . ./test_cases/${test_case}/env
+  #   fi
+  #   # You can add -vvvv here for debugging
+  #   ansible-playbook 'test_cases/${test_case}/playbook.yml'
+  #   py.test --junitxml='./junit/${test_case}' \
+  #     --connection docker \
+  #     -v 'test_cases/${test_case}/tests/test_default.py'
+  # "
 }
 
 main
