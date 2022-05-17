@@ -10,6 +10,7 @@ export COMPOSE_PROJECT_NAME
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
+declare -x api_key=''
  
 function main() {
  
@@ -62,7 +63,7 @@ echo " Setup CLI "
  
   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
   echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
-  api_key=$CONJUR_ADMIN_AUTHN_API_KEY
+  api_key=$(CONJUR_ADMIN_AUTHN_API_KEY)
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
   cp api_key ../
  
