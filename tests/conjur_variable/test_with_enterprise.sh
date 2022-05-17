@@ -26,6 +26,9 @@ echo " Provision Master"
   ./bin/dap --provision-follower
 
 echo " Setup Policy "
+pwd
+ls
+
 cp ../policy/root.yml .
 
 #   cd ..
