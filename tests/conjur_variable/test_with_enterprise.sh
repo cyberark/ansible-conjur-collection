@@ -29,7 +29,10 @@ echo " Setup Policy "
 pwd
 ls
 
-cp ../tests/conjur_variable/conjur.pem .
+# cp ../tests/conjur_variable/conjur.pem .
+# cp ../tests/conjur_variable/policy/root.yml .
+
+cp ../conjur.yml .
 
 #   cd ..
 # echo " stage 3 "
@@ -42,7 +45,8 @@ echo " stage 4 "
 pwd
 ls
     echo " ========load policy====="
-    ./bin/cli conjur policy load root root.yml
+    # ./bin/cli conjur policy load root root.yml
+    ./bin/cli conjur policy load --replace root conjur.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
      echo " =======Set Variable value ansible/test-secret-in-file ====="
