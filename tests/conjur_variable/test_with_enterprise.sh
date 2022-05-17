@@ -142,7 +142,8 @@ function setup_access_token {
 
 function run_test_cases {
 
-  test_case="retrieve-variable-bad-cert-path"
+ # retrieve-variable-bad-cert-path works
+  test_case="retrieve-variable-bad-certs"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
     # If env vars were provided, load them
