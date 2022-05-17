@@ -147,8 +147,9 @@ function run_test_cases {
   # retrieve-variable does not work
   # retrieve-variable-with-authn-token-bad-cert works
   # retrieve-variable-with-authn-token-bad-cert works
+  # retrieve-variable-no-cert-provided works
 
-  test_case="retrieve-variable-no-cert-provided"
+  test_case="retrieve-variable-disable-verify-certs"
 
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
