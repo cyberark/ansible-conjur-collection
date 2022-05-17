@@ -57,7 +57,9 @@ echo " Provision Master"
       conjur host rotate_api_key --host ansible/ansible-master
       "
 
-  cp conjur-enterprise.pem ../
+  # cp conjur-enterprise.pem ../
+
+  cp conjur-enterprise.pem ../tests/conjur_variable
 
   echo " =======55====="
   pwd
