@@ -122,7 +122,7 @@ echo " Setup Policy "
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    ansible \
+    "${COMPOSE_PROJECT_NAME}"-ansible \
 
   #   "${COMPOSE_PROJECT_NAME}"-ansible
     echo "Running tests"
@@ -140,7 +140,7 @@ echo "Running fetch_ssl_certs"
 #       -c "cat cert.crt > conjur.pem"
 
  docker-compose up -d --build conjur_https
- docker-compose exec -T conjur_https cat cert.crt > conjur.pem
+ docker-compose exec -T conjur_https cat cert.crt > conjur-enterprise.pem
 #  echo "fetch_ssl_certs end "
 }
 
@@ -169,10 +169,10 @@ function run_test_cases {
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
-    # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env' ]; then
-      . ./test_cases/${test_case}/env
-    fi
+    # # If env vars were provided, load them
+    # if [ -e 'test_cases/${test_case}/env' ]; then
+    #   . ./test_cases/${test_case}/env
+    # fi
 
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
