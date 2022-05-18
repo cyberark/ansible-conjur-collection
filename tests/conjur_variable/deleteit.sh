@@ -31,7 +31,11 @@ function main() {
   ./bin/dap --import-custom-certificates
 
   echo " Setup Policy "
-  cp ../tests/conjur_variable/policy/root.yml .
+  # cp ../tests/conjur_variable/policy/root.yml .
+  echo " stage 2 "
+  pwd
+  ls
+  cp ../policy/root.yml .
 
     echo " ========load policy====="
     ./bin/cli conjur policy load --replace root root.yml
@@ -64,8 +68,14 @@ function main() {
         conjur host rotate_api_key --host ansible/ansible-master
       "
 
-     cp conjur-enterprise.pem ../tests/conjur_variable
-
+      echo " stage 3 "
+      pwd
+      ls
+      # cp conjur-enterprise.pem ../tests/conjur_variable
+      cp conjur-enterprise.pem ../../tests/conjur_variable
+      echo " stage 4 "
+      pwd
+      ls
       # echo "Configuring Conjur via CLI"
 
       # echo "Fetching Ansible master host credentials"
