@@ -68,67 +68,81 @@ function main() {
         conjur host rotate_api_key --host ansible/ansible-master
       "
 
-      echo " stage 3 "
-            cd ..
-      pwd
-      ls
 
-      echo " stage 4 "
-      cd ..
-      pwd
-      ls
-      echo " stage 5 "
-      cd ..
-      pwd
-      ls
+      cp conjur-enterprise.pem ../../../tests/conjur_variable
 
-      cp conjur-enterprise.pem /tests/conjur_variable
+      # echo " stage 3 "
+      #       cd ..
+      # pwd
+      # ls
+
+      # echo " stage 4 "
+      # cd ..
+      # pwd
+      # ls
+      # echo " stage 5 "
+      # cd ..
+      # pwd
+      # ls
+
+      # cp conjur-enterprise.pem /tests/conjur_variable
 
       # # cp conjur-enterprise.pem ../tests/conjur_variable
-      # # cp conjur-enterprise.pem ../../tests/conjur_variable
-      # echo " stage 6 "
-      # pwd
-      # ls
-      # # echo "Configuring Conjur via CLI"
+      # # cp conjur-enterprise.pem ../../../tests/conjur_variable
+      echo " stage 6 "
+      pwd
+      ls
+      # echo "Configuring Conjur via CLI"
 
-      # # echo "Fetching Ansible master host credentials"
-      # # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-      # ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur_variable/conjur-enterprise.pem'
+      # echo "Fetching Ansible master host credentials"
+      # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+      ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur_variable/conjur-enterprise.pem'
 
-      # echo "Get Access Token"
-      #   docker-compose  \
-      #   run \
-      #   --rm \
-      #   -w /src/cli \
-      #   --entrypoint /bin/bash \
-      #   client \
-      #     -c "
-      #     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-      #     export CONJUR_AUTHN_API_KEY=\"$api_key\"
-      #     conjur authn authenticate
-      #   " > access_token
+      echo "Get Access Token"
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -c "
+          export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+          export CONJUR_AUTHN_API_KEY=\"$api_key\"
+          conjur authn authenticate
+        " > access_token
 
-      # cp access_token ../tests/conjur_variable
-      # echo " stage 25 "
-      # pwd
-      # ls
-      # cd ..
-      # echo " stage 25 "
-      # pwd
-      # ls
-      # cd tests
-      # echo " stage 25 "
-      # pwd
-      # ls
-      # cd conjur_variable
-      # echo " stage 25 "
-      # pwd
-      # ls
-      # echo "Preparing Ansible for test run"
-      # docker-compose up -d --build ansible
+      echo " stage 45 "
+      pwd
+      ls
+      cp access_token ../../../tests/conjur_variable
+      echo " stage 25 "
+      pwd
+      ls
+      cd ..
+      echo " stage 46 "
+      pwd
+      ls
+      cd ..
+      echo " stage 47 "
+      pwd
+      ls
+      cd ..
+      echo " stage 25 "
+      pwd
+      ls
+      cd tests
+      echo " stage 25 "
+      pwd
+      ls
+      cd conjur_variable
+      echo " stage 25 "
+      pwd
+      ls
+      echo "Preparing Ansible for test run"
+      docker-compose up -d --build ansible
 
-      # echo "Running tests"
-      # run_test_cases
+      echo "Running tests"
+      run_test_cases
 
 }
 
