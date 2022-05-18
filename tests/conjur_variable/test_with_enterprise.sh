@@ -140,7 +140,7 @@ echo "Running fetch_ssl_certs"
 #       -c "cat cert.crt > conjur.pem"
 
  docker-compose up -d --build conjur_https
- docker-compose exec -T conjur_https cat cert.crt > conjur-enterprise.pem
+#  docker-compose exec -T conjur_https cat cert.crt > conjur-enterprise.pem
 #  echo "fetch_ssl_certs end "
 }
 
