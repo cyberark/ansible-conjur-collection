@@ -122,8 +122,9 @@ echo " Setup Policy "
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    "${COMPOSE_PROJECT_NAME}"-ansible \
+    ansible \
 
+  #   "${COMPOSE_PROJECT_NAME}"-ansible
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
@@ -162,7 +163,9 @@ function setup_access_token {
 
 function run_test_cases {
 
-  test_case="retrieve-variable-bad-cert-path"
+  # retrieve-variable-bad-cert-path
+
+  test_case="retrieve-variable"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
