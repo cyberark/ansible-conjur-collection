@@ -98,23 +98,20 @@ function main() {
       # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
       ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur_variable/conjur-enterprise.pem'
 
-      echo "Get Access Token"
-        docker-compose  \
-        run \
-        --rm \
-        -w /src/cli \
-        --entrypoint /bin/bash \
-        client \
-          -c "
-          export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-          export CONJUR_AUTHN_API_KEY=\"$api_key\"
-          conjur authn authenticate
-        " > access_token
+      # echo "Get Access Token"
+      #   docker-compose  \
+      #   run \
+      #   --rm \
+      #   -w /src/cli \
+      #   --entrypoint /bin/bash \
+      #   client \
+      #     -c "
+      #     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+      #     export CONJUR_AUTHN_API_KEY=\"$api_key\"
+      #     conjur authn authenticate
+      #   " > access_token
 
-      echo " stage 45 "
-      pwd
-      ls
-      cp access_token ../../../tests/conjur_variable
+      # cp access_token ../../../tests/conjur_variable
       echo " stage 25 "
       pwd
       ls
