@@ -106,7 +106,7 @@ echo " Setup Policy "
   # echo "Preparing Ansible for test run"
   # docker-compose up -d --build ansible
 
-    docker run \
+    docker-compose run \
     --volume "${PWD}/api_key:/api_key" \
     --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
@@ -124,7 +124,8 @@ echo " Setup Policy "
     --entrypoint /bin/bash \
     "${COMPOSE_PROJECT_NAME}"-ansible \
 
-  #   "${COMPOSE_PROJECT_NAME}"-ansible
+  #   "${COMPOSE_PROJECT_NAME}"-ansible \
+
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
