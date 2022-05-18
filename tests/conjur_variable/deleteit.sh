@@ -94,11 +94,11 @@ function main() {
       echo " stage 25 "
       pwd
       ls
-      echo "Preparing Ansible for test run"
-      docker-compose up -d --build ansible
+      # echo "Preparing Ansible for test run"
+      # docker-compose up -d --build ansible
 
-      echo "Running tests"
-      run_test_cases
+      # echo "Running tests"
+      # run_test_cases
 
 }
 
