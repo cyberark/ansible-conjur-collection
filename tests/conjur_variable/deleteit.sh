@@ -136,6 +136,7 @@ function main() {
       pwd
       ls
       echo "Preparing Ansible for test run"
+      docker-compose up -d --build conjur_https
       docker-compose up -d --build ansible
 
       echo "Running tests"
