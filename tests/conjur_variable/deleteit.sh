@@ -151,6 +151,15 @@ function main() {
 #   " > access_token
 # }
 
+  # -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+  # -e "CONJUR_ACCOUNT=demo" \
+  # -e "CONJUR_AUTHN_LOGIN=admin" \
+  # -e "CONJUR_AUTHN_API_KEY=${admin_api_key}" \
+  # -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
+  # -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
+
+
+
 function run_test_cases {
 
   test_case="retrieve-variable"

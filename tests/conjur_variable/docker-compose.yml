@@ -9,10 +9,12 @@ services:
     command: infinity
     environment:
       CONJUR_APPLIANCE_URL: https://conjur-master.mycompany.local
-      CONJUR_ACCOUNT: cucumber
-      CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
-      CONJUR_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}
+      CONJUR_ACCOUNT: demo
+      CONJUR_AUTHN_LOGIN: admin
+      CONJUR_CERT_FILE: conjur-enterprise.pem
+      CONJUR_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}
       COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+      CONJUR_AUTHN_TOKEN_FILE: ${api_key}
     # links:
     #   - "conjur_https:conjur-https"
     volumes:
