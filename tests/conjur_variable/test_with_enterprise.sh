@@ -108,7 +108,7 @@ echo " Setup Policy "
 
     docker-compose run \
     --volume "${PWD}/api_key:/api_key" \
-    --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
+    --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
     --volume "../..:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
@@ -161,24 +161,35 @@ function setup_access_token {
   " > access_token
 }
 
-function run_test_cases {
-
   # retrieve-variable-bad-cert-path NoError
   # retrieve-variable-bad-certs NoError
+  # retrieve-variable-into-file NoError
   # retrieve-variable Error
 
-  test_case="retrieve-variable-bad-certs"
+function run_test_cases {
+  for test_case in test_cases/*; do
+    run_test_case "$(basename -- "$test_case")"
+  done
+}
+
+function run_test_case {
+  local test_case=$1
+  echo "---- testing ${test_case} ----"
+
+  if [ -z "$test_case" ]; then
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
+  fi
+
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
-
-    # # If env vars were provided, load them
-    # if [ -e 'test_cases/${test_case}/env' ]; then
-    #  . ./test_cases/${test_case}/env
-    # fi
-
+   #  # If env vars were provided, load them
+   # if [ -e 'test_cases/${test_case}/env' ]; then
+   #  . ./test_cases/${test_case}/env
+   # fi
+   
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
-
     py.test --junitxml='./junit/${test_case}' \
       --connection docker \
       -v 'test_cases/${test_case}/tests/test_default.py'
