@@ -57,6 +57,19 @@ echo " Provision Master"
       conjur host rotate_api_key --host ansible/ansible-master
       "
 
+
+  ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
+  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
+
+  docker-compose exec -T client bash -c "
+    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+    conjur authn authenticate
+  " > access_token
+
+ cp access_token ../tests/conjur_variable
+
+
   # cp conjur-enterprise.pem ../
 
   cp conjur-enterprise.pem ../tests/conjur_variable
@@ -157,6 +170,13 @@ echo "fetch_ssl_certs end "
 # CONJUR_CERT_FILE=conjur-master.mycompany.local.pem
 # CONJUR_KEY_FILE=conjur-master.mycompany.local.key
 # ENV
+
+  # -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+  # -e "CONJUR_ACCOUNT=demo" \
+  # -e "CONJUR_AUTHN_LOGIN=admin" \
+  # -e "CONJUR_AUTHN_API_KEY=${api_key}" \
+  # -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
+  # -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
 
 # function setup_access_token {
 # docker-compose exec -T client bash -c "

@@ -8,7 +8,7 @@ services:
     entrypoint: sleep
     command: infinity
     environment:
-      CONJUR_APPLIANCE_URL: https://conjur-https
+      CONJUR_APPLIANCE_URL: https://conjur-master.mycompany.local
       CONJUR_ACCOUNT: cucumber
       CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
       CONJUR_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}
