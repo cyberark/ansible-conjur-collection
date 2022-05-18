@@ -16,6 +16,8 @@ function main() {
   echo " stage 1 "
   pwd
   ls
+  cd tests
+  cd conjur_variable
 
   docker-compose up -d --build conjur_https \
 
