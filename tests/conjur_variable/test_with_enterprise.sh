@@ -13,9 +13,16 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
+echo " stage 1"
+pwd
+ls
+
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 # pushd ./conjur-intro
 cd conjur-intro
+echo " stage 2"
+pwd
+ls
 echo " Provision Master"
   ./bin/dap --provision-master
   ./bin/dap --provision-follower
@@ -28,7 +35,7 @@ echo " Setup Policy "
   # cd conjur-intro
 
     cp ../tests/conjur_variable/policy/root.yml .
-    
+
     echo " ========load policy====="
     # ./bin/cli conjur policy load root root.yml
     ./bin/cli conjur policy load --replace root root.yml
@@ -59,12 +66,21 @@ echo " Setup CLI "
 
   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
   echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+  api_key=$CONJUR_ADMIN_AUTHN_API_KEY
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
   cp api_key ../
-
+  echo " stage 3"
+  pwd
+  ls
   cd ..
+  echo " stage 4"
+  pwd
+  ls
   # popd
   cd tests/conjur_variable
+  echo " stage 5"
+  pwd
+  ls
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
@@ -82,13 +98,32 @@ echo " Setup CLI "
 
   # echo "Fetching Ansible master host credentials"
   # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
 
   # echo "Get Access Token"
   # setup_access_token
 
   # echo "Preparing Ansible for test run"
-  docker-compose up -d --build ansible
+  # docker-compose up -d --build ansible
+
+  docker run \
+  --volume "$(git rev-parse --show-toplevel):/repo" \
+  --volume "${PWD}/api_key:/api_key" \
+  --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
+  --volume "../../plugins:/root/.ansible/plugins" \
+  --volume "../..:/cyberark" \
+  --volume "/var/run/docker.sock:/var/run/docker.sock" \
+  --network dap_net \
+  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+  -e "CONJUR_ACCOUNT=demo" \
+  -e "CONJUR_AUTHN_LOGIN=admin" \
+  -e "CONJUR_AUTHN_API_KEY=${api_key}" \
+  -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
+  -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
+  --workdir "/repo" \
+  --rm \
+  --entrypoint /bin/bash \
+  ansible \
 
   echo "Running tests"
   run_test_cases
