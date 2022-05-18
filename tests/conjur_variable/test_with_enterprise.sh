@@ -106,7 +106,7 @@ echo " Setup Policy "
   # echo "Preparing Ansible for test run"
   # docker-compose up -d --build ansible
 
-    docker run \
+    docker-compose run \
     --volume "${PWD}/api_key:/api_key" \
     --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
@@ -129,9 +129,9 @@ echo " Setup Policy "
     echo " End of the tests "
 }
 
-function wait_for_conjur {
-  docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
-}
+# function wait_for_conjur {
+#   docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
+# }
 
 function fetch_ssl_certs {
 echo "Running fetch_ssl_certs"
