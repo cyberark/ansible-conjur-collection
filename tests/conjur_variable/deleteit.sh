@@ -79,7 +79,21 @@ function main() {
         " > access_token
 
       cp access_token ../tests/conjur_variable
-
+      echo " stage 25 "
+      pwd
+      ls
+      cd ..
+      echo " stage 25 "
+      pwd
+      ls
+      cd tests
+      echo " stage 25 "
+      pwd
+      ls
+      cd conjur_variable
+      echo " stage 25 "
+      pwd
+      ls
       echo "Preparing Ansible for test run"
       docker-compose up -d --build ansible
 
