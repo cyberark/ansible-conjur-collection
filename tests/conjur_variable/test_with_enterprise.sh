@@ -165,7 +165,7 @@ function run_test_cases {
 
   # retrieve-variable-bad-cert-path
 
-  test_case="retrieve-variable-bad-cert-path"
+  test_case="retrieve-variable"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
