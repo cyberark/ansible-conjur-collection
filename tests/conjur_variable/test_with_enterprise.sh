@@ -38,7 +38,7 @@ echo " Setup Policy "
 
     echo " ========load policy====="
     ./bin/cli conjur policy load root root.yml
-    ./bin/cli conjur policy load --replace root root.yml
+    # ./bin/cli conjur policy load --replace root root.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
      echo " =======Set Variable value ansible/test-secret-in-file ====="
