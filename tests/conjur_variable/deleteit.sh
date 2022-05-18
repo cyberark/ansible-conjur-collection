@@ -19,7 +19,7 @@ function main() {
   cd tests
   cd conjur_variable
 
-  docker-compose up -d --build conjur_https \
+  # docker-compose up -d --build conjur_https \
 
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   # pushd ./conjur-intro
