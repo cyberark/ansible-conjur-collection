@@ -166,20 +166,11 @@ function setup_access_token {
   # retrieve-variable-into-file NoError
   # retrieve-variable Error
 
+
+
 function run_test_cases {
-  for test_case in test_cases/*; do
-    run_test_case "$(basename -- "$test_case")"
-  done
-}
-
-function run_test_case {
-  local test_case=$1
+  local test_case="retrieve-variable"
   echo "---- testing ${test_case} ----"
-
-  if [ -z "$test_case" ]; then
-    echo ERROR: run_test called with no argument 1>&2
-    exit 1
-  fi
 
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
