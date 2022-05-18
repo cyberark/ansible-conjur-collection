@@ -38,6 +38,7 @@ echo " Setup Policy "
 
     echo " ========load policy====="
     # ./bin/cli conjur policy load root root.yml
+    ./bin/cli conjur policy load root /policy/root.yml
     ./bin/cli conjur policy load --replace root root.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
@@ -122,16 +123,12 @@ echo " Setup Policy "
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    "${COMPOSE_PROJECT_NAME}"-ansible \
+    ansible \
 
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
 }
-
-# function wait_for_conjur {
-#   docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
-# }
 
 function fetch_ssl_certs {
 echo "Running fetch_ssl_certs"
@@ -144,7 +141,7 @@ echo "Running fetch_ssl_certs"
 
  docker-compose up -d --build conjur_https
  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
- echo "fetch_ssl_certs end "
+#  echo "fetch_ssl_certs end "
 }
 
 # function setup_conjur {
