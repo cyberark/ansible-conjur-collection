@@ -12,6 +12,11 @@ declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
+
+  echo " stage 1 "
+  pwd
+  ls
+
   docker-compose up -d --build conjur_https \
 
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
