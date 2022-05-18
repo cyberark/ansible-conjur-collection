@@ -117,7 +117,7 @@ echo " Setup Policy "
     -e "CONJUR_ACCOUNT=demo" \
     -e "CONJUR_AUTHN_LOGIN=admin" \
     -e "CONJUR_AUTHN_API_KEY=${api_key}" \
-    -e "CONJUR_CERT_FILE=./conjur-enterprise.pem" \
+    -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
     -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
     --workdir "/cyberark" \
     --rm \
@@ -172,8 +172,13 @@ function run_test_cases {
   local test_case="retrieve-variable"
   echo "---- testing ${test_case} ----"
 
+
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
+
+    if [ -e 'test_cases/${test_case}/env' ]; then
+      . ./test_cases/${test_case}/env
+    fi
 
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
