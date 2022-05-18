@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/bash -e
+
+# set -o pipefail
 
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
@@ -10,84 +12,95 @@ declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
-  docker-compose up -d --build conjur \
-                               conjur_https \
-                               conjur_cli \
+  docker-compose up -d --build conjur_https \
 
-  echo "Waiting for Conjur server to come up"
-  wait_for_conjur
+  git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+  # pushd ./conjur-intro
+  cd conjur-intro
+  echo " Provision Master"
+  ./bin/dap --provision-master
+  ./bin/dap --wait-for-master
+  ./bin/dap --provision-follower
+  ./bin/dap --import-custom-certificates
 
-  echo "Fetching SSL certs"
-  fetch_ssl_certs
+  echo " Setup Policy "
+  cp ../tests/conjur_variable/policy/root.yml .
 
-  echo "Fetching admin API key"
-  CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+    echo " ========load policy====="
+    ./bin/cli conjur policy load --replace root root.yml
+    echo " ========Set Variable value ansible/test-secret ====="
+    ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+     echo " =======Set Variable value ansible/test-secret-in-file ====="
+    ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+     echo " =======Set Variable value ansible/var with spaces ====="
+    ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+     # echo "Fetching SSL certs"
 
-  echo "Recreating conjur CLI with admin credentials"
-  docker-compose up -d conjur_cli
+     echo "Fetching admin API key"
+     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+    #  CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+     api_key=$CONJUR_ADMIN_AUTHN_API_KEY
+     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
+     cp api_key ../
 
-  echo "Configuring Conjur via CLI"
-  setup_conjur
+     echo "Recreating conjur CLI with admin credentials"
+     # docker-compose up -d conjur_cli
+     echo " Setup CLI "
+      docker-compose  \
+      run \
+      --rm \
+      -w /src/cli \
+      --entrypoint /bin/bash \
+      client \
+        -c "cp /root/conjur-demo.pem conjur-enterprise.pem
+        conjur host rotate_api_key --host ansible/ansible-master
+      "
 
-  echo "Fetching Ansible master host credentials"
-  ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur.pem'
+     cp conjur-enterprise.pem ../tests/conjur_variable
 
-  echo "Get Access Token"
-  setup_access_token
+      # echo "Configuring Conjur via CLI"
 
-  echo "Preparing Ansible for test run"
-  docker-compose up -d --build ansible
+      # echo "Fetching Ansible master host credentials"
+      # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+      ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur_variable/conjur-enterprise.pem'
 
-  echo "Running tests"
-  run_test_cases
+      echo "Get Access Token"
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -c "
+          export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+          export CONJUR_AUTHN_API_KEY=\"$api_key\"
+          conjur authn authenticate
+        " > access_token
 
+      cp access_token ../tests/conjur_variable
 
+      echo "Preparing Ansible for test run"
+      docker-compose up -d --build ansible
+
+      echo "Running tests"
+      run_test_cases
 
 }
 
-function wait_for_conjur {
-  docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
-}
-
-function fetch_ssl_certs {
-  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
-}
-
-function setup_conjur {
-  docker-compose exec -T conjur_cli bash -c '
-    conjur policy load root /policy/root.yml
-    conjur variable values add ansible/test-secret test_secret_password
-    conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-    conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-  '
-}
-
-function setup_access_token {
-  docker-compose exec -T conjur_cli bash -c "
-    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-    conjur authn authenticate
-  " > access_token
-}
-
+# function setup_access_token {
+#   docker-compose exec -T conjur_cli bash -c "
+#     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+#     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+#     conjur authn authenticate
+#   " > access_token
+# }
 
 function run_test_cases {
-  for test_case in test_cases/*; do
-    run_test_case "$(basename -- "$test_case")"
-  done
-}
 
-function run_test_case {
-  local test_case=$1
-  echo "---- testing ${test_case} ----"
-
-  if [ -z "$test_case" ]; then
-    echo ERROR: run_test called with no argument 1>&2
-    exit 1
-  fi
-
+  test_case="retrieve-variable"
   docker-compose exec -T ansible bash -exc "
+
     cd tests/conjur_variable
 
     # If env vars were provided, load them
