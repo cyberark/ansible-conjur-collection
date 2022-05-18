@@ -104,7 +104,7 @@ echo " Setup Policy "
   # setup_access_token
 
   # echo "Preparing Ansible for test run"
-  # docker-compose up -d --build ansible
+  docker-compose up -d --build ansible
 
     docker-compose run \
     --volume "${PWD}/api_key:/api_key" \
