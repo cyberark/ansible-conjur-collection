@@ -41,7 +41,7 @@ echo " Provision Master"
      echo " =======Set Variable value ansible/test-secret-in-file ====="
     ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
      echo " =======Set Variable value ansible/var with spaces ====="
-    # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+    ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
 
 
@@ -55,17 +55,15 @@ echo " Provision Master"
     client \
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem
       conjur host rotate_api_key --host ansible/ansible-master
-      "
+      conjur authn authenticate
+    " > access_token
 
 
-  ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
-
-  docker-compose exec -T client bash -c "
-    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-    conjur authn authenticate
-  " > access_token
+  # docker-compose exec -T client bash -c "
+  #   export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+  #   export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+  #   conjur authn authenticate
+  # " > access_token
 
  cp access_token ../tests/conjur_variable
 
