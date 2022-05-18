@@ -104,9 +104,9 @@ echo " Setup Policy "
   # setup_access_token
 
   # echo "Preparing Ansible for test run"
-  # docker-compose up -d --build ansible
+    docker-compose up -d --build ansible
 
-    docker run \
+    docker-compose run \
     --volume "${PWD}/api_key:/api_key" \
     --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
@@ -123,8 +123,8 @@ echo " Setup Policy "
     --rm \
     --entrypoint /bin/bash \
     ansible \
-
   #   "${COMPOSE_PROJECT_NAME}"-ansible
+  
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
@@ -165,14 +165,14 @@ function run_test_cases {
 
   # retrieve-variable-bad-cert-path
 
-  test_case="retrieve-variable"
+  test_case="retrieve-variable-bad-cert-path"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
-    # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env' ]; then
-      . ./test_cases/${test_case}/env
-    fi
+    # # If env vars were provided, load them
+    # if [ -e 'test_cases/${test_case}/env' ]; then
+    #  . ./test_cases/${test_case}/env
+    # fi
 
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
