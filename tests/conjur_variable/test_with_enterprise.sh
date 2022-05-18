@@ -48,86 +48,86 @@ echo " Setup Policy "
 
 
 
-echo " Setup CLI "
+# echo " Setup CLI "
 
-    docker-compose  \
-    run \
-    --rm \
-    -w /src/cli \
-    --entrypoint /bin/bash \
-    client \
-      -c "cp /root/conjur-demo.pem conjur-enterprise.pem
-      conjur host rotate_api_key --host ansible/ansible-master
-      "
+#     docker-compose  \
+#     run \
+#     --rm \
+#     -w /src/cli \
+#     --entrypoint /bin/bash \
+#     client \
+#       -c "cp /root/conjur-demo.pem conjur-enterprise.pem
+#       conjur host rotate_api_key --host ansible/ansible-master
+#       "
 
-  cp conjur-enterprise.pem ../
+#   cp conjur-enterprise.pem ../
 
-  echo " =======55====="
+#   echo " =======55====="
 
-  CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-  echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
-  api_key=$CONJUR_ADMIN_AUTHN_API_KEY
-  echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
-  cp api_key ../
-  echo " stage 3"
-  pwd
-  ls
-  cd ..
-  echo " stage 4"
-  pwd
-  ls
-  # popd
-  cd tests/conjur_variable
-  echo " stage 5"
-  pwd
-  ls
-  echo "Waiting for Conjur server to come up"
-  # wait_for_conjur
+#   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+#   echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+#   api_key=$CONJUR_ADMIN_AUTHN_API_KEY
+#   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
+#   cp api_key ../
+#   echo " stage 3"
+#   pwd
+#   ls
+#   cd ..
+#   echo " stage 4"
+#   pwd
+#   ls
+#   # popd
+#   cd tests/conjur_variable
+#   echo " stage 5"
+#   pwd
+#   ls
+#   echo "Waiting for Conjur server to come up"
+#   # wait_for_conjur
 
-  echo "Fetching SSL certs"
-  fetch_ssl_certs
+#   echo "Fetching SSL certs"
+#   fetch_ssl_certs
 
-  echo "Fetching admin API key"
-  # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+#   echo "Fetching admin API key"
+#   # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
 
-  # echo "Recreating conjur CLI with admin credentials"
-  # docker-compose up -d client
+#   # echo "Recreating conjur CLI with admin credentials"
+#   # docker-compose up -d client
 
-  # echo "Configuring Conjur via CLI"
-  # # setup_conjur
+#   # echo "Configuring Conjur via CLI"
+#   # # setup_conjur
 
-  # echo "Fetching Ansible master host credentials"
-  # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
+#   # echo "Fetching Ansible master host credentials"
+#   # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+#   ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
 
-  # echo "Get Access Token"
-  # setup_access_token
+#   # echo "Get Access Token"
+#   # setup_access_token
 
-  # echo "Preparing Ansible for test run"
-  # docker-compose up -d --build ansible
+#   # echo "Preparing Ansible for test run"
+#   # docker-compose up -d --build ansible
 
-  docker run \
-  --volume "$(git rev-parse --show-toplevel):/repo" \
-  --volume "${PWD}/api_key:/api_key" \
-  --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
-  --volume "../../plugins:/root/.ansible/plugins" \
-  --volume "../..:/cyberark" \
-  --volume "/var/run/docker.sock:/var/run/docker.sock" \
-  --network dap_net \
-  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-  -e "CONJUR_ACCOUNT=demo" \
-  -e "CONJUR_AUTHN_LOGIN=admin" \
-  -e "CONJUR_AUTHN_API_KEY=${api_key}" \
-  -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
-  -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
-  --workdir "/repo" \
-  --rm \
-  --entrypoint /bin/bash \
-  ansible \
+#   docker run \
+#   --volume "$(git rev-parse --show-toplevel):/repo" \
+#   --volume "${PWD}/api_key:/api_key" \
+#   --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
+#   --volume "../../plugins:/root/.ansible/plugins" \
+#   --volume "../..:/cyberark" \
+#   --volume "/var/run/docker.sock:/var/run/docker.sock" \
+#   --network dap_net \
+#   -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+#   -e "CONJUR_ACCOUNT=demo" \
+#   -e "CONJUR_AUTHN_LOGIN=admin" \
+#   -e "CONJUR_AUTHN_API_KEY=${api_key}" \
+#   -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
+#   -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
+#   --workdir "/repo" \
+#   --rm \
+#   --entrypoint /bin/bash \
+#   ansible \
 
-  echo "Running tests"
-  run_test_cases
-  echo " End of the tests "
+#   echo "Running tests"
+#   run_test_cases
+#   echo " End of the tests "
 }
 
 function wait_for_conjur {
