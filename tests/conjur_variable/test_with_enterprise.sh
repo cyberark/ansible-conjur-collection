@@ -82,14 +82,15 @@ function main() {
     # echo "Preparing Ansible for test run"
     # docker-compose up -d --build ansible
 
-    docker build . -t conjur_ansible:v1
+    # docker build . -t conjur_ansible:v1
 
     echo " Run and pass the env variables "
 
-    # docker build -t conjur_ansible:v1 .
+    docker build -t conjur_ansible:v1 .
 
     #  docker images
-    docker-compose run \
+    docker run \
+    --name ansiblecontainer \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
@@ -104,7 +105,7 @@ function main() {
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    ansible \
+    conjur_ansible:v1 \
       # "${COMPOSE_PROJECT_NAME}"-ansible
       # conjur_ansible
 
