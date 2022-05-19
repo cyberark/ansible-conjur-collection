@@ -101,7 +101,7 @@ function run_test_cases {
       echo "---- docker ps ----"
           docker ps
       echo "---- Run test cases ----"
-  docker-compose exec -T ansible_1 bash -exc "
+  docker-compose exec -T ansiblecontainer bash -exc "
     cd tests/conjur_variable
 
     # if [ -e 'test_cases/${test_case}/env' ]; then
