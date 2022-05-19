@@ -12,9 +12,6 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-  echo " Stage 1"
-  pwd
-  ls
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
     # cd conjur-intro
@@ -53,8 +50,7 @@ function main() {
       -c "conjur host rotate_api_key --host ansible/ansible-master
       "> ANSIBLE_MASTER_AUTHN_API_KEY
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
-    # cp ANSIBLE_MASTER_AUTHN_API_KEY ../tests/conjur_variable
-
+  
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
@@ -64,12 +60,12 @@ function main() {
     # cd ..
   popd
 
-  cd tests/conjur_variable
+  pushd ./tests/conjur_variable
     echo " Build Ansible docker and pass the env variables "
     docker build -t conjur_ansible:v1 .
     echo " Run and pass the env variables "
     #  docker images
-    docker-compose run \
+    docker run \
     --name ansiblecontainer \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
@@ -85,12 +81,13 @@ function main() {
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    ansible \
+    conjur_ansible:v1 \
       # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
+  popd
 }
 
 function run_test_cases {
@@ -103,13 +100,8 @@ function run_test_cases {
       echo "---- Run test cases ----"
   docker-compose exec -T ansiblecontainer bash -exc "
     cd tests/conjur_variable
-
-    # if [ -e 'test_cases/${test_case}/env' ]; then
-    #   . ./test_cases/${test_case}/env
-    # fi
-
-    # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    
     py.test --junitxml='./junit/${test_case}' \
       --connection docker \
       -v 'test_cases/${test_case}/tests/test_default.py'
