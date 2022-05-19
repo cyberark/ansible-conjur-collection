@@ -1,5 +1,25 @@
 #!/bin/bash -eu
 
+      echo " stage 1"
+      pwd
+      ls
+
+ git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+
+ pushd ./conjur-intro
+
+      echo " stage 1"
+      pwd
+      ls
+
+popd
+
+      echo " stage 2"
+      pwd
+      ls
+
+      #!/bin/bash -eu
+
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
@@ -16,8 +36,8 @@ function main() {
       pwd
       ls
     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-    # pushd ./conjur-intro
-    cd conjur-intro
+    pushd ./conjur-intro
+    # cd conjur-intro
       echo " stage 2"
       pwd
       ls
@@ -66,12 +86,13 @@ function main() {
     echo " stage 3"
     pwd
     ls
-  cd ..
+  # cd ..
     echo " stage 4"
     pwd
     ls
-  # popd
-  cd tests/conjur_variable
+  popd
+
+#   cd tests/conjur_variable
     echo " stage 5"
     pwd
     ls
