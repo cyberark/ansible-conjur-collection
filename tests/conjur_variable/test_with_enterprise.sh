@@ -89,7 +89,7 @@ function main() {
     docker build -t conjur_ansible:v1 .
 
     #  docker images
-    docker-compose run \
+    docker-compose up \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
