@@ -61,7 +61,13 @@ function main() {
     # cd ..
     popd
 
-    # cd tests/conjur_variable
+  #  echo "Waiting for Conjur server to come up"
+  #  pwd
+  #  ls
+
+  #   # wait_for_conjur
+
+  #   cd tests/conjur_variable
 
     # echo "Waiting for Conjur server to come up"
     # wait_for_conjur
@@ -69,19 +75,24 @@ function main() {
     echo "Fetching SSL certs"
     #  fetch_ssl_certs
 
-    echo "Fetching admin API key"
+    echo " Build Ansible docker and pass the env variables "
+    pwd
+    ls
+
     # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
 
     # echo "Fetching Ansible master host credentials"
     # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-    ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
+    # ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
 
     # echo "Preparing Ansible for test run"
     # docker-compose up -d --build ansible
 
-    # docker build . -t myimage
 
-    docker build -t ansible:v1 .
+
+    docker build . -t ansible:v1
+
+    # docker build -t ansible:v1 .
 
     docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
@@ -113,13 +124,13 @@ function main() {
 #  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
 # }
 
-function setup_access_token {
-  docker-compose exec -T client bash -c "
-    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-    conjur authn authenticate
-  " > access_token
-}
+# function setup_access_token {
+#   docker-compose exec -T client bash -c "
+#     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+#     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+#     conjur authn authenticate
+#   " > access_token
+# }
 
   # retrieve-variable-bad-cert-path NoError
   # retrieve-variable-bad-certs NoError
