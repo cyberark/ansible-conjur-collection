@@ -93,9 +93,9 @@ function main() {
     --name ansiblecontainer \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-    --volume "../../plugins":/root/.ansible/plugins \
     --volume "../..:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
+    --volume "../../plugins":"/root/.ansible/plugins" \
     --network dap_net \
     -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
     -e "CONJUR_ACCOUNT=demo" \
