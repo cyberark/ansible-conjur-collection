@@ -82,11 +82,11 @@ function main() {
     # echo "Preparing Ansible for test run"
     # docker-compose up -d --build ansible
 
-    docker build . -t ansible
+    # docker build . -t ansible
 
     echo " Run and pass the env variables "
 
-    # docker build -t ansible .
+    docker build -t conjur_ansible:v1 .
 
     #  docker images
     docker-compose run \
