@@ -84,11 +84,11 @@ function main() {
 
 
 
-    docker build . -t ansible:v1
+    # docker build . -t ansible:v1
 
     echo " Run and pass the env variables "
 
-    # docker build -t ansible:v1 .
+    docker build -t ansible_image:v1 .
 
     docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
@@ -106,7 +106,7 @@ function main() {
     --rm \
     --no-deps \
     --entrypoint /bin/bash \
-    ansible_1 \
+    ansible \
   #   "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
