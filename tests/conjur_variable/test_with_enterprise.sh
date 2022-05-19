@@ -88,8 +88,9 @@ function main() {
 
     echo " Run and pass the env variables "
 
-    docker build -t ansible_image:v1 .
+     docker build -t ansible .
 
+    #  docker images
     docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
@@ -104,10 +105,10 @@ function main() {
     -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
     --workdir "/cyberark" \
     --rm \
-    --no-deps \
     --entrypoint /bin/bash \
     ansible \
-  #   "${COMPOSE_PROJECT_NAME}"-ansible
+      # "${COMPOSE_PROJECT_NAME}"-ansible
+      # conjur_ansible
 
     echo "Running tests"
     run_test_cases
