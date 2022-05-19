@@ -86,6 +86,8 @@ function main() {
 
     docker build . -t ansible:v1
 
+    echo " Run and pass the env variables "
+
     # docker build -t ansible:v1 .
 
     docker-compose run \
@@ -104,7 +106,7 @@ function main() {
     --rm \
     --no-deps \
     --entrypoint /bin/bash \
-    ansible:v1 \
+    ansible_1 \
   #   "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
