@@ -135,7 +135,11 @@ function main() {
 function run_test_cases {
   local test_case="retrieve-variable"
   echo "---- testing ${test_case} ----"
-
+  echo "---- testing 1 ----"
+  docker images
+  echo "---- testing 2 ----"
+  docker ps
+  echo "---- testing 4 ----"
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
