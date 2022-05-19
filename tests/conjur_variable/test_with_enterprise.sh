@@ -13,16 +13,16 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-echo " stage 1"
-pwd
-ls
+  echo " stage 1"
+  pwd
+  ls
 
 git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 # pushd ./conjur-intro
 cd conjur-intro
-echo " stage 2"
-pwd
-ls
+  echo " stage 2"
+  pwd
+  ls
 echo " Provision Master"
   ./bin/dap --provision-master
   ./bin/dap --provision-follower
@@ -67,6 +67,7 @@ echo " Setup Policy "
       "> ANSIBLE_MASTER_AUTHN_API_KEY
 
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+  # cp ANSIBLE_MASTER_AUTHN_API_KEY ../tests/conjur_variable
 
   echo " =======55====="
 
@@ -75,18 +76,18 @@ echo " Setup Policy "
   api_key=$CONJUR_ADMIN_AUTHN_API_KEY
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
   cp api_key ../
-  echo " stage 3"
-  pwd
-  ls
+    echo " stage 3"
+    pwd
+    ls
   cd ..
-  echo " stage 4"
-  pwd
-  ls
+    echo " stage 4"
+    pwd
+    ls
   # popd
   cd tests/conjur_variable
-  echo " stage 5"
-  pwd
-  ls
+    echo " stage 5"
+    pwd
+    ls
   echo "Waiting for Conjur server to come up"
   # wait_for_conjur
 
@@ -120,8 +121,8 @@ echo " Setup Policy "
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
     --network dap_net \
     -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-    -e "CONJUR_ACCOUNT=cucumber" \
-    -e "CONJUR_AUTHN_LOGIN=host/ansible/ansible-master" \
+    -e "CONJUR_ACCOUNT=demo" \
+    -e "CONJUR_AUTHN_LOGIN=admin" \
     -e "ANSIBLE_MASTER_AUTHN_API_KEY=${api_key}" \
     -e "CONJUR_ADMIN_AUTHN_API_KEY=${api_key}" \
     -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
@@ -172,12 +173,9 @@ function setup_access_token {
   # retrieve-variable-into-file NoError
   # retrieve-variable Error
 
-
-
 function run_test_cases {
   local test_case="retrieve-variable"
   echo "---- testing ${test_case} ----"
-
 
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
