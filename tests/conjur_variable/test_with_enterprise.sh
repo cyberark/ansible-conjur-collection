@@ -38,15 +38,12 @@ echo " Setup Policy "
 
     echo " ========load policy====="
     ./bin/cli conjur policy load root root.yml
-    # ./bin/cli conjur policy load --replace root root.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
      echo " =======Set Variable value ansible/test-secret-in-file ====="
     ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
      echo " =======Set Variable value ansible/var with spaces ====="
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-
-
 
 # echo " Setup CLI "
 
@@ -74,7 +71,6 @@ echo " Setup Policy "
   echo " =======55====="
 
   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-
   echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   api_key=$CONJUR_ADMIN_AUTHN_API_KEY
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
@@ -118,7 +114,6 @@ echo " Setup Policy "
 
     docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
-    --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
     --volume "../..:/cyberark" \
@@ -187,9 +182,9 @@ function run_test_cases {
   docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
-    if [ -e 'test_cases/${test_case}/env' ]; then
-      . ./test_cases/${test_case}/env
-    fi
+    # if [ -e 'test_cases/${test_case}/env' ]; then
+    #   . ./test_cases/${test_case}/env
+    # fi
 
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
