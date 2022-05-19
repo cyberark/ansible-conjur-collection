@@ -130,6 +130,7 @@ echo " Setup Policy "
     --no-deps \
     --entrypoint /bin/bash \
     ansible \
+
   #   "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
