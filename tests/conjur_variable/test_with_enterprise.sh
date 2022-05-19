@@ -56,15 +56,25 @@ echo " Setup Policy "
     -w /src/cli \
     --entrypoint /bin/bash \
     client \
-      -c "cp /root/conjur-demo.pem conjur-enterprise.pem
-      conjur host rotate_api_key --host ansible/ansible-master
-      "
+      -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
 
   cp conjur-enterprise.pem ../
+
+    docker-compose  \
+    run \
+    --rm \
+    -w /src/cli \
+    --entrypoint /bin/bash \
+    client \
+      -c "conjur host rotate_api_key --host ansible/ansible-master
+      "> ANSIBLE_MASTER_AUTHN_API_KEY
+
+    cp ANSIBLE_MASTER_AUTHN_API_KEY ../
 
   echo " =======55====="
 
   CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+
   echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   api_key=$CONJUR_ADMIN_AUTHN_API_KEY
   echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
@@ -107,7 +117,8 @@ echo " Setup Policy "
     docker-compose up -d --build ansible
 
     docker-compose run \
-    --volume "${PWD}/api_key:/api_key" \
+    --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
+    --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
     --volume "../..:/cyberark" \
@@ -116,9 +127,9 @@ echo " Setup Policy "
     -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
     -e "CONJUR_ACCOUNT=demo" \
     -e "CONJUR_AUTHN_LOGIN=admin" \
-    -e "CONJUR_AUTHN_API_KEY=${api_key}" \
-    -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
-    -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
+    -e "ANSIBLE_MASTER_AUTHN_API_KEY=${api_key}" \
+    -e "CONJUR_ADMIN_AUTHN_API_KEY=${api_key}" \
+    -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
