@@ -12,11 +12,11 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-    echo " Stage 1"
-    pwd
-    ls
-    git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-    pushd ./conjur-intro
+  echo " Stage 1"
+  pwd
+  ls
+  git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+  pushd ./conjur-intro
     # cd conjur-intro
     echo " Provision Master"
     ./bin/dap --provision-master
@@ -29,9 +29,9 @@ function main() {
     ./bin/cli conjur policy load root root.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-     echo " =======Set Variable value ansible/test-secret-in-file ====="
+    echo " =======Set Variable value ansible/test-secret-in-file ====="
     ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-     echo " =======Set Variable value ansible/var with spaces ====="
+    echo " =======Set Variable value ansible/var with spaces ====="
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
     # echo " Setup CLI "
@@ -62,42 +62,14 @@ function main() {
     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
     cp api_key ../
     # cd ..
-    popd
+  popd
 
-    echo " Stage 2 "
-    pwd
-    ls
-    cd tests/conjur_variable
-    echo " Stage 3 "
-    pwd
-    ls
-    # echo "Waiting for Conjur server to come up"
-    # wait_for_conjur
-
-    echo "Fetching SSL certs"
-    #  fetch_ssl_certs
-
+  cd tests/conjur_variable
     echo " Build Ansible docker and pass the env variables "
-    pwd
-    ls
-
-    # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
-
-    # echo "Fetching Ansible master host credentials"
-    # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-    # ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
-
-    # echo "Preparing Ansible for test run"
-    # docker-compose up -d --build ansible
-
-    # docker build . -t conjur_ansible:v1
-
-    echo " Stage 1"
-
     docker build -t conjur_ansible:v1 .
     echo " Run and pass the env variables "
     #  docker images
-    docker run \
+    docker-compose run \
     --name ansiblecontainer \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
@@ -113,43 +85,23 @@ function main() {
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    conjur_ansible:v1 \
+    ansible \
       # "${COMPOSE_PROJECT_NAME}"-ansible
-      # conjur_ansible
-      # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
+
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
 }
 
-# function fetch_ssl_certs {
-#  echo "Running fetch_ssl_certs"
-#  docker-compose up -d --build conjur_https
-#  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
-# }
-
-# function setup_access_token {
-#   docker-compose exec -T client bash -c "
-#     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-#     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-#     conjur authn authenticate
-#   " > access_token
-# }
-
-  # retrieve-variable-bad-cert-path NoError
-  # retrieve-variable-bad-certs NoError
-  # retrieve-variable-into-file NoError
-  # retrieve-variable Error
-
 function run_test_cases {
   local test_case="retrieve-variable"
-  echo "---- testing ${test_case} ----"
-  echo "---- testing 1 ----"
-  docker images
-  echo "---- testing 2 ----"
-  docker ps
-  echo "---- testing 4 ----"
-  docker-compose exec -T ansible bash -exc "
+      echo "---- testing ${test_case} ----"
+      echo "---- docker images ----"
+        docker images
+      echo "---- docker ps ----"
+          docker ps
+      echo "---- Run test cases ----"
+  docker-compose exec -T ansible_1 bash -exc "
     cd tests/conjur_variable
 
     # if [ -e 'test_cases/${test_case}/env' ]; then
