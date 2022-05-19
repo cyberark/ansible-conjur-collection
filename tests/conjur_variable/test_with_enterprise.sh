@@ -61,13 +61,7 @@ function main() {
     # cd ..
     popd
 
-  #  echo "Waiting for Conjur server to come up"
-  #  pwd
-  #  ls
-
-  #   # wait_for_conjur
-
-  #   cd tests/conjur_variable
+    cd tests/conjur_variable
 
     # echo "Waiting for Conjur server to come up"
     # wait_for_conjur
