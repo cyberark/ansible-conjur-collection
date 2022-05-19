@@ -12,6 +12,9 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
+    echo " Stage 1"
+    pwd
+    ls
     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
     pushd ./conjur-intro
     # cd conjur-intro
@@ -61,8 +64,13 @@ function main() {
     # cd ..
     popd
 
+    echo " Stage 2 "
+    pwd
+    ls
     cd tests/conjur_variable
-
+    echo " Stage 3 "
+    pwd
+    ls
     # echo "Waiting for Conjur server to come up"
     # wait_for_conjur
 
