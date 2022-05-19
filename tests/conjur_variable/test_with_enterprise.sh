@@ -102,7 +102,7 @@ function main() {
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
-    --volume "../..:/cyberark" \
+    --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
     --network dap_net \
     -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
