@@ -115,6 +115,7 @@ echo " Setup Policy "
     docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+    --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
     --volume "../../plugins:/root/.ansible/plugins" \
     --volume "../..:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
