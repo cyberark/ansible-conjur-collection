@@ -1,25 +1,5 @@
 #!/bin/bash -eu
 
-      echo " stage 1"
-      pwd
-      ls
-
- git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-
- pushd ./conjur-intro
-
-      echo " stage 1"
-      pwd
-      ls
-
-popd
-
-      echo " stage 2"
-      pwd
-      ls
-
-      #!/bin/bash -eu
-
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
@@ -32,20 +12,15 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-      echo " stage 1"
-      pwd
-      ls
     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
     pushd ./conjur-intro
     # cd conjur-intro
-      echo " stage 2"
-      pwd
-      ls
     echo " Provision Master"
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
-  cp ../tests/conjur_variable/policy/root.yml .
+    cp ../tests/conjur_variable/policy/root.yml .
+
     echo " Setup Policy "
     echo " ========load policy====="
     ./bin/cli conjur policy load root root.yml
@@ -56,7 +31,7 @@ function main() {
      echo " =======Set Variable value ansible/var with spaces ====="
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
-# echo " Setup CLI "
+    # echo " Setup CLI "
     docker-compose  \
     run \
     --rm \
@@ -64,7 +39,7 @@ function main() {
     --entrypoint /bin/bash \
     client \
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
-  cp conjur-enterprise.pem ../
+    cp conjur-enterprise.pem ../
 
     docker-compose  \
     run \
@@ -74,43 +49,39 @@ function main() {
     client \
       -c "conjur host rotate_api_key --host ansible/ansible-master
       "> ANSIBLE_MASTER_AUTHN_API_KEY
-  cp ANSIBLE_MASTER_AUTHN_API_KEY ../
-  # cp ANSIBLE_MASTER_AUTHN_API_KEY ../tests/conjur_variable
+    cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+    # cp ANSIBLE_MASTER_AUTHN_API_KEY ../tests/conjur_variable
 
-  echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
-  CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-  echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
-  api_key=$CONJUR_ADMIN_AUTHN_API_KEY
-  echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
-  cp api_key ../
-    echo " stage 3"
-    pwd
-    ls
-  # cd ..
-    echo " stage 4"
-    pwd
-    ls
-  popd
+    echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
+    CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+    echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+    api_key=$CONJUR_ADMIN_AUTHN_API_KEY
+    echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
+    cp api_key ../
+    # cd ..
+    popd
 
-#   cd tests/conjur_variable
-    echo " stage 5"
-    pwd
-    ls
-  # echo "Waiting for Conjur server to come up"
-  # wait_for_conjur
+    # cd tests/conjur_variable
 
-  echo "Fetching SSL certs"
-  fetch_ssl_certs
+    # echo "Waiting for Conjur server to come up"
+    # wait_for_conjur
 
-  echo "Fetching admin API key"
-  # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
+    echo "Fetching SSL certs"
+    #  fetch_ssl_certs
 
-  # echo "Fetching Ansible master host credentials"
-  # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
-  ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
+    echo "Fetching admin API key"
+    # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
 
-  # echo "Preparing Ansible for test run"
-    docker-compose up -d --build ansible
+    # echo "Fetching Ansible master host credentials"
+    # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
+    ANSIBLE_CONJUR_CERT_FILE='/cyberark/tests/conjur-enterprise.pem'
+
+    # echo "Preparing Ansible for test run"
+    # docker-compose up -d --build ansible
+
+    # docker build . -t myimage
+
+    docker build -t ansible:v1 .
 
     docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
@@ -128,7 +99,7 @@ function main() {
     --rm \
     --no-deps \
     --entrypoint /bin/bash \
-    ansible \
+    ansible:v1 \
   #   "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
@@ -136,11 +107,11 @@ function main() {
     echo " End of the tests "
 }
 
-function fetch_ssl_certs {
- echo "Running fetch_ssl_certs"
- docker-compose up -d --build conjur_https
- docker-compose exec -T conjur_https cat cert.crt > conjur.pem
-}
+# function fetch_ssl_certs {
+#  echo "Running fetch_ssl_certs"
+#  docker-compose up -d --build conjur_https
+#  docker-compose exec -T conjur_https cat cert.crt > conjur.pem
+# }
 
 function setup_access_token {
   docker-compose exec -T client bash -c "
