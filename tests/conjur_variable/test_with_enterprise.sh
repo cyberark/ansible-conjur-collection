@@ -101,6 +101,7 @@ function main() {
     --name ansiblecontainer \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+    --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
     --volume "../..:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
     --network dap_net \
@@ -115,7 +116,7 @@ function main() {
     conjur_ansible:v1 \
       # "${COMPOSE_PROJECT_NAME}"-ansible
       # conjur_ansible
-      # --volume ../../plugins:/root/.ansible/plugins \
+      # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
