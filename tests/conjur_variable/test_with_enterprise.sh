@@ -95,7 +95,6 @@ function main() {
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "../..:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
-    --volume ../../plugins:/root/.ansible/plugins \
     --network dap_net \
     -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
     -e "CONJUR_ACCOUNT=demo" \
@@ -108,7 +107,7 @@ function main() {
     conjur_ansible:v1 \
       # "${COMPOSE_PROJECT_NAME}"-ansible
       # conjur_ansible
-
+      # --volume ../../plugins:/root/.ansible/plugins \
     echo "Running tests"
     run_test_cases
     echo " End of the tests "
