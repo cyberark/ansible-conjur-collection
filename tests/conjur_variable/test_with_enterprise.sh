@@ -84,16 +84,16 @@ function main() {
 
     # docker build . -t conjur_ansible:v1
 
-    echo " Run and pass the env variables "
+    echo " Stage 1"
 
     docker build -t conjur_ansible:v1 .
-
+    echo " Run and pass the env variables "
     #  docker images
     docker run \
     --name ansiblecontainer \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-    --volume "../../plugins:/root/.ansible/plugins" \
+    --volume "../../plugins":/root/.ansible/plugins \
     --volume "../..:/cyberark" \
     --volume "/var/run/docker.sock:/var/run/docker.sock" \
     --network dap_net \
