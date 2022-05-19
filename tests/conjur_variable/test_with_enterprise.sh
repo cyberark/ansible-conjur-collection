@@ -86,7 +86,7 @@ function main() {
 
     echo " Run and pass the env variables "
 
-    docker build -t conjur_ansible:v1 .
+    # docker build -t conjur_ansible:v1 .
 
     #  docker images
     docker-compose up \
