@@ -64,8 +64,7 @@ function main() {
     docker build -t conjur_ansible:v1 .
     echo " Stage 2 "
 
-    docker run \
-    --name ansiblecontainer \
+    docker-compose run \
     --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
     --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
     --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
@@ -80,8 +79,10 @@ function main() {
     --workdir "/cyberark" \
     --rm \
     --entrypoint /bin/bash \
-    conjur_ansible:v1 \
+    ansible \
+    
       # "${COMPOSE_PROJECT_NAME}"-ansible
+      #   --name ansiblecontainer \
 
     echo "Running tests"
     run_test_cases
@@ -96,7 +97,7 @@ function run_test_cases {
     echo "---- docker ps ----"
       docker ps
     echo "---- Run test cases ----"
-  docker-compose exec -T ansiblecontainer bash -exc "
+  docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
