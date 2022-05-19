@@ -123,11 +123,11 @@ echo " Setup Policy "
     -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
     -e "CONJUR_ACCOUNT=demo" \
     -e "CONJUR_AUTHN_LOGIN=admin" \
-    -e "ANSIBLE_MASTER_AUTHN_API_KEY=${api_key}" \
-    -e "CONJUR_ADMIN_AUTHN_API_KEY=${api_key}" \
+    -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
     -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
     --workdir "/cyberark" \
     --rm \
+    --no-deps \
     --entrypoint /bin/bash \
     ansible \
   #   "${COMPOSE_PROJECT_NAME}"-ansible
