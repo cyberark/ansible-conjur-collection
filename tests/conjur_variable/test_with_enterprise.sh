@@ -7,6 +7,7 @@ COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variabl
 export COMPOSE_PROJECT_NAME
 
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
+declare -x ANSIBLE_MASTER_AUTHN_API_KEY_test=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
@@ -50,58 +51,65 @@ function main() {
       -c "conjur host rotate_api_key --host ansible/ansible-master
       "> ANSIBLE_MASTER_AUTHN_API_KEY
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
-  
+
+
+    echo "testing ANSIBLE_MASTER_AUTHN_API_KEY_test value "
+    ANSIBLE_MASTER_AUTHN_API_KEY_test=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
+
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
-    api_key=$CONJUR_ADMIN_AUTHN_API_KEY
     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
     cp api_key ../
     # cd ..
   popd
 
   pushd ./tests/conjur_variable
-    echo " Build Ansible docker and pass the env variables "
+    echo " Stage 1"
     docker build -t conjur_ansible:v1 .
-    echo " Run and pass the env variables "
-    #  docker images
-    docker run \
-    --name ansiblecontainer \
-    --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
-    --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-    --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
-    --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
-    --volume "/var/run/docker.sock:/var/run/docker.sock" \
-    --network dap_net \
-    -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-    -e "CONJUR_ACCOUNT=demo" \
-    -e "CONJUR_AUTHN_LOGIN=admin" \
-    -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-    -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
-    --workdir "/cyberark" \
-    --rm \
-    --entrypoint /bin/bash \
-    conjur_ansible:v1 \
-      # "${COMPOSE_PROJECT_NAME}"-ansible
+    echo " Stage 2 "
+
+    docker-compose run --name ansiblecontainer --rm ansible
+
+       # docker-compose run \
+       # --name ansiblecontainer \
+       # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
+       # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+       # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
+       # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
+       # --volume "/var/run/docker.sock:/var/run/docker.sock" \
+       # --network dap_net \
+       # -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+       # -e "CONJUR_ACCOUNT=demo" \
+       # -e "CONJUR_AUTHN_LOGIN=admin" \
+       # -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+       # -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+       # --workdir "/cyberark" \
+       # --rm \
+       # --entrypoint /bin/bash \
+       # ansible \
+
+    # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
-    run_test_cases
+    # run_test_cases
     echo " End of the tests "
   popd
 }
 
 function run_test_cases {
   local test_case="retrieve-variable"
-      echo "---- testing ${test_case} ----"
-      echo "---- docker images ----"
-        docker images
-      echo "---- docker ps ----"
-          docker ps
-      echo "---- Run test cases ----"
-  docker-compose exec -T ansiblecontainer bash -exc "
+    echo "---- testing ${test_case} ----"
+    echo "---- docker images ----"
+      docker images
+    echo "---- docker ps ----"
+      docker ps
+    echo "---- Run test cases ----"
+# docker-compose exec -T ansible bash -exc "
+  docker exec -t ansiblecontainer bash -exc "
     cd tests/conjur_variable
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
-    
+
     py.test --junitxml='./junit/${test_case}' \
       --connection docker \
       -v 'test_cases/${test_case}/tests/test_default.py'
