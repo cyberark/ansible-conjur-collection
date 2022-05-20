@@ -15,6 +15,9 @@ function main() {
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
     # cd conjur-intro
+
+    # conjur-master-1.mycompany.local
+
     echo " Provision Master"
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
@@ -68,8 +71,7 @@ function main() {
     docker images
 
     echo " Run Ansible "
-       docker-compose run \
-       --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
+       docker-compose up \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
@@ -85,10 +87,15 @@ function main() {
        --rm \
        --entrypoint /bin/bash \
        ansible \
-    # "${COMPOSE_PROJECT_NAME}"-ansible
+
+    # "${COMPOSE_PROJECT_NAME}"-ansible  conjur-master-1.mycompany.local
+    # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
 
     echo "Running tests"
-    run_test_cases
+    docker ps
+    docker images
+
+    # run_test_cases
     echo " End of the tests "
   popd
 }
