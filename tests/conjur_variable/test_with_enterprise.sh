@@ -33,6 +33,8 @@ function main() {
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
     # echo " Setup CLI "
+    docker-compose build
+
     docker-compose  \
     run \
     --name enterpriseclient \
