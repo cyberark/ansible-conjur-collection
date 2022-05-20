@@ -66,7 +66,6 @@ function main() {
 
     docker-compose run \
     --name ansiblecontainer \
-
     --rm \
     --entrypoint /bin/bash \
     ansible \
