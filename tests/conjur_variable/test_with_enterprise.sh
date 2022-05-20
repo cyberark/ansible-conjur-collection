@@ -54,7 +54,7 @@ function main() {
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
 
 
-    ANSIBLE_MASTER_AUTHN_API_KEY_test=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
+    # ANSIBLE_MASTER_AUTHN_API_KEY_test=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
     echo "testing only "
     echo "ANSIBLE_MASTER_AUTHN_API_KEY_test : ${ANSIBLE_MASTER_AUTHN_API_KEY_test}"
 
@@ -71,8 +71,9 @@ function main() {
     # docker build -t conjur_ansible:v1 .
     docker-compose build
     echo " Stage 2 "
-
-    docker-compose run --rm --name ansiblecontainer  ansible
+    docker ps
+    echo " Stage 4 "
+    docker-compose run --rm --name ansiblecontainer ansible
 
        # docker-compose run \
        # --name ansiblecontainer \
