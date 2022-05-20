@@ -55,7 +55,7 @@ function main() {
 
 
     echo "testing ANSIBLE_MASTER_AUTHN_API_KEY_test value "
-    ANSIBLE_MASTER_AUTHN_API_KEY_test=$(docker-compose exec -T enterpriseclient conjur host rotate_api_key --host ansible/ansible-master)
+    ANSIBLE_MASTER_AUTHN_API_KEY_test=$(docker exec -t enterpriseclient conjur host rotate_api_key --host ansible/ansible-master)
 
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
