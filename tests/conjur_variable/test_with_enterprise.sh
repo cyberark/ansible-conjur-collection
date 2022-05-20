@@ -98,7 +98,7 @@ function run_test_cases {
     echo "---- docker ps ----"
       docker ps
     echo "---- Run test cases ----"
-# docker-compose exec -T ansible bash -exc "
+# docker-compose exec -t ansible bash -exc "
   docker exec -T ansiblecontainer bash -exc "
     cd tests/conjur_variable
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
