@@ -65,11 +65,17 @@ function main() {
     cp api_key ../
     # cd ..
   popd
+  echo "step 10"
+  pwd
+  ls
 
   pushd ./tests/conjur_variable
     echo " Stage 1"
-    # docker build -t conjur_ansible:v1 .
-    docker-compose build
+    pwd
+    ls
+
+    docker build -t conjur_ansible:v1 .
+    # docker-compose build
     echo " Stage 2 "
     docker ps
     echo " Stage 4 "
