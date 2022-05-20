@@ -67,7 +67,7 @@ function main() {
     docker ps
     # docker-compose run --rm --name ansiblecontainer ansible
 
-       docker-compose run \
+       docker run \
        --name ansiblecontainer \
        --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
@@ -84,7 +84,7 @@ function main() {
        --no-deps \
        --rm \
        --entrypoint /bin/bash \
-       ansible \
+       conjur_ansible:v1 \
     # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
