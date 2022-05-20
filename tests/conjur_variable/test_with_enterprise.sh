@@ -84,11 +84,11 @@ function main() {
        # --entrypoint /bin/bash \
        # ansible \
 
-    # "${COMPOSE_PROJECT_NAME}"-ansible
+     # "${COMPOSE_PROJECT_NAME}"-ansible
 
-    echo "Running tests"
-    # run_test_cases
-    echo " End of the tests "
+     echo "Running tests"
+     # run_test_cases
+     echo " End of the tests "
   popd
 }
 
