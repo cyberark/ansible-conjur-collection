@@ -10,6 +10,8 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
+declare -x ANSIBLE_MASTER_AUTHN_API_KEY_test=''
+
 function main() {
 
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
@@ -51,6 +53,11 @@ function main() {
       "> ANSIBLE_MASTER_AUTHN_API_KEY
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
 
+
+    ANSIBLE_MASTER_AUTHN_API_KEY_test=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
+    echo "testing only "
+    echo "ANSIBLE_MASTER_AUTHN_API_KEY_test : ${ANSIBLE_MASTER_AUTHN_API_KEY_test}"
+
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
@@ -61,9 +68,10 @@ function main() {
 
   pushd ./tests/conjur_variable
     echo " Stage 1"
-    docker build -t conjur_ansible:v1 .
+    # docker build -t conjur_ansible:v1 .
+    docker-compose build
     echo " Stage 2 "
-    
+
     docker-compose run --name ansiblecontainer --rm ansible
 
        # docker-compose run \
