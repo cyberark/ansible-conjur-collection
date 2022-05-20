@@ -72,7 +72,7 @@ function main() {
     docker-compose build
     echo " Stage 2 "
 
-    docker-compose run --name ansiblecontainer --rm ansible
+    docker-compose run --rm --name ansiblecontainer  ansible
 
        # docker-compose run \
        # --name ansiblecontainer \
@@ -95,7 +95,7 @@ function main() {
     # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
-    run_test_cases
+    # run_test_cases
     echo " End of the tests "
   popd
 }
