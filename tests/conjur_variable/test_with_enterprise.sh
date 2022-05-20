@@ -66,22 +66,26 @@ function main() {
 
     docker-compose run \
     --name ansiblecontainer \
-    --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
-    --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-    --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
-    --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
-    --volume "/var/run/docker.sock:/var/run/docker.sock" \
-    --network dap_net \
-    -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-    -e "CONJUR_ACCOUNT=demo" \
-    -e "CONJUR_AUTHN_LOGIN=admin" \
-    -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-    -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
-    --workdir "/cyberark" \
+
     --rm \
     --entrypoint /bin/bash \
     ansible \
     
+    
+    
+    
+    # --workdir "/cyberark" \
+    # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
+    # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+    # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
+    # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
+    # --volume "/var/run/docker.sock:/var/run/docker.sock" \
+    # --network dap_net \
+    # -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+    # -e "CONJUR_ACCOUNT=demo" \
+    # -e "CONJUR_AUTHN_LOGIN=admin" \
+    # -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+    # -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
       # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
