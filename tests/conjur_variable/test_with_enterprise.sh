@@ -87,7 +87,7 @@ function main() {
     # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
-    run_test_cases
+    # run_test_cases
     echo " End of the tests "
   popd
 }
