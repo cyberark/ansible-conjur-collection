@@ -65,10 +65,10 @@ function main() {
     # docker-compose build
     echo " Stage 2 "
     docker ps
-    # docker-compose run --rm --name ansiblecontainer ansible
+    docker images
 
-       docker run \
-       --name ansiblecontainer \
+    echo " Run Ansible "
+       docker-compose run \
        --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
@@ -84,7 +84,7 @@ function main() {
        --no-deps \
        --rm \
        --entrypoint /bin/bash \
-       conjur_ansible:v1 \
+       ansible \
     # "${COMPOSE_PROJECT_NAME}"-ansible
 
     echo "Running tests"
@@ -103,7 +103,7 @@ function run_test_cases {
     echo "---- Run test cases ----"
 
 # docker-compose exec -T ansible bash -exc "
-  docker exec -t ansiblecontainer bash -exc "
+  docker exec -t ansible bash -exc "
     cd tests/conjur_variable
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
