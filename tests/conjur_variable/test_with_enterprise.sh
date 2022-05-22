@@ -86,7 +86,7 @@ function main() {
        --no-deps \
        --rm \
        --entrypoint /bin/bash \
-       ansible \
+       conjur_ansible:v1 \
 
     # "${COMPOSE_PROJECT_NAME}"-ansible  conjur-master-1.mycompany.local
     # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
