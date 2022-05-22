@@ -72,7 +72,14 @@ function main() {
 
     echo " Run Ansible "
 
-    docker-compose up conjur_ansible:v1 \
+    docker-compose up \
+    --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+    --volume "/var/run/docker.sock:/var/run/docker.sock" \
+    --network dap_net \
+    --no-deps \
+    --rm \
+    --entrypoint /bin/bash \
+    ansible \
 
       #  docker-compose up \
       #  --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
