@@ -96,7 +96,7 @@ function run_test_cases {
   local test_case="retrieve-variable"
     echo "---- testing ${test_case} ----"
 
-  docker exec -t ansible_container1 bash -exc "
+  docker exec -t ansible_container bash -exc "
     cd tests
     pwd
     ls
