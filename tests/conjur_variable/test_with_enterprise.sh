@@ -142,12 +142,14 @@ function run_test_cases {
 
 # docker-compose exec -T ansible bash -exc "
   docker exec -t ansible_container1 bash -exc "
-    cd tests/conjur_variable
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    pwd
+    ls
+    # cd tests/conjur_variable
+    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
-    py.test --junitxml='./junit/${test_case}' \
-      --connection docker \
-      -v 'test_cases/${test_case}/tests/test_default.py'
+    # py.test --junitxml='./junit/${test_case}' \
+    #   --connection docker \
+    #   -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
 
