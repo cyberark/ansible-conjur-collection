@@ -55,8 +55,8 @@ function main() {
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
     echo "admin api key ANSIBLE_MASTER_AUTHN_API_KEY"
     ANSIBLE_MASTER_AUTHN_API_KEY=$(./bin/cli conjur host rotate_api_key --host ansible/ansible-master)
-    echo "admin api key: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
-    echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+    echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
+    echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
     cp api_key ../
   popd
@@ -65,16 +65,12 @@ function main() {
 
     docker build -t conjur_ansible:v1 .
     echo " Stage 2 "
-    docker ps
-    docker images
 
-    pwd
-    ls
     echo " Run Ansible "
 
        docker run \
        -d -t \
-       --name ansible_container1 \
+       --name ansible_container \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "${PWD}:/cyberark/tests/conjur_variable" \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
@@ -88,15 +84,8 @@ function main() {
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
-       echo " Ansible logs "
-       docker logs ansible_container1
-
-        echo " Ansible inspect "
-       docker inspect ansible_container1
-
+    docker logs ansible_container
     echo "Running tests"
-    docker ps
-    docker images
 
     run_test_cases
     echo " End of the tests "
@@ -106,28 +95,14 @@ function main() {
 function run_test_cases {
   local test_case="retrieve-variable"
     echo "---- testing ${test_case} ----"
-    echo "---- docker images ----"
-      docker images
-    echo "---- docker ps ----"
-      docker ps
-    echo "---- Run test cases ----"
 
   docker exec -t ansible_container1 bash -exc "
-    pwd
-    ls
     cd tests
     pwd
     ls
     cd conjur_variable
     pwd
     ls
-    # cd test_cases
-    # pwd
-    # ls
-    # cd retrieve-variable
-    # pwd
-    # ls
-
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
