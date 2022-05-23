@@ -74,7 +74,7 @@ function main() {
     ls
     echo " Run Ansible "
 
-      docker run -d --name ansible_container conjur_ansible:v1
+      docker run -d --name ansible_container conjur_ansible:v1 ls
 
       #  docker run \
       #  --name ansible_container \
@@ -92,6 +92,9 @@ function main() {
 
        echo " Ansible logs "
        docker logs ansible_container
+
+        echo " Ansible inspect "
+       docker inspect ansible_container
 
 
       #  docker-compose up \
