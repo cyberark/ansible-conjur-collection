@@ -37,9 +37,7 @@ function main() {
     # echo " Setup CLI "
     docker-compose  \
     run \
-    -d \
-    -t \
-    --name client_container \
+    --rm \
     -w /src/cli \
     --entrypoint /bin/bash \
     client \
@@ -55,6 +53,15 @@ function main() {
     #   -c "conjur host rotate_api_key --host ansible/ansible-master
     #   "> ANSIBLE_MASTER_AUTHN_API_KEY
     # cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+
+    docker-compose  \
+    run \
+    -d -t \
+    --name client_container \
+    -w /src/cli \
+    --entrypoint /bin/bash \
+    client \
+
 
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
