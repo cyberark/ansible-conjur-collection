@@ -95,6 +95,7 @@ function main() {
 
        docker run \
        -d \
+       -t \
        --name ansible_container1 \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
@@ -108,7 +109,9 @@ function main() {
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
-       sleep infinity /
+
+
+      #  sleep infinity /
 
 
        echo " Ansible logs "
