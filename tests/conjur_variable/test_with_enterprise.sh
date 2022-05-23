@@ -99,7 +99,7 @@ function main() {
        --name ansible_container1 \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
-       --volume "../..:/cyberark" \
+       --volume "../..":/cyberark \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
