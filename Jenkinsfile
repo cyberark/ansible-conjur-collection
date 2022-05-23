@@ -47,21 +47,21 @@ pipeline {
 //             reportTitles: 'Conjur Ansible Collection report'])
 //            }
 // }
-    stage('OSS Test Script'){
-          steps {
-            sh 'chmod +x ./tests/conjur_variable/test.sh'
-            sh './tests/conjur_variable/test.sh'
-            // sh 'chmod +x ./tests/conjur_variable/test_with_enterprise.sh'
-            // sh './tests/conjur_variable/test_with_enterprise.sh'
-            // publishHTML (target : [allowMissing: false,
-            // alwaysLinkToLastBuild: false,
-            // keepAll: true,
-            // reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            // reportFiles: 'index.html',
-            // reportName: 'Ansible Coverage Report',
-            // reportTitles: 'Conjur Ansible Collection report'])
-           }
-}
+//     stage('OSS Test Script'){
+//           steps {
+//             // sh 'chmod +x ./tests/conjur_variable/test.sh'
+//             // sh './tests/conjur_variable/test.sh'
+//             // sh 'chmod +x ./tests/conjur_variable/test_with_enterprise.sh'
+//             // sh './tests/conjur_variable/test_with_enterprise.sh'
+//             // publishHTML (target : [allowMissing: false,
+//             // alwaysLinkToLastBuild: false,
+//             // keepAll: true,
+//             // reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+//             // reportFiles: 'index.html',
+//             // reportName: 'Ansible Coverage Report',
+//             // reportTitles: 'Conjur Ansible Collection report'])
+//            }
+// }
     stage('Enterprise Test Script'){
           steps {
             sh 'chmod +x ./tests/conjur_variable/test_with_enterprise.sh'

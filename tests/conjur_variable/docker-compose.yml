@@ -20,6 +20,7 @@ services:
       - ../../plugins:/root/.ansible/plugins
       - ../..:/cyberark
       - /var/run/docker.sock:/var/run/docker.sock
+    tty: true
 
   pg:
     image: postgres:9.4
