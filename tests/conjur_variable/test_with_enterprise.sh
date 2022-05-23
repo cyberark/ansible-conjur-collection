@@ -100,6 +100,7 @@ function main() {
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
+       --volume "../..:/cyberark" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -155,4 +156,8 @@ function run_test_cases {
 
 # pwd /cyberark
 # ls tests
+
+# pwd /cyberark/tests
+# ls conjur-enterprise.pem
+
 main
