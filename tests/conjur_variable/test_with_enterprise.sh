@@ -74,20 +74,21 @@ function main() {
     ls
     echo " Run Ansible "
 
+      docker run -d --name ansible_container conjur_ansible:v1
 
-       docker run \
-       --name ansible_container \
-       --volume "/var/run/docker.sock:/var/run/docker.sock" \
-       --network dap_net \
-       -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-       -e "CONJUR_ACCOUNT=demo" \
-       -e "CONJUR_AUTHN_LOGIN=admin" \
-       -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
-       --workdir "/cyberark" \
-       --rm \
-       --entrypoint /bin/bash \
-       conjur_ansible:v1 \
+      #  docker run \
+      #  --name ansible_container \
+      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
+      #  --network dap_net \
+      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+      #  -e "CONJUR_ACCOUNT=demo" \
+      #  -e "CONJUR_AUTHN_LOGIN=admin" \
+      #  -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+      #  --workdir "/cyberark" \
+      #  --rm \
+      #  --entrypoint /bin/bash \
+      #  conjur_ansible:v1 \
 
        echo " Ansible logs "
        docker logs ansible_container
