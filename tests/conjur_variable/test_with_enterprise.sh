@@ -34,7 +34,7 @@ function main() {
     echo " =======Set Variable value ansible/var with spaces ====="
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
-    # echo " Setup CLI "
+    echo " Setup CLI "
     docker-compose  \
     run \
     --rm \
@@ -101,13 +101,14 @@ function main() {
        --name ansible_container1 \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "${PWD}:/cyberark/tests/conjur_variable" \
+       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
        -e "CONJUR_ACCOUNT=cucumber" \
        -e "CONJUR_AUTHN_LOGIN=host/ansible/ansible-master" \
        -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
-       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
@@ -170,10 +171,10 @@ function run_test_cases {
   "
 }
 
-pwd /cyberark
-ls tests
+# pwd /cyberark
+# ls tests
 
-pwd /cyberark/tests
-ls conjur-enterprise.pem , conjur_variable
+# pwd /cyberark/tests
+# ls conjur-enterprise.pem , conjur_variable
 
 main
