@@ -14,9 +14,6 @@ function main() {
 
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
-    # cd conjur-intro
-
-    # conjur-master-1.mycompany.local
 
     echo " Provision Master"
     ./bin/dap --provision-master
@@ -62,13 +59,11 @@ function main() {
     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
     cp api_key ../
-    # cd ..
   popd
 
   pushd ./tests/conjur_variable
 
     docker build -t conjur_ansible:v1 .
-    # docker-compose build
     echo " Stage 2 "
     docker ps
     docker images
@@ -76,25 +71,6 @@ function main() {
     pwd
     ls
     echo " Run Ansible "
-
-      # docker run -d --name ansible_container conjur_ansible:v1 sleep infinity
-
-      #  docker run \
-      #  -d \
-      #  --name ansible_container1 \
-      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
-      #  --network dap_net \
-      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-      #  -e "CONJUR_ACCOUNT=demo" \
-      #  -e "CONJUR_AUTHN_LOGIN=admin" \
-      #  -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
-      #  --workdir "/cyberark" \
-      #  conjur_ansible:v1 \
-      #  sleep infinity
-
-      #  --entrypoint /bin/bash \
-
 
        docker run \
        -d -t \
@@ -112,21 +88,11 @@ function main() {
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
-
-       # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-       # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
-
-
-      #  sleep infinity /
-
-
        echo " Ansible logs "
        docker logs ansible_container1
 
         echo " Ansible inspect "
        docker inspect ansible_container1
-    # "${COMPOSE_PROJECT_NAME}"-ansible  conjur-master-1.mycompany.local
-    # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
 
     echo "Running tests"
     docker ps
@@ -146,7 +112,6 @@ function run_test_cases {
       docker ps
     echo "---- Run test cases ----"
 
-# docker-compose exec -T ansible bash -exc "
   docker exec -t ansible_container1 bash -exc "
     pwd
     ls
@@ -170,11 +135,5 @@ function run_test_cases {
     #   -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
-
-# pwd /cyberark
-# ls tests
-
-# pwd /cyberark/tests
-# ls conjur-enterprise.pem , conjur_variable
 
 main
