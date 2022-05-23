@@ -155,6 +155,9 @@ function run_test_cases {
     cd test_cases
     pwd
     ls
+    cd retrieve-variable
+    pwd
+    ls
 
     # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
