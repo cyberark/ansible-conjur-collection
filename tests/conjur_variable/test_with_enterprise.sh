@@ -156,20 +156,21 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
     pwd
     ls
-    cd tests
+    cd ..
     pwd
     ls
-    cd conjur_variable
+    cd root/.ansible/plugins/lookup
     pwd
     ls
-    # cd test_cases
-    # pwd
-    # ls
-    # cd retrieve-variable
+    cd ../../../../
+    pwd
+    ls
+
+    # cd tests/conjur_variable
     # pwd
     # ls
 
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
     #   --connection docker \
