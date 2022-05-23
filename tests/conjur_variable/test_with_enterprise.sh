@@ -152,8 +152,11 @@ function run_test_cases {
     cd conjur_variable
     pwd
     ls
+    cd test_cases
+    pwd
+    ls
 
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
     #   --connection docker \
