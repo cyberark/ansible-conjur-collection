@@ -31,15 +31,7 @@ function main() {
     echo " =======Set Variable value ansible/var with spaces ====="
     # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
-    # echo " Setup CLI "
-    docker-compose  \
-    run \
-    --rm \
-    -w /src/cli \
-    --entrypoint /bin/bash \
-    client \
-      -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
-    cp conjur-enterprise.pem ../
+
 
     docker-compose  \
     run \
@@ -48,7 +40,7 @@ function main() {
     --entrypoint /bin/bash \
     client \
       -c "conjur host rotate_api_key --host ansible/ansible-master
-      "> ANSIBLE_MASTER_AUTHN_API_KEY
+     "> ANSIBLE_MASTER_AUTHN_API_KEY
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
 
     echo " ====== testing 1 ======= "
@@ -57,6 +49,20 @@ function main() {
     pwd
     ls
     echo " ===== testing 2 ========"
+
+    # echo " Setup CLI "
+    docker-compose  \
+    run \
+    --rm \
+    -e "CONJUR_AUTHN_LOGIN=host/ansible/ansible-master" \
+    -e "CONJUR_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+    -w /src/cli \
+    --entrypoint /bin/bash \
+    client \
+      -c "cp /root/conjur-demo.pem conjur-enterprise.pem
+      conjur authn authenticate
+      "
+    cp conjur-enterprise.pem ../
 
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
