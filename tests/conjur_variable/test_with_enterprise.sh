@@ -83,12 +83,31 @@ function main() {
 
       # docker run -d --name ansible_container conjur_ansible:v1 sleep infinity
 
+      #  docker run \
+      #  -d -t \
+      #  --name ansible_container \
+      #  --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
+      #  --volume "${PWD}:/cyberark/tests/conjur_variable" \
+      #  --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
+      #  --network dap_net \
+      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+      #  -e "CONJUR_ACCOUNT=demo" \
+      #  -e "CONJUR_AUTHN_LOGIN=admin" \
+      #  -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+      #  -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+      #  --workdir "/cyberark" \
+      #  conjur_ansible:v1 \
+
+
+
        docker run \
        -d -t \
-       --name ansible_container1 \
+       --name ansible_container \
+       --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases:/cyberark" \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
-       --volume "${PWD}:/cyberark/tests/conjur_variable" \
-       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -100,14 +119,18 @@ function main() {
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
+       #  Note : ANSIBLE_CONJUR_CERT_FILE path need to correct
+
+
+
        # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
 
 
        echo " Ansible logs "
-       docker logs ansible_container1
+       docker logs ansible_container
 
         echo " Ansible inspect "
-       docker inspect ansible_container1
+       docker inspect ansible_container
     # "${COMPOSE_PROJECT_NAME}"-ansible  conjur-master-1.mycompany.local
     # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
 
@@ -130,7 +153,7 @@ function run_test_cases {
     echo "---- Run test cases ----"
 
 # docker-compose exec -T ansible bash -exc "
-  docker exec -t ansible_container1 bash -exc "
+  docker exec -t ansible_container bash -exc "
     pwd
     ls
     cd tests

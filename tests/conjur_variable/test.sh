@@ -8,9 +8,9 @@ function cleanup {
   docker-compose down -v
 }
 
-trap cleanup EXIT
+# trap cleanup EXIT
 
-cleanup
+# cleanup
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
