@@ -54,6 +54,11 @@ function main() {
       "> ANSIBLE_MASTER_AUTHN_API_KEY
     cp ANSIBLE_MASTER_AUTHN_API_KEY ../
 
+    echo " ====== testing 1 ======= "
+    pwd
+    ls
+    echo " ===== testing 2 ========"
+
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
@@ -76,28 +81,12 @@ function main() {
 
       # docker run -d --name ansible_container conjur_ansible:v1 sleep infinity
 
-      #  docker run \
-      #  -d \
-      #  --name ansible_container1 \
-      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
-      #  --network dap_net \
-      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-      #  -e "CONJUR_ACCOUNT=demo" \
-      #  -e "CONJUR_AUTHN_LOGIN=admin" \
-      #  -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
-      #  --workdir "/cyberark" \
-      #  conjur_ansible:v1 \
-      #  sleep infinity
-
-      #  --entrypoint /bin/bash \
-
-
        docker run \
        -d -t \
        --name ansible_container1 \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "${PWD}:/cyberark/tests/conjur_variable" \
+       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -110,10 +99,6 @@ function main() {
 
 
        # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-       # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
-
-
-      #  sleep infinity /
 
 
        echo " Ansible logs "
