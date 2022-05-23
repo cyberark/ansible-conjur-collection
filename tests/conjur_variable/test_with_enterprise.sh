@@ -92,12 +92,6 @@ function main() {
 
       #  --entrypoint /bin/bash \
 
-       echo " Ansible logs "
-       docker logs ansible_container1
-
-        echo " Ansible inspect "
-       docker inspect ansible_container1
-
 
        docker run \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
@@ -115,6 +109,12 @@ function main() {
        conjur_ansible:v1 \
        ls /
 
+
+       echo " Ansible logs "
+       docker logs ansible_container1
+
+        echo " Ansible inspect "
+       docker inspect ansible_container1
     # "${COMPOSE_PROJECT_NAME}"-ansible  conjur-master-1.mycompany.local
     # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
 
