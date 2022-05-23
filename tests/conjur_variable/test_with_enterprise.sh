@@ -74,25 +74,22 @@ function main() {
     ls
     echo " Run Ansible "
 
-    docker-compose up \
-    ansible \
+
+       docker run \
+       --volume "/var/run/docker.sock:/var/run/docker.sock" \
+       --network dap_net \
+       -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+       -e "CONJUR_ACCOUNT=demo" \
+       -e "CONJUR_AUTHN_LOGIN=admin" \
+       -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+       --workdir "/cyberark" \
+       --no-deps \
+       -it \
+       --rm \
+       ansible \
 
 
-    # docker-compose up \
-    # --network dap_net \
-    # --no-deps \
-    # --rm \
-    # --entrypoint /bin/bash \
-    # ansible \
-
-    # docker-compose up \
-    # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-    # --volume "/var/run/docker.sock:/var/run/docker.sock" \
-    # --network dap_net \
-    # --no-deps \
-    # --rm \
-    # --entrypoint /bin/bash \
-    # ansible \
 
       #  docker-compose up \
       #  --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
@@ -100,7 +97,7 @@ function main() {
       #  --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
       #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
       #  --network dap_net \
-      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master-1.mycompany.local" \
       #  -e "CONJUR_ACCOUNT=demo" \
       #  -e "CONJUR_AUTHN_LOGIN=admin" \
       #  -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
@@ -109,7 +106,7 @@ function main() {
       #  --no-deps \
       #  --rm \
       #  --entrypoint /bin/bash \
-      #  conjur_ansible:v1 \
+      #  ansible \
 
     # "${COMPOSE_PROJECT_NAME}"-ansible  conjur-master-1.mycompany.local
     # --volume "${PWD}/ANSIBLE_MASTER_AUTHN_API_KEY:/ANSIBLE_MASTER_AUTHN_API_KEY" \
