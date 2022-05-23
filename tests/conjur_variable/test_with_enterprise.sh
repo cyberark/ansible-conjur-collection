@@ -37,29 +37,29 @@ function main() {
     # echo " Setup CLI "
     docker-compose  \
     run \
-    --rm \
+    --name client_container \
     -w /src/cli \
     --entrypoint /bin/bash \
     client \
       -c "cp /root/conjur-demo.pem conjur-enterprise.pem"
     cp conjur-enterprise.pem ../
 
-    docker-compose  \
-    run \
-    --rm \
-    -w /src/cli \
-    --entrypoint /bin/bash \
-    client \
-      -c "conjur host rotate_api_key --host ansible/ansible-master
-      "> ANSIBLE_MASTER_AUTHN_API_KEY
-    cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+    # docker-compose  \
+    # run \
+    # --rm \
+    # -w /src/cli \
+    # --entrypoint /bin/bash \
+    # client \
+    #   -c "conjur host rotate_api_key --host ansible/ansible-master
+    #   "> ANSIBLE_MASTER_AUTHN_API_KEY
+    # cp ANSIBLE_MASTER_AUTHN_API_KEY ../
 
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
     echo "---- testing ANSIBLE_MASTER_AUTHN_API_KEY1----"
-    ANSIBLE_MASTER_AUTHN_API_KEY1=$(docker-compose exec -T client conjur host rotate_api_key --host ansible/ansible-master)
+    ANSIBLE_MASTER_AUTHN_API_KEY1=$(docker-compose exec -T client_container conjur host rotate_api_key --host ansible/ansible-master)
     echo "---- testing ${ANSIBLE_MASTER_AUTHN_API_KEY1} ----"
-    ANSIBLE_MASTER_AUTHN_API_KEY2=$(./bin/cli client conjur host rotate_api_key --host ansible/ansible-master)
+    ANSIBLE_MASTER_AUTHN_API_KEY2=$(./bin/cli client_container conjur host rotate_api_key --host ansible/ansible-master)
     echo "---- testing ${ANSIBLE_MASTER_AUTHN_API_KEY2} ----"
     # ANSIBLE_MASTER_AUTHN_API_KEY=$(docker-compose exec -T conjur_cli conjur host rotate_api_key --host ansible/ansible-master)
     # CONJUR_ADMIN_AUTHN_API_KEY=$(docker-compose exec -T conjur conjurctl role retrieve-key cucumber:user:admin)
