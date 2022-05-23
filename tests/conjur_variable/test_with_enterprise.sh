@@ -94,8 +94,7 @@ function main() {
 
 
        docker run \
-       -d \
-       -t \
+       -d -t \
        --name ansible_container1 \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
@@ -103,9 +102,9 @@ function main() {
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-       -e "CONJUR_ACCOUNT=demo" \
-       -e "CONJUR_AUTHN_LOGIN=admin" \
-       -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+       -e "CONJUR_ACCOUNT=cucumber" \
+       -e "CONJUR_AUTHN_LOGIN=host/ansible/ansible-master" \
+       -e "ANSIBLE_MASTER_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
