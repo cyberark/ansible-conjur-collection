@@ -99,7 +99,6 @@ function main() {
        --name ansible_container1 \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
-       --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
        --volume "../..:/cyberark" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
@@ -111,7 +110,7 @@ function main() {
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
-
+       # --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
       #  sleep infinity /
 
 
