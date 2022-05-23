@@ -37,6 +37,8 @@ function main() {
     # echo " Setup CLI "
     docker-compose  \
     run \
+    -d \
+    -t \
     --name client_container \
     -w /src/cli \
     --entrypoint /bin/bash \
