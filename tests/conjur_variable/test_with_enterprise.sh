@@ -97,7 +97,7 @@ function main() {
        -d \
        -t \
        --name ansible_container1 \
-       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/tests:/cyberark/tests" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
@@ -150,7 +150,10 @@ function run_test_cases {
     pwd
     ls
     cd conjur_variable
-    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    pwd
+    ls
+
+    ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
     #   --connection docker \
@@ -162,6 +165,6 @@ function run_test_cases {
 # ls tests
 
 # pwd /cyberark/tests
-# ls conjur-enterprise.pem
+# ls conjur-enterprise.pem , conjur_variable
 
 main
