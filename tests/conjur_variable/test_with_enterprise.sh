@@ -142,9 +142,9 @@ function run_test_cases {
 
 # docker-compose exec -T ansible bash -exc "
   docker exec -t ansible_container1 bash -exc "
+    cd tests
     pwd
     ls
-    # cd tests/conjur_variable
     # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
@@ -153,4 +153,6 @@ function run_test_cases {
   "
 }
 
+# pwd /cyberark
+# ls tests
 main
