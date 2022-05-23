@@ -86,10 +86,9 @@ function main() {
        -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
        --workdir "/cyberark" \
-       --rm \
        --entrypoint /bin/bash \
        conjur_ansible:v1 \
-       sleep infinity \
+
 
        echo " Ansible logs "
        docker logs ansible_container
