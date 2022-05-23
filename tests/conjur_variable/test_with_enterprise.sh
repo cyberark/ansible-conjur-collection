@@ -98,8 +98,8 @@ function main() {
        -t \
        --name ansible_container1 \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-       --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
-       --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/tests:/cyberark" \
+       --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
+       --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/tests:/cyberark/tests" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -149,6 +149,7 @@ function run_test_cases {
     cd tests
     pwd
     ls
+    cd conjur_variable
     # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
