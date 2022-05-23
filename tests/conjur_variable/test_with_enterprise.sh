@@ -64,7 +64,7 @@ function main() {
 
   pushd ./tests/conjur_variable
 
-    # docker build -t conjur_ansible:v1 .
+    docker build -t conjur_ansible:v1 .
     # docker-compose build
     echo " Stage 2 "
     docker ps
