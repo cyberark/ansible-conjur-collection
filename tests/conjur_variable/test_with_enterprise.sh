@@ -143,6 +143,8 @@ function run_test_cases {
 
 # docker-compose exec -T ansible bash -exc "
   docker exec -t ansible_container1 bash -exc "
+    pwd
+    ls
     cd tests
     pwd
     ls
