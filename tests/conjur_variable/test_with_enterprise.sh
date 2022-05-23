@@ -76,6 +76,7 @@ function main() {
 
 
        docker run \
+       --name ansible_container \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -89,7 +90,7 @@ function main() {
        conjur_ansible:v1 \
 
        echo " Ansible logs "
-       docker logs ansible
+       docker logs ansible_container
 
 
       #  docker-compose up \
