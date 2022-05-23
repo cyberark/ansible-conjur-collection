@@ -165,6 +165,9 @@ function run_test_cases {
     cd ../../../../
     pwd
     ls
+    cd root/.ansible/plugins
+    pwd
+    ls
 
     # cd tests/conjur_variable
     # pwd
