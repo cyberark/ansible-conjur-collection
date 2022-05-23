@@ -87,8 +87,10 @@ function main() {
        --no-deps \
        -it \
        --rm \
-       ansible \
+       conjur_ansible:v1 \
 
+       echo " Ansible logs "
+       docker logs ansible
 
 
       #  docker-compose up \

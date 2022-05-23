@@ -49,8 +49,8 @@ pipeline {
 // }
     stage('OSS Test Script'){
           steps {
-            sh 'chmod +x ./tests/test.sh'
-            sh './tests/test.sh'
+            sh 'chmod +x ./tests/conjur_variable/test.sh'
+            sh './tests/conjur_variable/test.sh'
             // sh 'chmod +x ./tests/conjur_variable/test_with_enterprise.sh'
             // sh './tests/conjur_variable/test_with_enterprise.sh'
             // publishHTML (target : [allowMissing: false,
