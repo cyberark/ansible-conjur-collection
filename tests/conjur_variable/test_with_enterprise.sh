@@ -71,7 +71,7 @@ function main() {
        docker run \
        -d -t \
        --name ansible_container \
-       --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
+       --volume "/var/lib/jenkins/workspace/sible-conjur-collection_deleteit/plugins":/root/.ansible/plugins \
        --volume "${PWD}:/cyberark/tests/conjur_variable" \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
