@@ -94,6 +94,8 @@ function main() {
 
 
        docker run \
+       -d \
+       --name ansible_container1 \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/plugins":/root/.ansible/plugins \
        --volume "/var/lib/jenkins/workspace/conjur-collection_deleteit_later/tests:/cyberark" \
