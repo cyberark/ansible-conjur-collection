@@ -77,6 +77,7 @@ function main() {
       # docker run -d --name ansible_container conjur_ansible:v1 sleep infinity
 
        docker run \
+       -d \
        --name ansible_container \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
@@ -86,9 +87,10 @@ function main() {
        -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
        --workdir "/cyberark" \
-       --entrypoint /bin/bash \
        conjur_ansible:v1 \
+       sleep infinity \
 
+      #  --entrypoint /bin/bash \
 
        echo " Ansible logs "
        docker logs ansible_container
