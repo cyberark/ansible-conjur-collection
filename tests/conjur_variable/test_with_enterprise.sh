@@ -16,8 +16,11 @@ echo " Step 1"
    pwd
    ls
   pushd ./tests/conjur_variable
-  git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+ echo " Step 54"
+  git submodule update --init --recursive
+  # git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
    # pushd ./conjur-intro
+   echo " Step 27"
    cd conjur-intro
    echo " Step 2"
     pwd
