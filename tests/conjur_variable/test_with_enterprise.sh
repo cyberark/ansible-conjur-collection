@@ -21,14 +21,15 @@ function main() {
 
       # cp ../conjur.yml .
 
-      cp ../tests/conjur_variable/conjur.yml .
+      # cp ../tests/conjur_variable/conjur.yml .
       # ./bin/cli conjur policy load --replace root conjur.yml
 
-    # cp ../tests/conjur_variable/policy/root.yml .
+    cp ../tests/conjur_variable/policy/root.yml .
 
+    ./bin/cli conjur policy load root /policy/root.yml
     echo " Setup Policy "
     echo " ========load policy====="
-    ./bin/cli conjur policy load root conjur.yml
+    # ./bin/cli conjur policy load root conjur.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
     echo " =======Set Variable value ansible/test-secret-in-file ====="
