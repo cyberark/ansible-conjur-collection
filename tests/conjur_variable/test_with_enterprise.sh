@@ -12,9 +12,14 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
+echo " Step 1"
+   pwd
+   ls
+
+pushd ./tests/conjur_variable
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-  pushd ./conjur-intro
-    # cd conjur-intro
+  # pushd ./conjur-intro
+  cd conjur-intro
 
     # conjur-master-1.mycompany.local
 
@@ -22,7 +27,7 @@ function main() {
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
-    cp ../tests/conjur_variable/policy/root.yml .
+    cp ../policy/root.yml .
 
     echo " Setup Policy "
     echo " ========load policy====="
@@ -62,10 +67,14 @@ function main() {
     echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
     cp api_key ../
-    # cd ..
-  popd
+    cd ..
+  # popd
 
-  pushd ./tests/conjur_variable
+  # pushd ./tests/conjur_variable
+
+    echo " Stage 45 "
+    docker ps
+    docker images
 
     docker build -t conjur_ansible:v1 .
     # docker-compose build
@@ -100,6 +109,7 @@ function main() {
        -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
+       --volume "${PWD}/plugins":/root/.ansible/plugins \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
