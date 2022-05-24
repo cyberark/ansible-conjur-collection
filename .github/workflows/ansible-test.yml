@@ -64,7 +64,6 @@ jobs:
         run: ansible-test sanity --docker -v --color --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
 
-
 # Unit tests (OPTIONAL)
 
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
@@ -78,6 +77,9 @@ jobs:
       matrix:
         ansible:
           # - stable-2.9 # Only if your collection supports Ansible 2.9
+          - stable-2.10
+          - stable-2.11
+          - stable-2.12
           - stable-2.10
           - devel
         python:
@@ -104,8 +106,3 @@ jobs:
       - name: Run unit test
         run: ansible-test units --docker default -v --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
-
-      # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
-      - uses: codecov/codecov-action@v2
-        with:
-          fail_ci_if_error: false
