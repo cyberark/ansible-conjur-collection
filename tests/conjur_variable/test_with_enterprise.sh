@@ -138,7 +138,7 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
     pwd
     ls
-      cp -r plugins ../root/.ansible
+      cp -r /plugins ../root/.ansible/
 
         cd ..
         pwd
