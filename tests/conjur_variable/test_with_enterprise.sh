@@ -27,7 +27,7 @@ echo " Step 1"
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
-    cp ../tests/conjur_variable/policy/root.yml .
+    cp ../policy/root.yml .
 
     echo " Setup Policy "
     echo " ========load policy====="
