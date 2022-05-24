@@ -110,7 +110,7 @@ function main() {
        -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
-       --volume "${PWD}/plugins":/root/.ansible/plugins \
+       --volume "../../plugins":/root/.ansible/plugins \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -121,6 +121,8 @@ function main() {
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
+       -ec 'pwd
+       ls'
 
       echo " Ansible logs "
       docker logs ansible_container
@@ -140,7 +142,7 @@ function run_test_cases {
     pwd
     ls
     cd ..
-    # cp -r cyberark/plugins root/.ansible
+    cp -r cyberark/plugins root/.ansible/plugins
     #   # cp -r plugins ../root/.ansible/
 
         pwd
