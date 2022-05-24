@@ -138,9 +138,10 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
     pwd
     ls
-      cp -r plugins ../root/.ansible/
+    cd ..
+    cp -r cyberark/plugins root/.ansible
+      # cp -r plugins ../root/.ansible/
 
-        cd ..
         pwd
         ls
         cd root
@@ -150,6 +151,8 @@ function run_test_cases {
         pwd
         ls
         cd plugins
+        pwd
+        ls
 
 
     # cd tests/conjur_variable
