@@ -102,6 +102,22 @@ function main() {
       --workdir "/cyberark" \
       conjur_ansible:v1 \
 
+
+      #  docker run \
+      #  -d -t \
+      #  --name ansible_container \
+      #  --volume "$(git rev-parse --show-toplevel):/cyberark" \
+      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
+      #  --network dap_net \
+      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+      #  -e "CONJUR_ACCOUNT=cucumber" \
+      #  -e "CONJUR_AUTHN_LOGIN=host/ansible/ansible-master" \
+      #  -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+      #  --workdir "/cyberark" \
+      #  conjur_ansible:v1 \
+
+
       echo " Ansible logs "
       docker logs ansible_container
       echo " Ansible inspect "
@@ -114,7 +130,7 @@ function main() {
 }
 
 function run_test_cases {
-  local test_case="retrieve-variable-disable-verify-certs"
+  local test_case="retrieve-variable-into-file"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
    pwd
@@ -123,9 +139,9 @@ function run_test_cases {
    pwd
    ls
 
-    if [ -e 'test_cases/${test_case}/env' ]; then
-    . ./test_cases/${test_case}/env
-    fi
+    # if [ -e 'test_cases/${test_case}/env' ]; then
+    # . ./test_cases/${test_case}/env
+    # fi
   #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
    ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
