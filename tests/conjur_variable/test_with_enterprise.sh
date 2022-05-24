@@ -80,7 +80,7 @@ function main() {
 
   pushd ./tests/conjur_variable
 
-      # docker build -t conjur_ansible:v1 .
+      docker build -t conjur_ansible:v1 .
       # echo " Run Ansible "
       # docker run \
       # -d -t \
@@ -109,6 +109,7 @@ function main() {
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "${PWD}/plugins":/root/.ansible/plugins \
        --volume "${PWD}/tests/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+       --volume "${PWD}/tests/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "${PWD}/tests/access_token:/cyberark/tests/access_token" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
@@ -139,13 +140,12 @@ function run_test_cases {
    pwd
    ls
    cd tests/conjur_variable
-   pwd
    ls
 
-    if [ -e 'test_cases/${test_case}/env' ]; then
-    . ./test_cases/${test_case}/env
-    fi
-  #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
+        # if [ -e 'test_cases/${test_case}/env' ]; then
+        # . ./test_cases/${test_case}/env
+        # fi
+        #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
    ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
