@@ -111,26 +111,27 @@ function main() {
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
-       --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
        -e "CONJUR_ACCOUNT=demo" \
        -e "CONJUR_AUTHN_LOGIN=admin" \
-       -e "ANSIBLE_MASTER_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+       -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+       -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
-# [2022-05-24T14:38:37.611Z] HOSTNAME=18c42ca3aabb
-# [2022-05-24T14:38:37.611Z] TERM=xterm
-# [2022-05-24T14:38:37.611Z] CONJUR_ACCOUNT=demo
-# [2022-05-24T14:38:37.611Z] CONJUR_AUTHN_LOGIN=admin
-# [2022-05-24T14:38:37.611Z] ANSIBLE_MASTER_AUTHN_API_KEY=341mh3y3ef7wgf2gn3jj73g7991v140xk9k2bqr48m3tmhr7624fwc6m
-# [2022-05-24T14:38:37.611Z] CONJUR_ADMIN_AUTHN_API_KEY=1n312se1gry6p31qf4q8w2zcsg661mt9x327275sb196cewe2ktdmvj
-# [2022-05-24T14:38:37.611Z] ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem
-# [2022-05-24T14:38:37.611Z] CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local
-# [2022-05-24T14:38:37.611Z] DEBIAN_FRONTEND=noninteractive
-# [2022-05-24T14:38:37.611Z] HOME=/root
+        # env variables values
+            # HOSTNAME=18c42ca3aabb
+            # TERM=xterm
+            # CONJUR_ACCOUNT=demo
+            # CONJUR_AUTHN_LOGIN=admin
+            # ANSIBLE_MASTER_AUTHN_API_KEY=341mh3y3ef7wgf2gn3jj73g7991v140xk9k2bqr48m3tmhr7624fwc6m
+            # CONJUR_ADMIN_AUTHN_API_KEY=1n312se1gry6p31qf4q8w2zcsg661mt9x327275sb196cewe2ktdmvj
+            # ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem
+            # CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local
+            # DEBIAN_FRONTEND=noninteractive
+            # HOME=/root
 
 
       echo " Ansible logs "
