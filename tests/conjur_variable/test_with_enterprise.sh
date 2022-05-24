@@ -60,12 +60,31 @@ function main() {
     --entrypoint /bin/bash \
     client \
       -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-      conjur variable values add ansible/test-secret test_secret_password
-      conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-      conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-      conjur authn authenticate
       '
     cp conjur-enterprise.pem ../
+
+
+    docker-compose  \
+    run \
+    --rm \
+    -w /src/cli \
+    --entrypoint /bin/bash \
+    client \
+      -c "
+          export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+          export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+          conjur authn authenticate
+         " > access_token
+
+    cp access_token ../
+
+
+
+
+      # conjur variable values add ansible/test-secret test_secret_password
+      # conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+      # conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+      # conjur authn authenticate
 
     echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
     CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
@@ -92,6 +111,8 @@ function main() {
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+       --volume "${PWD}/access_token:/cyberark/tests/access_token" \
+       --volume "${PWD}/access_token:/cyberark/tests/conjur_variable/access_token" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -124,7 +145,14 @@ function run_test_cases {
   local test_case="retrieve-variable"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
-   cd tests/conjur_variable
+   pwd
+   ls
+   cd tests
+   pwd
+   ls
+   cd conjur_variable
+   pwd
+   ls
    ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
