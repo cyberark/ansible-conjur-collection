@@ -75,9 +75,9 @@ echo " Step 1"
    echo " Step 45 "
     pwd
     ls
-    docker build -t conjur_ansible:v1 .
-    echo " Stage 2 "
 
+    echo " Stage 2 "
+#     docker build -t conjur_ansible:v1 .
     echo " Run Ansible "
 
        docker run \
