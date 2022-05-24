@@ -71,9 +71,7 @@ function main() {
        docker run \
        -d -t \
        --name ansible_container \
-       --volume "/var/lib/jenkins/workspace/sible-conjur-collection_deleteit/plugins":/root/.ansible/plugins \
-       --volume "${PWD}:/cyberark/tests/conjur_variable" \
-       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+       --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -83,6 +81,11 @@ function main() {
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
+       
+       # --volume "/var/lib/jenkins/workspace/sible-conjur-collection_deleteit/plugins":/root/.ansible/plugins \
+       # --volume "${PWD}:/cyberark/tests/conjur_variable" \
+       # --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+       # --volume "/var/run/docker.sock:/var/run/docker.sock" \
 
     docker logs ansible_container
     echo "Running tests"
@@ -97,13 +100,15 @@ function run_test_cases {
     echo "---- testing ${test_case} ----"
 
   docker exec -t ansible_container bash -exc "
+    pwd
+    ls 
     cd tests
     pwd
     ls
     cd conjur_variable
     pwd
     ls
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
     # py.test --junitxml='./junit/${test_case}' \
     #   --connection docker \
