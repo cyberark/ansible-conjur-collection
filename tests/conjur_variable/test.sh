@@ -82,7 +82,6 @@ function setup_access_token {
   " > access_token
 }
 
-
 function run_test_cases {
   for test_case in test_cases/*; do
     run_test_case "$(basename -- "$test_case")"
