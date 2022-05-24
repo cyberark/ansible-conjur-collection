@@ -12,15 +12,17 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-  echo " Step 1"
+echo " Step 1"
    pwd
    ls
+  pushd ./tests/conjur_variable
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-  pushd ./conjur-intro
-
-  echo " Step 2"
-   pwd
-   ls
+   # pushd ./conjur-intro
+   cd conjur-intro
+   echo " Step 2"
+    pwd
+    ls
+    
     echo " Provision Master"
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
@@ -65,10 +67,14 @@ function main() {
     echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
     echo "${CONJUR_ADMIN_AUTHN_API_KEY}" > api_key
     cp api_key ../
-  popd
+    cd ..
+   #    popd
 
-  pushd ./tests/conjur_variable
+  #   pushd ./tests/conjur_variable
 
+   echo " Step 45 "
+    pwd
+    ls
     docker build -t conjur_ansible:v1 .
     echo " Stage 2 "
 
