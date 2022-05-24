@@ -77,7 +77,7 @@ echo " Step 1"
     ls
 
     echo " Stage 2 "
-#     docker build -t conjur_ansible:v1 .
+    docker build -t conjur_ansible:v1 .
     echo " Run Ansible "
 
        docker run \
