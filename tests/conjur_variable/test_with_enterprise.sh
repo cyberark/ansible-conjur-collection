@@ -116,7 +116,8 @@ function main() {
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
        -e "CONJUR_ACCOUNT=demo" \
        -e "CONJUR_AUTHN_LOGIN=admin" \
-       -e "CONJUR_ADMIN_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+       -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+       -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
@@ -138,14 +139,20 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
    pwd
    ls
-   cd tests/conjur_variable
+  #  cp plugins ../root/.ansible/plugins
+   cd ..
+   cd root/.ansible/plugins
+   pwd
    ls
+
+  #  cd tests/conjur_variable
+  #  ls
 
         # if [ -e 'test_cases/${test_case}/env' ]; then
         # . ./test_cases/${test_case}/env
         # fi
         #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
-   ansible-playbook 'test_cases/${test_case}/playbook.yml'
+  #  ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
         # py.test --junitxml='./junit/${test_case}' \
         #   --connection docker \
