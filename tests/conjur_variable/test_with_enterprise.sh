@@ -34,7 +34,7 @@ function main() {
     echo " =======Set Variable value ansible/test-secret-in-file ====="
     ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
     echo " =======Set Variable value ansible/var with spaces ====="
-    # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+    ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
 
 
