@@ -42,23 +42,19 @@ function main() {
         -c "conjur host rotate_api_key --host ansible/ansible-master
       "> ANSIBLE_MASTER_AUTHN_API_KEY
       cp ANSIBLE_MASTER_AUTHN_API_KEY ../
-
       ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
-      echo "$ANSIBLE_MASTER_AUTHN_API_KEY"
+      echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
       echo " Setup CLI "
         docker-compose  \
         run \
         --rm \
-        -e "CONJUR_AUTHN_LOGIN=host/ansible/ansible-master" \
-        -e "CONJUR_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
         -w /src/cli \
         --entrypoint /bin/bash \
         client \
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           '
         cp conjur-enterprise.pem ../
-
 
         docker-compose  \
         run \
@@ -75,7 +71,7 @@ function main() {
 
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-      echo "admin api key: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+      echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   popd
 
   pushd ./tests/conjur_variable
@@ -88,7 +84,6 @@ function main() {
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "${PWD}/plugins":/root/.ansible/plugins \
-       --volume "${PWD}/tests/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
        --volume "${PWD}/tests/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "${PWD}/tests/access_token:/cyberark/tests/conjur_variable/access_token" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
@@ -97,8 +92,7 @@ function main() {
        -e "CONJUR_ACCOUNT=demo" \
        -e "CONJUR_AUTHN_LOGIN=admin" \
        -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
-       -e "CONJUR_ADMIN_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
-       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
