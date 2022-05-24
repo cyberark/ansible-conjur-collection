@@ -26,7 +26,7 @@ function main() {
 
     cp ../tests/conjur_variable/policy/root.yml .
 
-    ./bin/cli conjur policy load root /policy/root.yml
+    ./bin/cli conjur policy load root root.yml
     echo " Setup Policy "
     echo " ========load policy====="
     # ./bin/cli conjur policy load root conjur.yml
