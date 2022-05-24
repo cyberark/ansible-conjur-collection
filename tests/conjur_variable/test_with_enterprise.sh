@@ -12,9 +12,15 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
+  echo " Step 1"
+   pwd
+   ls
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
 
+  echo " Step 2"
+   pwd
+   ls
     echo " Provision Master"
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
