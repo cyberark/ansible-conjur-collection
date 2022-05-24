@@ -139,10 +139,17 @@ function run_test_cases {
    pwd
    ls
    cp -r plugins ../root/.ansible/
-   cd ..
-   cd root/.ansible/plugins
    pwd
    ls
+   cd ..
+   pwd
+   ls
+   cd ..
+   pwd
+   ls
+  #  cd root/.ansible/plugins
+  #  pwd
+  #  ls
 
   #  cd tests/conjur_variable
   #  ls
