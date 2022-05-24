@@ -138,20 +138,28 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
     pwd
     ls
-      cp -r plugins ../root/.ansible/
-        #  cd ..
-        #  cd root/.ansible/plugins
-        #  pwd
-        #  ls
+      cp -r plugins ../root/.ansible
 
-    cd tests/conjur_variable
-    ls
+        cd ..
+        pwd
+        ls
+        cd root
+        pwd
+        ls
+        cd .ansible
+        pwd
+        ls
+        cd plugins
+
+
+    # cd tests/conjur_variable
+    # ls
 
         # if [ -e 'test_cases/${test_case}/env' ]; then
         # . ./test_cases/${test_case}/env
         # fi
         #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
         # py.test --junitxml='./junit/${test_case}' \
         #   --connection docker \
