@@ -19,7 +19,9 @@ function main() {
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
-      cp ../conjur.yml .
+      # cp ../conjur.yml .
+
+      cp ../tests/conjur_variable/policy/conjur.yml .
       ./bin/cli conjur policy load --replace root conjur.yml
 
     # cp ../tests/conjur_variable/policy/root.yml .
