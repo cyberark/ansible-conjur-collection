@@ -121,8 +121,8 @@ function main() {
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
-       -ec 'pwd
-       ls'
+       -c "pwd
+       ls"
 
       echo " Ansible logs "
       docker logs ansible_container
