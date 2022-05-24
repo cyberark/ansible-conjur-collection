@@ -21,7 +21,7 @@ function main() {
 
       # cp ../conjur.yml .
 
-      cp ../tests/conjur_variable/policy/conjur.yml .
+      cp ../tests/conjur_variable/conjur.yml .
       ./bin/cli conjur policy load --replace root conjur.yml
 
     # cp ../tests/conjur_variable/policy/root.yml .
