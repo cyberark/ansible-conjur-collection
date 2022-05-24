@@ -54,8 +54,6 @@ function main() {
         client \
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           '
-        # cp conjur-enterprise.pem ../
-
         cp conjur-enterprise.pem ../tests
 
       conjur_enterprise=$(cat conjur-enterprise.pem)
@@ -72,8 +70,6 @@ function main() {
               export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
               conjur authn authenticate
             " > access_token
-        # cp access_token ../
-
         cp access_token ../tests/conjur_variable
 
       access_token=$(cat access_token)
@@ -86,32 +82,9 @@ function main() {
 
   pushd ./tests/conjur_variable
 
-    echo " stage 1 "
-    pwd
-    ls
-
       docker build -t conjur_ansible:v1 .
 
       echo " Run Ansible "
-      #  docker run \
-      #  -d -t \
-      #  --name ansible_container \
-      #  --volume "$(git rev-parse --show-toplevel):/cyberark" \
-      #  --volume "${PWD}/plugins":/root/.ansible/plugins \
-      #  --volume "${PWD}/tests/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-      #  --volume "${PWD}/tests/access_token:/cyberark/tests/conjur_variable/access_token" \
-      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
-      #  --network dap_net \
-      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-      #  -e "CONJUR_ACCOUNT=demo" \
-      #  -e "CONJUR_AUTHN_LOGIN=admin" \
-      #  -e "ANSIBLE_MASTER_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-      #  --workdir "/cyberark" \
-      #  conjur_ansible:v1 \
-
-
-
        docker run \
        -d -t \
        --name ansible_container \
