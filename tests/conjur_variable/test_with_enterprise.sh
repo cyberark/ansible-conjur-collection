@@ -115,6 +115,7 @@ function main() {
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases:/cyberark" \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
+       --volume "${PWD}/access_token:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "${PWD}/access_token:/cyberark/tests/access_token" \
        --volume "${PWD}/access_token:/cyberark/tests/conjur_variable/access_token" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
