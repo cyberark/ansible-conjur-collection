@@ -110,7 +110,6 @@ function main() {
        -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
-       --volume "${PWD}/plugins":/root/.ansible/plugins \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -139,7 +138,7 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
    pwd
    ls
-  #  cp plugins ../root/.ansible/plugins
+   cp plugins ../root/.ansible/plugins
    cd ..
    cd root/.ansible/plugins
    pwd
