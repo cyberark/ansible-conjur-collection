@@ -19,11 +19,14 @@ function main() {
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
-    cp ../tests/conjur_variable/policy/root.yml .
+      cp ../conjur.yml .
+      ./bin/cli conjur policy load --replace root conjur.yml
+
+    # cp ../tests/conjur_variable/policy/root.yml .
 
     echo " Setup Policy "
     echo " ========load policy====="
-    ./bin/cli conjur policy load root root.yml
+    # ./bin/cli conjur policy load root root.yml
     echo " ========Set Variable value ansible/test-secret ====="
     ./bin/cli conjur variable values add ansible/test-secret test_secret_password
     echo " =======Set Variable value ansible/test-secret-in-file ====="
@@ -110,7 +113,6 @@ function main() {
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases:/cyberark" \
        --volume "/var/lib/jenkins/workspace/ection_test_15266_addedTestCases/plugins":/root/.ansible/plugins \
        --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur-enterprise.pem" \
-       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        --volume "${PWD}/access_token:/cyberark/tests/access_token" \
        --volume "${PWD}/access_token:/cyberark/tests/conjur_variable/access_token" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
@@ -120,7 +122,7 @@ function main() {
        -e "CONJUR_AUTHN_LOGIN=admin" \
        -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
-       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
