@@ -58,6 +58,9 @@ function main() {
 
         cp conjur-enterprise.pem ../tests
 
+      conjur_enterprise=$(cat conjur-enterprise.pem)
+      echo "conjur-enterprise.pem: ${conjur_enterprise}"
+
         docker-compose  \
         run \
         --rm \
@@ -72,6 +75,9 @@ function main() {
         # cp access_token ../
 
         cp access_token ../tests/conjur_variable
+
+      access_token=$(cat access_token)
+      echo "conjur-enterprise.pemY: ${access_token}"
 
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
