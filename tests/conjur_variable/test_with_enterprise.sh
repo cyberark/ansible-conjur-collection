@@ -111,8 +111,6 @@ function main() {
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "${PWD}/plugins":/root/.ansible/plugins \
-       --volume "${PWD}/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-       --volume "${PWD}/access_token:/cyberark/tests/conjur_variable/access_token" \
        --volume "/var/run/docker.sock:/var/run/docker.sock" \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
