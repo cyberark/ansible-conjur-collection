@@ -162,6 +162,6 @@ of this plugin:
 ## Use conjur variable lookup plugin to provide secrets to Ansible Playbooks
 
 
-  The lookup plugin uses the control node’s identity to retrieve secrets from Conjur and provide them to the relevant playbook. The control node has execute permission on all relevant variables. It retrieves values from Conjur at runtime. The retrieved secrets are inserted by the playbook where needed before the playbook is passed to the remote nodes.
+  The lookup plugin uses identity of control node to retrieve secrets from Conjur and provide them to the relevant playbook. The control node has execute permission on all relevant variables. It retrieves values from Conjur at runtime. The retrieved secrets are inserted by the playbook where needed before the playbook is passed to the remote nodes.
 
   The control node simply passes the values onto the remote nodes in a playbook through SSH, and the secrets disappear along with the playbook at the end of execution.
