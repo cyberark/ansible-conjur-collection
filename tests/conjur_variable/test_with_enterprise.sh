@@ -6,7 +6,6 @@ declare -x COMPOSE_PROJECT_NAME
 COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 export COMPOSE_PROJECT_NAME
 
-
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
@@ -47,20 +46,15 @@ function main() {
       echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
       echo " Setup CLI "
-        docker-compose  \
-        run \
-        --rm \
-        -w /src/cli \
-        --entrypoint /bin/bash \
-        client \
-          -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-          conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-          '
-        # cp conjur-enterprise.pem ../tests
-        cp conjur-enterprise.pem ../tests/conjur_variable
-
-      conjur_enterprise=$(cat conjur-enterprise.pem)
-      echo "conjur-enterprise.pem: ${conjur_enterprise}"
+        # docker-compose  \
+        # run \
+        # --rm \
+        # -w /src/cli \
+        # --entrypoint /bin/bash \
+        # client \
+        #   -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+        #   conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+        #   '
 
         docker-compose  \
         run \
@@ -69,11 +63,18 @@ function main() {
         --entrypoint /bin/bash \
         client \
           -c "
+              cp /root/conjur-demo.pem conjur-enterprise.pem
+              conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
               export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
               export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
               conjur authn authenticate
             " > access_token
+
         cp access_token ../tests/conjur_variable
+        cp conjur-enterprise.pem ../tests/conjur_variable
+
+      conjur_enterprise=$(cat conjur-enterprise.pem)
+      echo "conjur-enterprise.pem: ${conjur_enterprise}"
 
       access_token=$(cat access_token)
       echo "access_token: ${access_token}"
@@ -125,19 +126,13 @@ function run_test_cases {
   docker exec -t ansible_container bash -exc "
    pwd
    ls
-   cd tests
-   pwd
-   ls
-   cd conjur_variable
-   ls
+   cd tests/conjur_variable
 
-        # if [ -e 'test_cases/${test_case}/env' ]; then
-        # . ./test_cases/${test_case}/env
-        # fi
+        if [ -e 'test_cases/${test_case}/env' ]; then
+        . ./test_cases/${test_case}/env
+        fi
 
-  ansible-playbook 'test_cases/${test_case}/playbook.yml'
-
-     # export COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+       ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
         # py.test --junitxml='./junit/${test_case}' \
         #   --connection docker \
