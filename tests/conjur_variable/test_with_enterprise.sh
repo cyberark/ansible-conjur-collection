@@ -129,13 +129,13 @@ function run_test_cases {
 
   # retrieve-variable-disable-verify-certs
 
-  local test_case="retrieve-variable"
+  local test_case="retrieve-variable-no-cert-provided"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
    pwd
    ls
    cd tests
-   export CONJUR_CERT_FILE=./conjur-enterprise.pem
+  #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
    pwd
    ls
    cd conjur_variable
