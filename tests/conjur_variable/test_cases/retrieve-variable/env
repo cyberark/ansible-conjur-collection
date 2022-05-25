@@ -1,1 +1,1 @@
-export CONJUR_CERT_FILE=./conjur-enterprise.pem
+export CONJUR_CERT_FILE=./conjur.pem
