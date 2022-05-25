@@ -126,7 +126,10 @@ function main() {
 }
 
 function run_test_cases {
-  local test_case="retrieve-variable-disable-verify-certs"
+
+  # retrieve-variable-disable-verify-certs
+
+  local test_case="retrieve-variable"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
    pwd
