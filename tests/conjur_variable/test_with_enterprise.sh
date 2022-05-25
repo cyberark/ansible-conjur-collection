@@ -6,6 +6,7 @@ declare -x COMPOSE_PROJECT_NAME
 COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 export COMPOSE_PROJECT_NAME
 
+
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
@@ -138,7 +139,7 @@ function run_test_cases {
    pwd
    ls
    cd tests
-  #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
+   # export CONJUR_CERT_FILE=./conjur-enterprise.pem
    pwd
    ls
    cd conjur_variable
@@ -149,6 +150,9 @@ function run_test_cases {
         fi
 
   ansible-playbook 'test_cases/${test_case}/playbook.yml'
+
+
+     export COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
         py.test --junitxml='./junit/${test_case}' \
           --connection docker \
