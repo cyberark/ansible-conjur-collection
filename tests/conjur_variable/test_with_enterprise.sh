@@ -141,9 +141,9 @@ function run_test_cases {
    cd conjur_variable
    ls
 
-        # if [ -e 'test_cases/${test_case}/env' ]; then
-        # . ./test_cases/${test_case}/env
-        # fi
+        if [ -e 'test_cases/${test_case}/env' ]; then
+        . ./test_cases/${test_case}/env
+        fi
 
   ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
