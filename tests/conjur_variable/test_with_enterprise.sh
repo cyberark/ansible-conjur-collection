@@ -12,7 +12,7 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-    git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+  git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
 
       echo " Provision Master"
@@ -23,15 +23,11 @@ function main() {
       echo " ========load policy====="
       cp ../tests/conjur_variable/policy/root.yml .
       ./bin/cli conjur policy load root root.yml
-            # cp ../tests/conjur_variable/conjur.yml .
-            # ./bin/cli conjur policy load --replace root conjur.yml
-            # ./bin/cli conjur policy load root conjur.yml
+
       echo " ========Set Variable value ansible/test-secret ====="
       ./bin/cli conjur variable values add ansible/test-secret test_secret_password
       echo " =======Set Variable value ansible/test-secret-in-file ====="
       ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-      echo " =======Set Variable value ansible/var with spaces ====="
-      # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
       docker-compose  \
       run \
@@ -57,9 +53,6 @@ function main() {
           '
         cp conjur-enterprise.pem ../tests/conjur_variable
 
-      conjur_enterprise=$(cat conjur-enterprise.pem)
-      echo "conjur-enterprise.pem: ${conjur_enterprise}"
-
         docker-compose  \
         run \
         --rm \
@@ -73,12 +66,9 @@ function main() {
             " > access_token
         cp access_token ../tests/conjur_variable
 
-      access_token=$(cat access_token)
-      echo "access_token: ${access_token}"
-
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-      echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+
   popd
 
   pushd ./tests/conjur_variable
@@ -103,49 +93,11 @@ function main() {
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
-      echo " Ansible logs "
-      docker logs ansible_container
-      echo " Ansible inspect "
-      docker inspect ansible_container
-
       echo "Running tests"
       run_test_cases
       echo " End of the tests "
   popd
 }
-
-# function run_test_cases {
-
-#   # retrieve-variable-disable-verify-certs
-#   # retrieve-variable-bad-cert-path
-#   # retrieve-variable-disable-verify-certs
-#   # retrieve-variable-with-authn-token-bad-cert
-#   # retrieve-variable-no-cert-provided
-
-
-#   local test_case="retrieve-variable"
-#   echo "---- Run test cases ----"
-#   docker exec -t ansible_container bash -exc "
-#    pwd
-#    ls
-#    cd tests
-#    pwd
-#    ls
-#    cd conjur_variable
-#    ls
-
-#         if [ -e 'test_cases/${test_case}/env' ]; then
-#         . ./test_cases/${test_case}/env
-#         fi
-#         # export CONJUR_CERT_FILE=./conjur-enterprise.pem
-#   ansible-playbook 'test_cases/${test_case}/playbook.yml'
-
-#         # py.test --junitxml='./junit/${test_case}' \
-#         #   --connection docker \
-#         #   -v 'test_cases/${test_case}/tests/test_default.py'
-#   "
-# }
-
 
 function run_test_cases {
   for test_case in test_cases/*; do
