@@ -146,6 +146,12 @@ function main() {
 #   "
 # }
 
+
+function run_test_cases {
+  for test_case in test_cases/*; do
+    run_test_case "$(basename -- "$test_case")"
+  done
+}
 function run_test_case {
   local test_case=$1
   echo "---- testing ${test_case} ----"
