@@ -55,8 +55,8 @@ function main() {
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           '
         cp conjur-enterprise.pem ../tests
-        cp conjur-enterprise.pem ../tests/conjur_variable
-        cp conjur-enterprise.pem ../
+        # cp conjur-enterprise.pem ../tests/conjur_variable
+        # cp conjur-enterprise.pem ../
 
       conjur_enterprise=$(cat conjur-enterprise.pem)
       echo "conjur-enterprise.pem: ${conjur_enterprise}"
