@@ -20,6 +20,7 @@ pipeline {
 
     stage('Run tests') {
       parallel {
+
         stage("Test conjur_variable lookup plugin") {
           steps {
             sh './ci/test.sh -d conjur_variable'
@@ -33,9 +34,14 @@ pipeline {
             junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
-      }
-    }
-    stage('Report Test Code Coverage'){
+        stage('Enterprise Test Script'){
+          steps {
+            sh 'chmod +x ./tests/conjur_variable/start_enterprise.sh'
+            sh './tests/conjur_variable/start_enterprise.sh'
+           }
+        }
+
+        stage('Report Test Code Coverage'){
           steps {
             sh './dev/ansibletest.sh'
             publishHTML (target : [allowMissing: false,
@@ -46,13 +52,10 @@ pipeline {
             reportName: 'Ansible Coverage Report',
             reportTitles: 'Conjur Ansible Collection report'])
            }
-}
-    stage('Enterprise Test Script'){
-          steps {
-            sh 'chmod +x ./tests/conjur_variable/start_enterprise.sh'
-            sh './tests/conjur_variable/start_enterprise.sh'
-           }
-}
+        }
+      }
+    }
+
     stage('Build Release Artifacts') {
       when {
         anyOf {
