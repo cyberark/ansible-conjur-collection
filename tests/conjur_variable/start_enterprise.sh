@@ -52,9 +52,6 @@ function main() {
           '
         cp conjur-enterprise.pem ../tests/conjur_variable
 
-      conjur_enterprise=$(cat conjur-enterprise.pem)
-      echo "conjur-enterprise.pem: ${conjur_enterprise}"
-
         docker-compose  \
         run \
         --rm \
@@ -68,9 +65,6 @@ function main() {
             " > access_token
         cp access_token ../tests/conjur_variable
 
-      access_token=$(cat access_token)
-      echo "access_token: ${access_token}"
-
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
       echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
@@ -78,9 +72,7 @@ function main() {
 
   pushd ./tests/conjur_variable
 
-      docker build -t conjur_ansible:v1 .
-
-      echo " Run Ansible "
+       docker build -t conjur_ansible:v1 .
        docker run \
        -d -t \
        --name ansible_container \
@@ -97,11 +89,6 @@ function main() {
        -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
-
-      echo " Ansible logs "
-      docker logs ansible_container
-      echo " Ansible inspect "
-      docker inspect ansible_container
 
       echo "Running tests"
       run_test_cases
