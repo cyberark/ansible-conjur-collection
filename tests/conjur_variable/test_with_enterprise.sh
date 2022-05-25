@@ -150,9 +150,9 @@ function run_test_cases {
 
   ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
-        # py.test --junitxml='./junit/${test_case}' \
-        #   --connection docker \
-        #   -v 'test_cases/${test_case}/tests/test_default.py'
+        py.test --junitxml='./junit/${test_case}' \
+          --connection docker \
+          -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
 
