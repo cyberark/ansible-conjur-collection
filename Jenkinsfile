@@ -46,7 +46,12 @@ pipeline {
             reportName: 'Ansible Coverage Report',
             reportTitles: 'Conjur Ansible Collection report'])
            }
-}
+    }
+    stage('Enterprise Setup'){
+          steps {
+            sh './tests/conjur_variable/start_enterprise.sh'
+           }
+    }
     stage('Build Release Artifacts') {
       when {
         anyOf {
