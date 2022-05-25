@@ -35,7 +35,18 @@ pipeline {
         }
       }
     }
-
+    stage('Report Test Code Coverage'){
+          steps {
+            sh './dev/ansibletest.sh'
+            publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: false,
+            keepAll: true,
+            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+            reportFiles: 'index.html',
+            reportName: 'Ansible Coverage Report',
+            reportTitles: 'Conjur Ansible Collection report'])
+           }
+}
     stage('Build Release Artifacts') {
       when {
         anyOf {
