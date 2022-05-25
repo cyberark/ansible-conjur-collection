@@ -129,8 +129,10 @@ function run_test_cases {
 
   # retrieve-variable-disable-verify-certs
   # retrieve-variable-bad-cert-path
+  # retrieve-variable-disable-verify-certs
 
-  local test_case="retrieve-variable-disable-verify-certs"
+
+  local test_case="retrieve-variable-with-authn-token-bad-cert"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
    pwd
