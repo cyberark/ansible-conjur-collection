@@ -53,10 +53,9 @@ function main() {
         --entrypoint /bin/bash \
         client \
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+          conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
           '
-        # cp conjur-enterprise.pem ../tests
         cp conjur-enterprise.pem ../tests/conjur_variable
-        # cp conjur-enterprise.pem ../
 
       conjur_enterprise=$(cat conjur-enterprise.pem)
       echo "conjur-enterprise.pem: ${conjur_enterprise}"
@@ -97,24 +96,12 @@ function main() {
        -e "CONJUR_ACCOUNT=demo" \
        -e "CONJUR_AUTHN_LOGIN=admin" \
        -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+       -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
        -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
-
-        # env variables values
-            # HOSTNAME=18c42ca3aabb
-            # TERM=xterm
-            # CONJUR_ACCOUNT=demo
-            # CONJUR_AUTHN_LOGIN=admin
-            # ANSIBLE_MASTER_AUTHN_API_KEY=341mh3y3ef7wgf2gn3jj73g7991v140xk9k2bqr48m3tmhr7624fwc6m
-            # CONJUR_ADMIN_AUTHN_API_KEY=1n312se1gry6p31qf4q8w2zcsg661mt9x327275sb196cewe2ktdmvj
-            # ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem
-            # CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local
-            # DEBIAN_FRONTEND=noninteractive
-            # HOME=/root
-
 
       echo " Ansible logs "
       docker logs ansible_container
@@ -127,35 +114,61 @@ function main() {
   popd
 }
 
-function run_test_cases {
+# function run_test_cases {
 
-  # retrieve-variable-disable-verify-certs
-  # retrieve-variable-bad-cert-path
-  # retrieve-variable-disable-verify-certs
-  # retrieve-variable-with-authn-token-bad-cert
-  # retrieve-variable-no-cert-provided
+#   # retrieve-variable-disable-verify-certs
+#   # retrieve-variable-bad-cert-path
+#   # retrieve-variable-disable-verify-certs
+#   # retrieve-variable-with-authn-token-bad-cert
+#   # retrieve-variable-no-cert-provided
 
 
-  local test_case="retrieve-variable"
-  echo "---- Run test cases ----"
+#   local test_case="retrieve-variable"
+#   echo "---- Run test cases ----"
+#   docker exec -t ansible_container bash -exc "
+#    pwd
+#    ls
+#    cd tests
+#    pwd
+#    ls
+#    cd conjur_variable
+#    ls
+
+#         if [ -e 'test_cases/${test_case}/env' ]; then
+#         . ./test_cases/${test_case}/env
+#         fi
+#         # export CONJUR_CERT_FILE=./conjur-enterprise.pem
+#   ansible-playbook 'test_cases/${test_case}/playbook.yml'
+
+#         # py.test --junitxml='./junit/${test_case}' \
+#         #   --connection docker \
+#         #   -v 'test_cases/${test_case}/tests/test_default.py'
+#   "
+# }
+
+function run_test_case {
+  local test_case=$1
+  echo "---- testing ${test_case} ----"
+
+  if [ -z "$test_case" ]; then
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
+  fi
+
   docker exec -t ansible_container bash -exc "
-   pwd
-   ls
-   cd tests
-   pwd
-   ls
-   cd conjur_variable
-   ls
+    cd tests/conjur_variable
 
-        if [ -e 'test_cases/${test_case}/env' ]; then
-        . ./test_cases/${test_case}/env
-        fi
-        # export CONJUR_CERT_FILE=./conjur-enterprise.pem
-  ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    # If env vars were provided, load them
+    if [ -e 'test_cases/${test_case}/env' ]; then
+      . ./test_cases/${test_case}/env
+    fi
 
-        # py.test --junitxml='./junit/${test_case}' \
-        #   --connection docker \
-        #   -v 'test_cases/${test_case}/tests/test_default.py'
+    # You can add -vvvv here for debugging
+    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+
+    # py.test --junitxml='./junit/${test_case}' \
+    #   --connection docker \
+    #   -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
 
