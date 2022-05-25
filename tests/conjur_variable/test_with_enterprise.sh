@@ -62,7 +62,7 @@ function main() {
         -w /src/cli \
         --entrypoint /bin/bash \
         client \
-          -c "
+          -ec "
               cp /root/conjur-demo.pem conjur-enterprise.pem
               conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
               export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
