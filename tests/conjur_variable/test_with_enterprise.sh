@@ -143,7 +143,7 @@ function run_test_cases {
         # if [ -e 'test_cases/${test_case}/env' ]; then
         # . ./test_cases/${test_case}/env
         # fi
-        #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
+        export CONJUR_CERT_FILE=./conjur-enterprise.pem
   ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
         # py.test --junitxml='./junit/${test_case}' \
