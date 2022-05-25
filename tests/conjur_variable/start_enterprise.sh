@@ -28,7 +28,6 @@ function main() {
       echo " =======Set Variable value ansible/test-secret-in-file ====="
       ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
-
       docker-compose  \
       run \
       --rm \
