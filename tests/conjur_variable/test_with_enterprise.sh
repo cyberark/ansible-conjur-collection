@@ -165,8 +165,8 @@ function run_test_case {
     cd tests/conjur_variable
 
     # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env' ]; then
-      . ./test_cases/${test_case}/env
+    if [ -e 'test_cases/${test_case}/env_enterprise' ]; then
+      . ./test_cases/${test_case}/env_enterprise
     fi
 
     # You can add -vvvv here for debugging
