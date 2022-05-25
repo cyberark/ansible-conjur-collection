@@ -56,7 +56,7 @@ function main() {
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
           '
-        cp conjur-enterprise.pem ../tests
+        # cp conjur-enterprise.pem ../tests
         cp conjur-enterprise.pem ../tests/conjur_variable
 
       conjur_enterprise=$(cat conjur-enterprise.pem)
@@ -104,19 +104,6 @@ function main() {
        --workdir "/cyberark" \
        conjur_ansible:v1 \
 
-        # env variables values
-            # HOSTNAME=18c42ca3aabb
-            # TERM=xterm
-            # CONJUR_ACCOUNT=demo
-            # CONJUR_AUTHN_LOGIN=admin
-            # ANSIBLE_MASTER_AUTHN_API_KEY=341mh3y3ef7wgf2gn3jj73g7991v140xk9k2bqr48m3tmhr7624fwc6m
-            # CONJUR_ADMIN_AUTHN_API_KEY=1n312se1gry6p31qf4q8w2zcsg661mt9x327275sb196cewe2ktdmvj
-            # ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem
-            # CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local
-            # DEBIAN_FRONTEND=noninteractive
-            # HOME=/root
-
-
       echo " Ansible logs "
       docker logs ansible_container
       echo " Ansible inspect "
@@ -139,7 +126,6 @@ function run_test_cases {
    pwd
    ls
    cd tests
-   # export CONJUR_CERT_FILE=./conjur-enterprise.pem
    pwd
    ls
    cd conjur_variable
@@ -152,11 +138,11 @@ function run_test_cases {
   ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
 
-     export COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+     # export COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
-        py.test --junitxml='./junit/${test_case}' \
-          --connection docker \
-          -v 'test_cases/${test_case}/tests/test_default.py'
+        # py.test --junitxml='./junit/${test_case}' \
+        #   --connection docker \
+        #   -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
 
