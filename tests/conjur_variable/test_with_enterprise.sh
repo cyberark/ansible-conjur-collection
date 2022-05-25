@@ -54,9 +54,10 @@ function main() {
         client \
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           '
-        # cp conjur-enterprise.pem ../
+        cp conjur-enterprise.pem ../tests
 
-        cp conjur-enterprise.pem ../tests/conjur_variable
+      conjur_enterprise=$(cat conjur-enterprise.pem)
+      echo "conjur-enterprise.pem: ${conjur_enterprise}"
 
         docker-compose  \
         run \
@@ -69,9 +70,10 @@ function main() {
               export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
               conjur authn authenticate
             " > access_token
-        # cp access_token ../
-
         cp access_token ../tests/conjur_variable
+
+      access_token=$(cat access_token)
+      echo "access_token: ${access_token}"
 
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
@@ -80,49 +82,37 @@ function main() {
 
   pushd ./tests/conjur_variable
 
-    echo " stage 1 "
-    pwd
-    ls
-
       docker build -t conjur_ansible:v1 .
 
       echo " Run Ansible "
-      #  docker run \
-      #  -d -t \
-      #  --name ansible_container \
-      #  --volume "$(git rev-parse --show-toplevel):/cyberark" \
-      #  --volume "${PWD}/plugins":/root/.ansible/plugins \
-      #  --volume "${PWD}/tests/conjur-enterprise.pem:/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-      #  --volume "${PWD}/tests/access_token:/cyberark/tests/conjur_variable/access_token" \
-      #  --volume "/var/run/docker.sock:/var/run/docker.sock" \
-      #  --network dap_net \
-      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-      #  -e "CONJUR_ACCOUNT=demo" \
-      #  -e "CONJUR_AUTHN_LOGIN=admin" \
-      #  -e "ANSIBLE_MASTER_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-      #  --workdir "/cyberark" \
-      #  conjur_ansible:v1 \
-
-
-
        docker run \
        -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
-       --volume "${PWD}/plugins":/root/.ansible/plugins \
-       --volume "/var/run/docker.sock:/var/run/docker.sock" \
+       --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
        --network dap_net \
        -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
        -e "CONJUR_ACCOUNT=demo" \
        -e "CONJUR_AUTHN_LOGIN=admin" \
        -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
        -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+       -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
-       -c "pwd
-       ls"
+
+        # env variables values
+            # HOSTNAME=18c42ca3aabb
+            # TERM=xterm
+            # CONJUR_ACCOUNT=demo
+            # CONJUR_AUTHN_LOGIN=admin
+            # ANSIBLE_MASTER_AUTHN_API_KEY=341mh3y3ef7wgf2gn3jj73g7991v140xk9k2bqr48m3tmhr7624fwc6m
+            # CONJUR_ADMIN_AUTHN_API_KEY=1n312se1gry6p31qf4q8w2zcsg661mt9x327275sb196cewe2ktdmvj
+            # ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem
+            # CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local
+            # DEBIAN_FRONTEND=noninteractive
+            # HOME=/root
+
 
       echo " Ansible logs "
       docker logs ansible_container
@@ -136,36 +126,25 @@ function main() {
 }
 
 function run_test_cases {
-  local test_case="retrieve-variable-disable-verify-certs"
+
+  # retrieve-variable-disable-verify-certs
+
+  local test_case="retrieve-variable"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
-    pwd
-    ls
-    cd ..
-    cp -r cyberark/plugins root/.ansible/plugins
-    #   # cp -r plugins ../root/.ansible/
+   pwd
+   ls
+   cd tests
+   pwd
+   ls
+   cd conjur_variable
+   ls
 
-        pwd
-        ls
-        cd root
-        pwd
-        ls
-        cd .ansible
-        pwd
-        ls
-        cd plugins
-        pwd
-        ls
-
-
-    # cd tests/conjur_variable
-    # ls
-
-        # if [ -e 'test_cases/${test_case}/env' ]; then
-        # . ./test_cases/${test_case}/env
-        # fi
-        #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
-    # ansible-playbook 'test_cases/${test_case}/playbook.yml'
+        if [ -e 'test_cases/${test_case}/env' ]; then
+        . ./test_cases/${test_case}/env
+        fi
+        # export CONJUR_CERT_FILE=./conjur-enterprise.pem
+  ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
         # py.test --junitxml='./junit/${test_case}' \
         #   --connection docker \
