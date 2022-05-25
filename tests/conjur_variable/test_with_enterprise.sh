@@ -55,6 +55,8 @@ function main() {
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           '
         cp conjur-enterprise.pem ../tests
+        cp access_token ../tests/conjur_variable
+        cp conjur-enterprise.pem ../
 
       conjur_enterprise=$(cat conjur-enterprise.pem)
       echo "conjur-enterprise.pem: ${conjur_enterprise}"
@@ -130,9 +132,11 @@ function run_test_cases {
   # retrieve-variable-disable-verify-certs
   # retrieve-variable-bad-cert-path
   # retrieve-variable-disable-verify-certs
+  # retrieve-variable-with-authn-token-bad-cert
+  # retrieve-variable-no-cert-provided
 
 
-  local test_case="retrieve-variable-with-authn-token-bad-cert"
+  local test_case="retrieve-variable"
   echo "---- Run test cases ----"
   docker exec -t ansible_container bash -exc "
    pwd
