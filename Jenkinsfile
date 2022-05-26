@@ -18,44 +18,50 @@ pipeline {
       }
     }
 
-    stage('Run tests') {
-      parallel {
+    // stage('Run tests') {
+    //   parallel {
 
-        stage("Test conjur_variable lookup plugin") {
-          steps {
-            sh './ci/test.sh -d conjur_variable'
-            junit 'tests/conjur_variable/junit/*'
-          }
-        }
+    //     stage("Test conjur_variable lookup plugin") {
+    //       steps {
+    //         sh './ci/test.sh -d conjur_variable'
+    //         junit 'tests/conjur_variable/junit/*'
+    //       }
+    //     }
 
-        stage("Test conjur_host_identity role") {
-          steps {
-            sh './ci/test.sh -d conjur_host_identity'
-            junit 'roles/conjur_host_identity/tests/junit/*'
-          }
-        }
+    //     stage("Test conjur_host_identity role") {
+    //       steps {
+    //         sh './ci/test.sh -d conjur_host_identity'
+    //         junit 'roles/conjur_host_identity/tests/junit/*'
+    //       }
+    //     }
+    //     stage('Enterprise Test Script'){
+    //       steps {
+    //         sh 'chmod +x ./tests/conjur_variable/start_enterprise.sh'
+    //         sh './tests/conjur_variable/start_enterprise.sh'
+    //        }
+    //     }
+
+    //     stage('Report Test Code Coverage'){
+    //       steps {
+    //         sh './dev/ansibletest.sh'
+    //         publishHTML (target : [allowMissing: false,
+    //         alwaysLinkToLastBuild: false,
+    //         keepAll: true,
+    //         reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+    //         reportFiles: 'index.html',
+    //         reportName: 'Ansible Coverage Report',
+    //         reportTitles: 'Conjur Ansible Collection report'])
+    //        }
+    //     }
+    //   }
+    // }
+
         stage('Enterprise Test Script'){
           steps {
             sh 'chmod +x ./tests/conjur_variable/start_enterprise.sh'
             sh './tests/conjur_variable/start_enterprise.sh'
            }
         }
-
-        stage('Report Test Code Coverage'){
-          steps {
-            sh './dev/ansibletest.sh'
-            publishHTML (target : [allowMissing: false,
-            alwaysLinkToLastBuild: false,
-            keepAll: true,
-            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            reportFiles: 'index.html',
-            reportName: 'Ansible Coverage Report',
-            reportTitles: 'Conjur Ansible Collection report'])
-           }
-        }
-      }
-    }
-
     stage('Build Release Artifacts') {
       when {
         anyOf {
