@@ -10,6 +10,9 @@ else
    currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 fi
 
+echo "testing"
+pwd
+ls
 
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
