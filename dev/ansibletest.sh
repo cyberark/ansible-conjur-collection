@@ -10,10 +10,6 @@ else
    currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 fi
 
-echo "testing"
-pwd
-ls
-
 cd ../../
 DIR="ansible-conjur-collection/tests/output"
 if [ -d "$DIR" ]; then
@@ -31,7 +27,7 @@ cd conjur
 
 # pip install pycairo
 export PATH=/var/lib/jenkins/.local/bin:$PATH
-pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+# pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 cd ../../../
