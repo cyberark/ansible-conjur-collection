@@ -28,9 +28,7 @@ cd conjur
 
 export PATH=/var/lib/jenkins/.local/bin:$PATH
 echo " $(python3 -m pip --version) "
- #  pip 22.0.4 (python 3.9)
- #  pip 20.0.2 (python 3.8)
-pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check # required in  pip 20.0.2 (python 3.8) only
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
 cd ../../../

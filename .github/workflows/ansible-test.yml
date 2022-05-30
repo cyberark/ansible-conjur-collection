@@ -76,7 +76,7 @@ jobs:
       fail-fast: true
       matrix:
         ansible:
-          # - stable-2.9 # Only if your collection supports Ansible 2.9
+          - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
           - stable-2.11
           - stable-2.12
@@ -84,9 +84,9 @@ jobs:
           - devel
         python:
           - 3.8
-        exclude:
-          - ansible: stable-2.9
-            python: 3.9
+        # exclude:
+        #   - ansible: stable-2.9
+        #     python: 3.9
 
     steps:
       - name: Check out code
