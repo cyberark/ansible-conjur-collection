@@ -79,7 +79,7 @@ jobs:
           - stable-2.12
           - devel
         python:
-          - 3.9
+          - 3.8
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
