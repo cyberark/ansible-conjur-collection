@@ -29,8 +29,10 @@ cd conjur
 # pip install pycairo
 export PATH=/var/lib/jenkins/.local/bin:$PATH
 echo " Step 1 "
+echo " $(python3 -m pip --version) "
 pwd
 ls
+ #  pip 22.0.4 from /Users/Pooja.Gangwar/brew/lib/python3.9/site-packages/pip (python 3.9)
 pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py --coverage
 ansible-test coverage html -v --requirements --group-by command --group-by version
