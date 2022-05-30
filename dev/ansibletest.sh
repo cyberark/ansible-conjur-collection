@@ -28,7 +28,7 @@ cd conjur
 
 # pip install pycairo
 export PATH=/var/lib/jenkins/.local/bin:$PATH
-echo"step 1"
+echo " Step 1 "
 pwd
 ls
 pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
