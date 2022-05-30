@@ -79,7 +79,7 @@ jobs:
           - stable-2.12
           - devel
         python:
-          - default
+          - 3.8
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -95,7 +95,10 @@ jobs:
       - name: Install ansible-base (${{ matrix.ansible }})
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
-      # Run the unit tests
+      - name: Install collection dependencies
+        run: ansible-galaxy collection install ansible.netcommon ansible.utils -p .
+
+      # Run the unit tests  run: ansible-test units --docker default -v --python default
       - name: Run unit test
-        run: ansible-test units --docker default -v --python default
+        run: ansible-test units -v --color --docker --coverage --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
