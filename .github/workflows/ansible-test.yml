@@ -69,25 +69,18 @@ jobs:
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
 
   units:
-    runs-on: ubuntu-latest
     name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
-      # As soon as the first unit test fails, cancel the others to free up the CI queue
-      fail-fast: true
       matrix:
         ansible:
-          # - stable-2.9 # Only if your collection supports Ansible 2.9
+          - stable-2.9
           - stable-2.10
           - stable-2.11
           - stable-2.12
-          - stable-2.10
           - devel
         python:
-          - 3.8
-        exclude:
-          - ansible: stable-2.9
-            python: 3.9
-
+          - 3.9
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
