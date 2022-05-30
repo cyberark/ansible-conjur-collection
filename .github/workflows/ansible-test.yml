@@ -97,5 +97,5 @@ jobs:
 
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units --docker default -v --python ${{ matrix.python }}
+        run: ansible-test units --docker default -v --python default
         working-directory: ./ansible_collections/cyberark/conjur
