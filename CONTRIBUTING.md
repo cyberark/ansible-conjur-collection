@@ -42,9 +42,9 @@ environment :
 
 To use it:
 
-1. Install dependencies (as above)
+    Install dependencies (as above)
 
-1. To setup the dev environment ,first need to Clone GitHub [conjur-collection](https://github.com/cyberark/ansible-conjur-collection) repository in your directory and then run start.sh script
+To setup the dev environment, you first need to clone the GitHub repository [cyberark/ansible-conjur-collection](https://github.com/cyberark/ansible-conjur-collection) repository in your directory and then run start.sh script
 
 
  ```sh-session
@@ -55,7 +55,7 @@ To use it:
  ```
 ### Verification
 
-  When start.sh script successfully setup Conjur environment along with inventory machines , the terminal returns the following:
+  When start.sh script has successfully setup Conjur environment along with the inventory machines, the terminal returns the following:
 
    ```sh-session
    ...
@@ -104,7 +104,7 @@ of this plugin:
     - Create a PR with these changes
 
 - Create an annotated tag with the new version, formatted as `v##.##.##`
-    - This will kick off an automated script which publish the release to
+    - This will kick off an automated script which will publish the release to
       [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur)
 
 - Create the release on GitHub for that tag
@@ -112,56 +112,91 @@ of this plugin:
     - Attach package to Github Release
 
 ## Set up Conjur Open Source and Ansible control node
-  - ### Setup a conjur OSS Environment
+  -  Setup a conjur OSS Environment
+      - Pull the Docker image
 
-    -   Pull the Docker image
-    -   Generate the master key
-    -   Load master key as an environment variable
-    -   Start the Conjur OSS environment
-    -   Create admin account
-    -   Connect the Conjur client to the Conjur server
+          ```sh-session
+          docker-compose pull
+          ```
 
-  - ### Granting a Conjur identity to Ansible hosts
-    To grant your Ansible host a Conjur identity, you first must install the Conjur Ansible Role in your playbook
-          directly
-      ```sh-session
-      ansible-galaxy install cyberark.conjur-host-identity
-      ```
-      Once you've done this, you can configure each Ansible node with a Conjur identity by including a section like the example below in your Ansible playbook:
+      - Generate the master key
 
-      ```sh-session
-      - hosts: servers
-        roles:
-          - role: cyberark.conjur-host-identity
-            conjur_appliance_url: 'https://conjur.myorg.com',
-            conjur_account: 'myorg',
-            conjur_host_factory_token: "{{lookup('env', 'HFTOKEN')}}",
-            conjur_host_name: "{{inventory_hostname}}"
-      ```
-      First we register the host with Conjur, adding it into the layer specific to the provided host factory token, and then installs Summon with the Summon Conjur provider for secret retrieval from Conjur.
+          ```sh-session
+          docker-compose run --no-deps --rm conjur data-key generate > data_key
+          ```
 
-## Load policy to set up Conjur Ansible integration
+      - Load master key as an environment variable
 
+          ```sh-session
+          export CONJUR_DATA_KEY="$(< data_key)"
+          ```
 
-  Policy defines Conjur entities and the relationships between them.  An entity can be a policy, a host, a user, a layer, a group, or a variable.
+      - Start the Conjur OSS environment
+
+          ```sh-session
+          docker-compose up -d
+          ```
+
+      - Create admin account
+
+          ```sh-session
+          docker-compose exec conjur conjurctl account create myConjurAccount > admin_data
+          ```
+
+      - Connect the Conjur client to the Conjur server
+
+          ```sh-session
+          docker-compose exec client conjur init -u conjur -a myConjurAccount
+          ```
+
+ -  Granting a Conjur identity to Ansible hosts
+     - To grant your Ansible host a Conjur identity, you first must install the Conjur Ansible Role in your     playbook directly
+
+          ```sh-session
+          ansible-galaxy install cyberark.conjur-host-identity
+          ```
+     - Once you've done this, you can configure each Ansible node with a Conjur identity by including a section like the example below in your Ansible playbook:
+
+          ```sh-session
+          - hosts: servers
+            roles:
+              - role: cyberark.conjur-host-identity
+                conjur_appliance_url: 'https://conjur.myorg.com',
+                conjur_account: 'myorg',
+                conjur_host_factory_token: "{{lookup('env', 'HFTOKEN')}}",
+                conjur_host_name: "{{inventory_hostname}}"
+          ```
+     - First we register the host with Conjur, adding it into the layer specific to the provided host factory token, and then installs Summon with the Summon Conjur provider for secret retrieval from Conjur.
+
+##  Load policy to set up Conjur Ansible integration
+
+  Conjur policy assigns roles to your organization's users, groups, machines, and web services, and uses those roles to control access to your secrets.
+  To load policy into conjur :-
 
   ```sh
-    docker exec conjur_client conjur policy load root /policy/root.yml
+  docker exec conjur_client conjur policy load root /policy/root.yml
   ```
-## Create Ansible managed nodes
+  [Conjur policy example](https://github.com/cyberark/ansible-conjur-collection/blob/main/dev/policy/root.yml)
 
-  Set all required variables, ensure `Conjur_host_factory_token` is set . Install `ca-certificates` and place Conjur public SSL certificate. Symlink Conjur public SSL certificate into /etc/ssl/certs .
+##  Create Ansible managed nodes
 
-## Use conjur host identity to set up Conjur identity on managed nodes
+  On Ansible managed nodees ,ensure `Conjur_host_factory_token` and all required variables are set . Install `ca-certificates` and place Conjur public SSL certificate. Symlink Conjur public SSL certificate into /etc/ssl/certs .
 
+  [Github code reference](https://github.com/cyberark/ansible-conjur-collection/blob/main/roles/conjur_host_identity/tasks/identity.yml)
 
-  - Set all required variables, ensure `Conjur_host_factory_token` is set . Install `ca-certificates` , place Conjur  public SSL certificate and Symlink Conjur public SSL certificate into /etc/ssl/certs
-  - Install openssl-perl Package when ansible_os_family is `RedHat`
-  - Copy files from the Ansible to the hosts  into /etc/Conjur.conf and request identity from Conjur and place Conjur identity  file into /etc/
+##  Use conjur host identity to set up Conjur identity on managed nodes
+ß
+  Copy files from Ansible to the managed hosts into /etc/Conjur.conf and request identity from Conjur and place Conjur identity  file into /etc/.
 
-## Use conjur variable lookup plugin to provide secrets to Ansible Playbooks
+  [Github code reference](https://github.com/cyberark/ansible-conjur-collection/blob/main/roles/conjur_host_identity/tasks/identity.yml)
 
+##  Use conjur variable lookup plugin to provide secrets to Ansible Playbooks
 
-  The lookup plugin uses identity of control node to retrieve secrets from Conjur and provide them to the relevant playbook. The control node has execute permission on all relevant variables. It retrieves values from Conjur at runtime. The retrieved secrets are inserted by the playbook where needed before the playbook is passed to the remote nodes.
+  The lookup plugin uses the identity of the control node to retrieve secrets from Conjur and provide them to the relevant playbook. The control node has execute permission on all relevant variables. It retrieves values from Conjur at runtime. The retrieved secrets are inserted by the playbook where needed before the playbook is passed to the remote nodes.
 
   The control node simply passes the values onto the remote nodes in a playbook through SSH, and the secrets disappear along with the playbook at the end of execution.
+
+  ```sh-session
+  vars:
+  database_url: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
+  ```
