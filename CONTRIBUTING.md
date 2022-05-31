@@ -185,10 +185,10 @@ of this plugin:
   [Github code reference](https://github.com/cyberark/ansible-conjur-collection/blob/main/roles/conjur_host_identity/tasks/identity.yml)
 
 ##  Use conjur host identity to set up Conjur identity on managed nodes
-ß
-  Copy files from Ansible to the managed hosts into /etc/Conjur.conf and request identity from Conjur and place Conjur identity  file into /etc/.
 
-  [Github code reference](https://github.com/cyberark/ansible-conjur-collection/blob/main/roles/conjur_host_identity/tasks/identity.yml)
+  The Conjur role provides a method to establish the Conjur identity of a remote node with Ansible. The node can then be granted least-privilege access to retrieve the secrets it needs in a secure manner .
+
+   [Collection documentation](https://github.com/cyberark/ansible-conjur-collection#installation)
 
 ##  Use conjur variable lookup plugin to provide secrets to Ansible Playbooks
 
