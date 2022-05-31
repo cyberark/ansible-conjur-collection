@@ -37,36 +37,29 @@ pipeline {
       }
     }
 
-    stage('CodeCoverage report and Run tests against Conjur Enterprise') {
-      parallel {
-
-        stage('Run tests against Conjur Enterprise'){
-          steps {
-            sh 'chmod +x ./tests/conjur_variable/start_enterprise.sh'
-            sh './tests/conjur_variable/start_enterprise.sh'
-           }
-
-        post {
-          always {
-              sh 'chmod +x ./tests/conjur_variable/stop_enterprise.sh'
-              sh './tests/conjur_variable/stop_enterprise.sh'
-          }
+    stage('Code Coverage Report'){
+      steps {
+        sh './dev/ansibletest.sh'
+        publishHTML (target : [allowMissing: false,
+        alwaysLinkToLastBuild: false,
+        keepAll: true,
+        reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+        reportFiles: 'index.html',
+        reportName: 'Ansible Coverage Report',
+        reportTitles: 'Conjur Ansible Code Coverage report'])
         }
+    }
+
+    stage('Functional Tests Enterprise'){
+      steps {
+        sh './tests/conjur_variable/start_enterprise.sh'
         }
 
-        stage('CodeCoverage report'){
-          steps {
-            sh './dev/ansibletest.sh'
-            publishHTML (target : [allowMissing: false,
-            alwaysLinkToLastBuild: false,
-            keepAll: true,
-            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
-            reportFiles: 'index.html',
-            reportName: 'Ansible Coverage Report',
-            reportTitles: 'Conjur Ansible Collection report'])
-           }
-        }
+    post {
+      always {
+          sh './tests/conjur_variable/stop_enterprise.sh'
       }
+    }
     }
 
     stage('Build Release Artifacts') {
