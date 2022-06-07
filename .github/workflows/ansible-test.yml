@@ -64,28 +64,22 @@ jobs:
         run: ansible-test sanity --docker -v --color --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
 
-
 # Unit tests (OPTIONAL)
 
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
 
   units:
-    runs-on: ubuntu-latest
     name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
-      # As soon as the first unit test fails, cancel the others to free up the CI queue
-      fail-fast: true
       matrix:
         ansible:
-          # - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
+          - stable-2.11
+          - stable-2.12
           - devel
         python:
           - 3.8
-        exclude:
-          - ansible: stable-2.9
-            python: 3.9
-
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -102,5 +96,5 @@ jobs:
 
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units --docker default -v --python ${{ matrix.python }}
+        run: ansible-test units --docker default -v --python ${{ matrix.python }} tests/unit/plugins/lookup/test_conjur_variable.py
         working-directory: ./ansible_collections/cyberark/conjur
