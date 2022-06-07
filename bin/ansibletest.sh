@@ -11,19 +11,23 @@ function print_usage() {
    cat << EOF
 Run unit tests for Conjur Variable Lookup plugin.
 
+USAGE
 ./ansibletest.sh [options]
 
--p <version>     Run tests against specified Python version  (Default: 3.9)
--a <version>     Run tests against specified Ansible version (Default: stable-2.10)
+-p<version>Run tests against specified Python version(Default: 3.9)
+-a<version>Run tests against specified Ansible version(Default: stable-2.10)
 EOF
 }
 
 while getopts 'a:p:' flag; do
   case "${flag}" in
-    a) ansible_version="${OPTARG}" ;;
-    p) python_version="${OPTARG}" ;;
+    a) ansible_version="${OPTARG}"
+       ;;
+    p) python_version="${OPTARG}"
+       ;;
     *) print_usage
-       exit 1 ;;
+       exit 1
+       ;;
    esac
 done
 
