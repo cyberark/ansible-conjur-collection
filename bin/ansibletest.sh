@@ -1,18 +1,8 @@
 #!/bin/bash -eu
 
 # go to root folder for execution
-cd $(dirname $0)/..
 
-
-#==========
-
-# filepath=$(dirname $0)/..
-
-# echo "Existing '$filepath' found"
-
-
-#==============
-
+cd "$(dirname "$0")"/ ..
 
 python_version="3.9"
 ansible_version="stable-2.10"
