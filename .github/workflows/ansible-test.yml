@@ -95,6 +95,7 @@ jobs:
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
       # Run the unit tests
+      # ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable_negative.py
       - name: Run unit test
         run: ansible-test units --docker default -v --python ${{ matrix.python }} tests/unit/plugins/lookup/test_conjur_variable.py
         working-directory: ./ansible_collections/cyberark/conjur
