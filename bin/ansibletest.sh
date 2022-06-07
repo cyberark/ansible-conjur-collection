@@ -2,7 +2,7 @@
 
 # go to root folder for execution
 
-cd "$(dirname "$0")"/ ..
+cd '$(dirname '$0')'/ ..
 
 python_version="3.9"
 ansible_version="stable-2.10"
@@ -11,7 +11,7 @@ function print_usage() {
    cat << EOF
 Run unit tests for Conjur Variable Lookup plugin.
 
-./ansibletest.sh [options]
+./ansibletest.sh[options]
 
 -p <version>     Run tests against specified Python version  (Default: 3.9)
 -a <version>     Run tests against specified Ansible version (Default: stable-2.10)
