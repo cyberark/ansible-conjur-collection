@@ -1,4 +1,7 @@
-#!/bin/bash -eu
+#!/usr/bin/env bash
+
+source bin/util
+set -euo pipefail
 
 # go to root folder for execution
 cd $(dirname $0)/..
