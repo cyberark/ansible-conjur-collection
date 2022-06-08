@@ -1,46 +1,39 @@
 #!/bin/bash -eu
 
+python_version="3.9"
+ansible_version="stable-2.10"
 
-filepath=$(pwd)
-firstthree=${filepath:1:3}
+cd "$(dirname "$0")"/..
 
-if [ "$firstthree" == var ]; then
-   currentbranch=$BRANCH_NAME
-else
-   currentbranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-fi
+function print_usage() {
+   cat << EOF
+Run unit tests for Conjur Variable Lookup plugin.
 
+./ansibletest.sh [options]
 
-cd ../../
-DIR="ansible-conjur-collection/tests/output"
-if [ -d "$DIR" ]; then
-   echo "Existing '$DIR' found"
-   rm -rf ansible-conjur-collection/tests/output
-else
-   echo "'$DIR' NOT found. "
-fi
+-p <version>     Run tests against specified Python version  (Default: 3.9)
+-a <version>     Run tests against specified Ansible version (Default: stable-2.10)
+EOF
+}
 
-mkdir -p ansible_collections/cyberark/
-cd ansible_collections/cyberark/
-git clone --single-branch --branch "$currentbranch" https://github.com/cyberark/ansible-conjur-collection.git
-mv ansible-conjur-collection conjur
-cd conjur
+while getopts 'a:p:' flag; do
+  case "${flag}" in
+    a) ansible_version="${OPTARG}" ;;
+    p) python_version="${OPTARG}" ;;
+    *) print_usage
+       exit 1 ;;
+   esac
+done
 
-# pip install pycairo
-export PATH=/var/lib/jenkins/.local/bin:$PATH
-pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
-ansible-test units --docker default -v --python 3.8 tests/unit/plugins/lookup/test_conjur_variable.py --coverage
-ansible-test coverage html -v --requirements --group-by command --group-by version
-cd ../../../
-
-CURRENTDIR="workspace"
-if [ -d "$CURRENTDIR" ]; then
-   rootdir="_-ansible-conjur-collection_"
-   Combinedstring=$rootdir$currentbranch
-   get32characters=${Combinedstring: -32}
-   cp -r ansible_collections/cyberark/conjur/tests/output workspace/"$get32characters"/tests
-else
-   cp -r ansible_collections/cyberark/conjur/tests/output ansible-conjur-collection/tests
-fi
-
-rm -rf ansible_collections
+docker build \
+  --build-arg PYTHON_VERSION="${python_version}" \
+  --build-arg ANSIBLE_VERSION="${ansible_version}" \
+  -t pytest-tools:latest \
+  -f tests/unit/Dockerfile .
+docker run --rm \
+  -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
+  -w /ansible_collections/cyberark/conjur/tests/unit/ \
+  pytest-tools:latest /bin/bash -c "
+    ansible-test units -vvv --coverage --python ${python_version}
+    ansible-test coverage html -v --requirements --group-by command --group-by version
+  "
