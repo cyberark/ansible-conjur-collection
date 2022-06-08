@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+<<<<<<< HEAD
 source bin/util
+=======
+
+source bin/util
+set -euo pipefail
+>>>>>>> d022d9b7d1703ea392630801a7cefb7720ee28b6
 
 # go to root folder for execution
 cd $(dirname $0)/..
