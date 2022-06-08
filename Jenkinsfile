@@ -37,7 +37,7 @@ pipeline {
     }
     stage('Report Test Code Coverage'){
           steps {
-            sh './bin/ansibletest.sh'
+            sh './dev/ansibletest.sh'
            }
 }
     stage('Build Release Artifacts') {
