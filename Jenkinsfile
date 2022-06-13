@@ -33,13 +33,15 @@ pipeline {
             junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
+
+        stage("Run conjur_variable unit tests") {
+          steps {
+            sh './dev/test_unit.sh'
+          }
+        }
       }
     }
-    stage('Report Test Code Coverage'){
-          steps {
-            sh './dev/ansibletest.sh'
-           }
-}
+
     stage('Build Release Artifacts') {
       when {
         anyOf {
