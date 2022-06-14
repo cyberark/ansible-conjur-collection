@@ -33,11 +33,10 @@ pipeline {
             junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
-      }
-    }
-    stage('Report Test Code Coverage'){
+
+        stage("Run conjur_variable unit tests and generate code coverage report") {
           steps {
-            sh './dev/ansibletest.sh'
+            sh './dev/test_unit.sh'
             publishHTML (target : [allowMissing: false,
             alwaysLinkToLastBuild: false,
             keepAll: true,
@@ -45,8 +44,11 @@ pipeline {
             reportFiles: 'index.html',
             reportName: 'Ansible Coverage Report',
             reportTitles: 'Conjur Ansible Collection report'])
-           }
-}
+          }
+        }
+      }
+    }
+
     stage('Build Release Artifacts') {
       when {
         anyOf {
