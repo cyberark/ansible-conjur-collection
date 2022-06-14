@@ -33,6 +33,12 @@ pipeline {
             junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
+
+        stage("Run conjur_variable unit tests") {
+          steps {
+            sh './dev/test_unit.sh'
+          }
+        }
       }
     }
 
