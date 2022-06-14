@@ -147,13 +147,13 @@ class TestConjurLookup(TestCase):
         with self.assertRaises(FileNotFoundError):
             self.lookup.run(terms, **kwargs)
 
-    # def test_run_no_variable_path(self):
-    #     kwargs = {'as_file': False, 'conf_file': 'conf_file', 'validate_certs': True}
+    def test_run_no_variable_path(self):
+        kwargs = {'as_file': False, 'conf_file': 'conf_file', 'validate_certs': True}
 
-    #     with self.assertRaises(AnsibleError) as context:
-    #         self.lookup.run([], **kwargs)
-    #         self.assertEqual(context.exception.message, "Invalid secret path: no secret path provided.")
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run([], **kwargs)
+            self.assertEqual(context.exception.message, "Invalid secret path: no secret path provided.")
 
-    #     with self.assertRaises(AnsibleError) as context:
-    #         self.lookup.run([''], **kwargs)
-    #         self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run([''], **kwargs)
+            self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
