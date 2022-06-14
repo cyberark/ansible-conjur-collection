@@ -34,12 +34,24 @@ pipeline {
           }
         }
 
-        stage("Run conjur_variable unit tests and generate code coverage report") {
+        stage("Run conjur_variable unit tests") {
           steps {
             sh './dev/test_unit.sh'
           }
         }
       }
+    }
+
+    stage('Generate Code Coverage Report'){
+          steps {
+            publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: false,
+            keepAll: true,
+            reportDir: 'tests/output/reports/coverage=units=python-3.8/',
+            reportFiles: 'index.html',
+            reportName: 'Ansible Coverage Report',
+            reportTitles: 'Conjur Ansible Collection report'])
+           }
     }
 
     stage('Build Release Artifacts') {
