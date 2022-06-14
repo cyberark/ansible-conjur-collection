@@ -28,10 +28,10 @@ while getopts 'a:p:r' flag; do
    esac
 done
 
-test_cmd="ansible-test units --python $python_version"
+testcmd="ansible-test units --python $python_version"
 if [[ "$gen_report" == "true" ]]; then
   test_cmd="ansible-test coverage erase;
-    $test_cmd --coverage;
+    $testcmd --coverage;
     ansible-test coverage html -v --requirements --group-by command --group-by version;
   "
 fi
