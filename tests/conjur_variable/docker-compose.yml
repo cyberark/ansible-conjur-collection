@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+       ANSIBLE_VERSION: 5.6.0
     entrypoint: sleep
     command: infinity
     environment:
