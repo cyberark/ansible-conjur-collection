@@ -5,6 +5,8 @@
 #Ansible versions:
 #    - stable-2.9
 #    - stable-2.10
+#    - stable-2.11
+#    - stable-2.12
 #    - devel
 #
 #Python versions:
@@ -73,6 +75,9 @@ jobs:
     strategy:
       matrix:
         ansible:
+          # Unit tests fail against Ansible stable-2.9. Given that 2.9 is EoL,
+          # we can disable these tests here.
+          # - stable-2.9
           - stable-2.10
           - stable-2.11
           - stable-2.12
@@ -86,15 +91,6 @@ jobs:
         with:
           path: ansible_collections/cyberark/conjur
 
-      - name: Set up Python ${{ matrix.ansible }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install ansible-base (${{ matrix.ansible }})
-        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
-
-      # Run the unit tests
-      - name: Run unit test
-        run: ansible-test units --docker default -v --python ${{ matrix.python }} tests/unit/plugins/lookup/test_conjur_variable.py
+      - name: Run unit tests
+        run: ./dev/test_unit.sh -a ${{ matrix.ansible }} -p ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
