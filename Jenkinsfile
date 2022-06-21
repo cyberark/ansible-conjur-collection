@@ -50,6 +50,21 @@ pipeline {
       }
     }
 
+    stage('Functional Tests Enterprise') {
+      steps {
+        dir ('tests/conjur_variable') {
+          sh './start_enterprise'
+        }
+      }
+      post {
+        always {
+          dir ('tests/conjur_variable') {
+            sh './stop_enterprise'
+          }
+        }
+      }
+    }
+
     stage('Build Release Artifacts') {
       when {
         anyOf {
