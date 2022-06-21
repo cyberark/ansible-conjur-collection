@@ -52,15 +52,11 @@ pipeline {
 
     stage('Functional Tests Enterprise') {
       steps {
-        dir ('tests/conjur_variable') {
-          sh './start_enterprise'
-        }
+          sh './tests/conjur_variable/start_enterprise.sh'
       }
       post {
         always {
-          dir ('tests/conjur_variable') {
-            sh './stop_enterprise'
-          }
+            sh './tests/conjur_variable/stop_enterprise.sh'
         }
       }
     }
