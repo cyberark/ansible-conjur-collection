@@ -52,10 +52,12 @@ pipeline {
 
     stage('Functional Tests Enterprise') {
       steps {
+          sh 'chmod +x tests/conjur_variable/start_enterprise.sh'
           sh './tests/conjur_variable/start_enterprise.sh'
       }
       post {
         always {
+            sh 'chmod +x tests/conjur_variable/stop_enterprise.sh'
             sh './tests/conjur_variable/stop_enterprise.sh'
         }
       }
