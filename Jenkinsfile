@@ -36,6 +36,7 @@ pipeline {
 
         stage("Run conjur_variable unit tests") {
           steps {
+            sh 'chmod +x dev/test_unit.sh'
             sh './dev/test_unit.sh -r'
             publishHTML (target : [allowMissing: false,
               alwaysLinkToLastBuild: false,
