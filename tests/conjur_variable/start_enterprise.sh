@@ -1,14 +1,5 @@
 #!/bin/bash -eu
 
-function cleanup {
-pushd conjur-intro
-  docker-compose down -v
-popd
-}
-
-trap cleanup EXIT
-cleanup
-
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
 COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
@@ -107,6 +98,7 @@ function main() {
       run_test_cases
       echo " End of the tests "
   popd
+  cleanup
 
 }
 
@@ -142,5 +134,14 @@ function run_test_case {
 }
 
 main
+
+function cleanup {
+pushd conjur-intro
+  docker-compose down -v
+popd
+  rm -rf conjur-intro
+}
+
+trap cleanup EXIT
 
 

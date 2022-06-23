@@ -1,6 +1,4 @@
-#!/bin/bash
-set -ex
-
+#!/bin/bash -eu
 
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
