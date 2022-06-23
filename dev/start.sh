@@ -38,11 +38,9 @@ then
  ./start_oss.sh
 elif [[ "$conjur_enterprise" == "true" ]]
 then
-  # pushd ../tests/conjur_variable
-  cd ..
-  cd tests/conjur_variable
-  ./start_enterprise.sh
-  # popd
+  pushd tests/conjur_variable
+   ./start_enterprise.sh
+  popd
 else
   echo "You are not giving correct inputs."
   exit 1;
