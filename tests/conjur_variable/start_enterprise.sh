@@ -11,12 +11,13 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-  DIR="conjur-intro"
-    if [ "$(ls -A $DIR)" ]; then
-      echo "conjur-intro dir is already available"
-    else
-      git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-    fi
+  # DIR="conjur-intro"
+  #   if [ "$(ls -A $DIR)" ]; then
+  #     echo "conjur-intro dir is already available"
+  #   else
+  #     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+  #   fi
+      git submodule update --init --recursive
 
   pushd ./conjur-intro
 
@@ -142,7 +143,7 @@ function cleanup {
 pushd conjur-intro
   docker-compose down -v
 popd
-  rm -rf conjur-intro
+
 }
 
 trap cleanup EXIT
