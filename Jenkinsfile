@@ -50,12 +50,12 @@ pipeline {
       }
     }
 
-    stage('Functional Tests Enterprise') {
-      steps {
-          sh 'chmod +x tests/conjur_variable/start_enterprise.sh'
-          sh './dev/start.sh -e start_enterprise.sh'
-      }
-    }
+    // stage('Functional Tests Enterprise') {
+    //   steps {
+    //       sh 'chmod +x tests/conjur_variable/start_enterprise.sh'
+    //       sh './dev/start.sh -e start_enterprise.sh'
+    //   }
+    // }
 
     stage('Build Release Artifacts') {
       when {
