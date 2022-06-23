@@ -3,6 +3,7 @@
 .idea/
 
 # Test output
+tests/conjur_variable/conjur-intro/
 tests/*/bot/
 tests/*/coverage/
 tests/*/junit/
@@ -15,6 +16,7 @@ bot
 coverage
 junit
 reports
+conjur-intro
 
 *.js
 *.html
