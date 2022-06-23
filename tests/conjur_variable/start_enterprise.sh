@@ -9,7 +9,7 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
-
+  git submodule update --init --recursive
 
 function main() {
 
@@ -20,7 +20,7 @@ function main() {
   #     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   #   fi
 
-  git submodule update --init --recursive
+
 
   pushd ./conjur-intro
 
