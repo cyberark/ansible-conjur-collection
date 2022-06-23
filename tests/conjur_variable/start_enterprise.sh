@@ -97,8 +97,11 @@ function main() {
       echo "Running tests"
       run_test_cases
       echo " End of the tests "
+
+      cleanup
+
   popd
-  cleanup
+
 
 }
 
