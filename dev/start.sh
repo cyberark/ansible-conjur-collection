@@ -39,6 +39,7 @@ then
 elif [[ "$conjur_enterprise" == "true" ]]
 then
   pushd tests/conjur_variable
+   chmod +x start_enterprise.sh
    ./start_enterprise.sh
   popd
 else
