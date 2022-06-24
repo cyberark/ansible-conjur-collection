@@ -13,7 +13,9 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 function main() {
 
-
+  echo " testing11 "
+  pwd
+  ls
   pushd ./conjur-intro
 
       echo " Provision Master"
