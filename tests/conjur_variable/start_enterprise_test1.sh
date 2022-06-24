@@ -1,0 +1,142 @@
+#!/bin/bash -eu
+
+
+# normalises project name by filtering non alphanumeric characters and transforming to lowercase
+declare -x COMPOSE_PROJECT_NAME
+COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+export COMPOSE_PROJECT_NAME
+
+declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
+declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
+declare -x ANSIBLE_CONJUR_CERT_FILE=''
+
+git submodule update --init --recursive
+
+function main() {
+
+  pushd ./conjur-intro
+
+      echo " Provision Master"
+      ./bin/dap --provision-master
+      ./bin/dap --provision-follower
+
+      echo " Setup Policy "
+      echo " ========load policy====="
+      cp ../tests/conjur_variable/policy/root.yml .
+      ./bin/cli conjur policy load root root.yml
+            # cp ../tests/conjur_variable/conjur.yml .
+            # ./bin/cli conjur policy load --replace root conjur.yml
+            # ./bin/cli conjur policy load root conjur.yml
+      echo " ========Set Variable value ansible/test-secret ====="
+      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+      echo " =======Set Variable value ansible/test-secret-in-file ====="
+      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+      echo " =======Set Variable value ansible/var with spaces ====="
+      # ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+
+      docker-compose  \
+      run \
+      --rm \
+      -w /src/cli \
+      --entrypoint /bin/bash \
+      client \
+        -c "conjur host rotate_api_key --host ansible/ansible-master
+      "> ANSIBLE_MASTER_AUTHN_API_KEY
+      cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+      ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
+      echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
+
+      echo " Setup CLI "
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+          '
+        cp conjur-enterprise.pem ../tests
+
+      conjur_enterprise=$(cat conjur-enterprise.pem)
+      echo "conjur-enterprise.pem: ${conjur_enterprise}"
+
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -c "
+              export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+              export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+              conjur authn authenticate
+            " > access_token
+        cp access_token ../tests/conjur_variable
+
+      access_token=$(cat access_token)
+      echo "access_token: ${access_token}"
+
+      echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
+      CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+      echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+  popd
+
+  pushd ./tests/conjur_variable
+
+      docker build -t conjur_ansible:v1 .
+
+      echo " Run Ansible "
+       docker run \
+       -d -t \
+       --name ansible_container \
+       --volume "$(git rev-parse --show-toplevel):/cyberark" \
+       --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
+       --network dap_net \
+       -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+       -e "CONJUR_ACCOUNT=demo" \
+       -e "CONJUR_AUTHN_LOGIN=admin" \
+       -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+       -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
+       -e "CONJUR_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+       --workdir "/cyberark" \
+       conjur_ansible:v1 \
+
+        # env variables values
+            # HOSTNAME=18c42ca3aabb
+            # TERM=xterm
+            # CONJUR_ACCOUNT=demo
+            # CONJUR_AUTHN_LOGIN=admin
+            # ANSIBLE_MASTER_AUTHN_API_KEY=341mh3y3ef7wgf2gn3jj73g7991v140xk9k2bqr48m3tmhr7624fwc6m
+            # CONJUR_ADMIN_AUTHN_API_KEY=1n312se1gry6p31qf4q8w2zcsg661mt9x327275sb196cewe2ktdmvj
+            # ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem
+            # CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local
+            # DEBIAN_FRONTEND=noninteractive
+            # HOME=/root
+
+      echo "Running tests"
+      run_test_cases
+      echo " End of the tests "
+  popd
+}
+
+function run_test_cases {
+  local test_case="retrieve-variable-disable-verify-certs"
+  echo "---- Run test cases ----"
+  docker exec -t ansible_container bash -exc "
+   cd tests
+   cd conjur_variable
+
+        # if [ -e 'test_cases/${test_case}/env' ]; then
+        # . ./test_cases/${test_case}/env
+        # fi
+        #  export CONJUR_CERT_FILE=./conjur-enterprise.pem
+  ansible-playbook 'test_cases/${test_case}/playbook.yml'
+
+        # py.test --junitxml='./junit/${test_case}' \
+        #   --connection docker \
+        #   -v 'test_cases/${test_case}/tests/test_default.py'
+  "
+}
+
+main
