@@ -106,10 +106,26 @@ echo " Testing2 "
       #  docker build -t conjur_ansible:v2 .
       #  echo " Testing454545 "
 
-      #   -d -t \
+
+      #  docker run \
+      #  -d -t \
+      #  --name ansible_container \
+      #  --volume "$(git rev-parse --show-toplevel):/cyberark" \
+      #  --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
+      #  --network dap_net \
+      #  -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+      #  -e "CONJUR_ACCOUNT=demo" \
+      #  -e "CONJUR_AUTHN_LOGIN=admin" \
+      #  -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+      #  -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
+      #  -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+      #  -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+      #  -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+      #  --workdir "/cyberark" \
+      # conjur_ansible:v2
+
 
        docker run \
-       --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
        --network dap_net \
@@ -122,7 +138,28 @@ echo " Testing2 "
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
-      #  conjur_ansible:v2
+       --rm \
+       --entrypoint /bin/bash \
+       ansiblecontainername \
+
+        # docker run \
+        #   --volume "$(git rev-parse --show-toplevel):/repo" \
+        #   --volume "${PWD}/maven_cache":/root/.m2 \
+        #   --volume "${PWD}/api_key:/api_key" \
+        #   --volume "${PWD}/conjur-enterprise.pem:/conjur-enterprise.pem" \
+        #   --network dap_net \
+        #   -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+        #   -e "CONJUR_ACCOUNT=demo" \
+        #   -e "CONJUR_AUTHN_LOGIN=admin" \
+        #   -e "CONJUR_AUTHN_API_KEY=${admin_api_key}" \
+        #   -e "CONJUR_CERT_FILE=/conjur-enterprise.pem" \
+        #   -e "CONJUR_AUTHN_TOKEN_FILE=/api_key" \
+        #   --workdir "/repo" \
+        #   --rm \
+        #   --entrypoint /bin/bash \
+        #   sampleapp \
+
+
 
       echo "Running tests"
       run_test_cases

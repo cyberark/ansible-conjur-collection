@@ -1,6 +1,7 @@
 version: '3'
 services:
   ansible:
+    image: ansiblecontainername
     container_name: ${COMPOSE_PROJECT_NAME}-ansible
     build:
       context: .
