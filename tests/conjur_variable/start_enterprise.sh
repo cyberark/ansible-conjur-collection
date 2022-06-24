@@ -82,7 +82,12 @@ echo " Testing2 "
             export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
             conjur authn authenticate
           " > access_token
-      cp access_token ../tests/conjur_variable
+
+      echo " Testing45 "
+
+      cp access_token ../.
+
+      # cp access_token ../tests/conjur_variable
 
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
@@ -91,6 +96,7 @@ echo " Testing2 "
 
   pushd ./tests/conjur_variable
 
+       echo " Testing4545 "
        docker build -t conjur_ansible:v1 .
        docker run \
        -d -t \
