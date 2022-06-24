@@ -16,7 +16,7 @@ function main() {
   echo " testing11 "
   pwd
   ls
-  pushd ./conjur-intro
+  pushd ./tests/conjur_variable/conjur-intro
 
       echo " Provision Master"
       ./bin/dap --provision-master
