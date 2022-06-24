@@ -100,6 +100,9 @@ echo " Testing2 "
 
        echo " Testing4545 "
        pwd
+       ls
+       docker build .
+       echo " Testing4545451 "
        docker build -t conjur_ansible:v2 .
        echo " Testing454545 "
 
