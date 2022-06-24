@@ -98,7 +98,7 @@ function main() {
  echo "get current again"
  pwd
  ls
-  pushd ./tests/conjur_variable
+  # pushd ./tests/conjur_variable
 
        echo "inside conjur_variable now"
        docker build -t conjur_ansible:v1 .
@@ -124,7 +124,7 @@ function main() {
       run_test_cases
       echo " End of the tests "
 
-  popd
+  # popd
 }
 
 function run_test_cases {
