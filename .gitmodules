@@ -1,3 +1,0 @@
-[submodule "tests/conjur_variable/conjur-intro"]
-	path = tests/conjur_variable/conjur-intro
-	url = https://github.com/conjurdemos/conjur-intro

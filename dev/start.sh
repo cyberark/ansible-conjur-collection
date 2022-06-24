@@ -23,24 +23,14 @@ while getopts 's:e' flag; do
    esac
 done
 
-# if [[ "$conjur_oss" == "true" ]]; then
-#  ./start_oss.sh
-# fi
-
-# if [[ "$conjur_enterprise" == "true" ]]; then
-# pushd ../tests/conjur_variable
-# ./start_enterprise.sh
-# popd
-# fi
-
 if [[  "$conjur_oss" == "true" ]]
 then
- ./start_oss.sh
+  ./start_oss.sh    # ./start.sh -s start_oss.sh  -- Jenkins
 elif [[ "$conjur_enterprise" == "true" ]]
 then
-  pushd tests/conjur_variable
-   chmod +x start_enterprise.sh
-   ./start_enterprise.sh
+  pushd ../tests/conjur_variable
+    chmod +x start_enterprise.sh
+    ./start_enterprise.sh    # ./start.sh -e start_enterprise.sh  -- Jenkins
   popd
 else
   echo "You are not giving correct inputs."
