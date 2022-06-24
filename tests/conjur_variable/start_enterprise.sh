@@ -101,14 +101,14 @@ echo " Testing2 "
        echo " Testing4545 "
        pwd
        ls
-       docker build .
-       echo " Testing4545451 "
-       docker build -t conjur_ansible:v2 .
-       echo " Testing454545 "
+      #  docker build .
+      #  echo " Testing4545451 "
+      #  docker build -t conjur_ansible:v2 .
+      #  echo " Testing454545 "
 
-        #  -d -t \
 
        docker run \
+       -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
@@ -122,7 +122,7 @@ echo " Testing2 "
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
-       conjur_ansible:v2 \
+      #  conjur_ansible:v2
 
       echo "Running tests"
       run_test_cases
