@@ -29,7 +29,10 @@ function main() {
 
       echo " Setup Policy "
       echo " ========load policy====="
-      cp ../tests/conjur_variable/policy/root.yml .
+      pwd
+      ls
+      cp ../policy/root.yml .
+      # cp ../tests/conjur_variable/policy/root.yml .
       ./bin/cli conjur policy load root root.yml
       echo " ========Set Variable value ansible/test-secret ====="
       ./bin/cli conjur variable values add ansible/test-secret test_secret_password
@@ -58,7 +61,13 @@ function main() {
           -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
           conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
           '
-        cp conjur-enterprise.pem ../tests/conjur_variable
+
+        echo " ========testit 1====="
+        pwd
+        ls
+        cp conjur-enterprise.pem ../.
+
+        # cp conjur-enterprise.pem ../tests/conjur_variable
 
         docker-compose  \
         run \
@@ -71,7 +80,12 @@ function main() {
               export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
               conjur authn authenticate
             " > access_token
-        cp access_token ../tests/conjur_variable
+
+        echo " ========testit 2====="
+        pwd
+        ls
+        cp access_token ../.
+        # cp access_token ../tests/conjur_variable
 
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
