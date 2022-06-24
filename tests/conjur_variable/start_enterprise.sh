@@ -96,7 +96,7 @@ function main() {
   popd
 
 cd ..
-
+# cd conjur_variable
  echo "get current again"
  pwd
  ls
@@ -126,7 +126,7 @@ pushd ./conjur_variable
       run_test_cases
       echo " End of the tests "
 
-  # popd
+  popd
 }
 
 function run_test_cases {
