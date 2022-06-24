@@ -124,8 +124,9 @@ echo " Testing2 "
       #  --workdir "/cyberark" \
       # conjur_ansible:v2
 
-       docker build -t ansiblecontainername:v2 .
-
+       echo " Start1 "
+       docker build .
+        echo " Start2 "
        docker run \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
