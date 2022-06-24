@@ -32,8 +32,8 @@ function main() {
       echo " ========load policy====="
       pwd
       ls
-      cp ../conjur_variable/policy/root.yml .
-
+      cp ../policy/root.yml .
+      pwd
       # cp ../tests/conjur_variable/policy/root.yml .
 
     echo " Setup CLI "
