@@ -10,9 +10,10 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
+git submodule update --init --recursive
+
 function main() {
 
-  git submodule update --init --recursive
   pushd ./conjur-intro
 
       echo " Provision Master"
