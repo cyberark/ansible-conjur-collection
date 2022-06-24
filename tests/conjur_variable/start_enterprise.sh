@@ -28,6 +28,17 @@ function main() {
       # echo " =======Set Variable value ansible/test-secret-in-file ====="
       # ./bin/cli
 
+      docker-compose  \
+      run \
+      --rm \
+      -w /src/cli \
+      --entrypoint /bin/bash \
+      client \
+        -c "conjur host rotate_api_key --host ansible/ansible-master
+      "> ANSIBLE_MASTER_AUTHN_API_KEY
+      cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+      ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
+      echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
       echo " Setup CLI "
         docker-compose  \
@@ -42,19 +53,6 @@ function main() {
           conjur variable values add ansible/test-secret test_secret_password
           conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
           "
-
-
-      docker-compose  \
-      run \
-      --rm \
-      -w /src/cli \
-      --entrypoint /bin/bash \
-      client \
-        -c "conjur host rotate_api_key --host ansible/ansible-master
-      "> ANSIBLE_MASTER_AUTHN_API_KEY
-      cp ANSIBLE_MASTER_AUTHN_API_KEY ../
-      ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
-      echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
       # echo " Setup CLI "
       #   docker-compose  \
