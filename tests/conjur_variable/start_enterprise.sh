@@ -97,7 +97,7 @@ echo " Testing2 "
   pushd ./tests/conjur_variable
 
        echo " Testing4545 "
-       docker build -t conjur_ansible:v1 .
+       docker build -t conjur_ansible:v2 .
        echo " Testing454545 "
 
         #  -d -t \
@@ -116,7 +116,7 @@ echo " Testing2 "
        -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
        -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
-       conjur_ansible:v1 \
+       conjur_ansible:v2 \
 
       echo "Running tests"
       run_test_cases
