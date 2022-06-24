@@ -106,9 +106,9 @@ echo " Testing2 "
       #  docker build -t conjur_ansible:v2 .
       #  echo " Testing454545 "
 
+      #   -d -t \
 
        docker run \
-       -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
