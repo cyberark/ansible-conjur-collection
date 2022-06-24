@@ -125,7 +125,7 @@ echo " Testing2 "
       # conjur_ansible:v2
 
        echo " Start1 "
-       docker build .
+       docker build -t tag .
         echo " Start2 "
        docker run \
        --name ansible_container \
