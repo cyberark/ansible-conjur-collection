@@ -28,7 +28,7 @@ then
   ./start_oss.sh    # ./start.sh -s start_oss.sh  -- Jenkins
 elif [[ "$conjur_enterprise" == "true" ]]
 then
-  pushd ../tests/conjur_variable
+  pushd tests/conjur_variable
     chmod +x start_enterprise.sh
     ./start_enterprise.sh    # ./start.sh -e start_enterprise.sh  -- Jenkins
   popd
