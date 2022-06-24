@@ -30,6 +30,11 @@ function main() {
       pwd
       # cp ../tests/conjur_variable/policy/root.yml .
 
+        ./bin/cli conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+        ./bin/cli conjur policy load root root.yml
+        ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+        ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+
 
 echo " Testing1 "
       docker-compose  \
@@ -52,11 +57,13 @@ echo " Testing1 "
       --entrypoint /bin/bash \
       client \
         -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-        conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-        conjur policy load root root.yml
-        conjur variable values add ansible/test-secret test_secret_password
-        conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
         '
+
+        # conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+        # conjur policy load root root.yml
+        # conjur variable values add ansible/test-secret test_secret_password
+        # conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+
       cp conjur-enterprise.pem ../tests/conjur_variable
 
 echo " Testing2 "
