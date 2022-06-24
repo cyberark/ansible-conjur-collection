@@ -94,9 +94,12 @@ echo " Testing2 "
       echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   popd
 
+     echo " current pwd "
+     pwd
   pushd ./tests/conjur_variable
 
        echo " Testing4545 "
+       pwd
        docker build -t conjur_ansible:v2 .
        echo " Testing454545 "
 
