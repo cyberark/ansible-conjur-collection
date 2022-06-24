@@ -124,8 +124,10 @@ echo " Testing2 "
       #  --workdir "/cyberark" \
       # conjur_ansible:v2
 
+       docker build -t ansiblecontainername:v2 .
 
        docker run \
+       --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
        --network dap_net \
