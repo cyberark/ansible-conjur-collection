@@ -20,6 +20,9 @@ trap cleanup EXIT
 
 function main() {
 
+ echo "get current directory"
+ pwd
+ ls
     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
 
@@ -92,9 +95,14 @@ function main() {
       echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   popd
 
+ echo "get current again"
+ pwd
+ ls
   pushd ./tests/conjur_variable
 
+       echo "inside conjur_variable now"
        docker build -t conjur_ansible:v1 .
+        echo "inside conjur_variable"
        docker run \
        -d -t \
        --name ansible_container \
