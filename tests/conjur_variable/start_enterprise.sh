@@ -95,10 +95,12 @@ function main() {
       echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   popd
 
+cd ..
+
  echo "get current again"
  pwd
  ls
-  # pushd ./tests/conjur_variable
+pushd ./conjur_variable
 
        echo "inside conjur_variable now"
        docker build -t conjur_ansible:v1 .
