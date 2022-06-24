@@ -63,8 +63,12 @@ echo " Testing1 "
         # conjur policy load root root.yml
         # conjur variable values add ansible/test-secret test_secret_password
         # conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+      echo " Testingtesting "
+      pwd
+      ls
+      cp conjur-enterprise.pem ../.
 
-      cp conjur-enterprise.pem ../tests/conjur_variable
+      # cp conjur-enterprise.pem ../tests/conjur_variable
 
 echo " Testing2 "
       docker-compose  \
