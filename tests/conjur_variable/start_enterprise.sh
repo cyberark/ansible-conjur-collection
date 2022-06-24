@@ -30,7 +30,11 @@ function main() {
 
       echo " Setup Policy "
       echo " ========load policy====="
-      cp ../tests/conjur_variable/policy/root.yml .
+      pwd
+      ls
+      cp ../conjur_variable/policy/root.yml .
+
+      # cp ../tests/conjur_variable/policy/root.yml .
 
     echo " Setup CLI "
       docker-compose  \
