@@ -94,7 +94,7 @@ Configure a remote node with a Conjur identity and Summon:
 ```yml
 - hosts: servers
   roles:
-    - role: cyberark.conjur.conjur-host-identity
+    - role: cyberark.conjur.conjur_host_identity
       conjur_appliance_url: 'https://conjur.myorg.com'
       conjur_account: 'myorg'
       conjur_host_factory_token: "{{ lookup('env', 'HFTOKEN') }}"
