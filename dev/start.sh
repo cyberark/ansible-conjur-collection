@@ -31,7 +31,7 @@ then
     chmod +x start_enterprise_test.sh
     # chmod +x start_enterprise.sh
     # ./start_enterprise.sh    # ./start.sh -e start_enterprise.sh  -- Jenkins
-    start_enterprise_test.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
+    ./start_enterprise_test.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
   popd
 else
   echo "You are not giving correct inputs."
