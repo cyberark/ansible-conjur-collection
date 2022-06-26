@@ -120,6 +120,8 @@ function main() {
       echo " End of the tests "
 
    popd
+
+   cleanup
 }
 
 function run_test_cases {
