@@ -21,8 +21,9 @@ trap cleanup EXIT
 function main() {
 
  echo "get current directory"
-
-    pushd ./tests/conjur_variable
+ pwd
+ ls
+    pushd ../tests/conjur_variable
 
         git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 
