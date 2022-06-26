@@ -20,20 +20,24 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 # ============
 
-#     pushd ./tests/conjur_variable
+    #  echo "get current directory"
+    #  pwd
+    #  ls
 
-#         git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-# pwd
-# ls
-#         pushd ./conjur-intro
+    # pushd ./tests/conjur_variable
+    # pwd
+    #     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+    #     pwd
+    #     ls
+    #     chmod +x conjur-intro
+    #         pushd ./conjur-intro
 
 
 
-# pwd
+    #         pwd
 
-
-# popd
-# popd
+    #     popd
+    # popd
 
 # ============
 
@@ -45,9 +49,12 @@ function main() {
 
     pushd ./tests/conjur_variable
 
+
         git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 
+        # chmod + conjur-intro
         pushd ./conjur-intro
+
 
             docker-compose down -v
 
