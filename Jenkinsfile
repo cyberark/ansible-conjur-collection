@@ -52,8 +52,10 @@ pipeline {
 
     stage('Functional Tests Enterprise') {
       steps {
+             sh 'chmod +x dev/start_enterprise.sh'
+             sh './dev/start_enterprise.sh'
           // sh 'chmod +x tests/conjur_variable/start_enterprise.sh'
-          sh './dev/start.sh -e start_enterprise.sh'
+          // sh './dev/start.sh -e start_enterprise.sh'
           // sh './tests/conjur_variable/start_enterprise.sh'
       }
     }
