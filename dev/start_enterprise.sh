@@ -20,11 +20,19 @@ declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 # ============
 
-# pushd ../tests/conjur_variable
+#     pushd ./tests/conjur_variable
 
+#         git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 # pwd
 # ls
+#         pushd ./conjur-intro
 
+
+
+# pwd
+
+
+# popd
 # popd
 
 # ============
@@ -35,86 +43,90 @@ function main() {
  pwd
  ls
 
-    git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-    pushd ../tests/conjur_variable/conjur-intro
+    pushd ./tests/conjur_variable
 
-      docker-compose down -v
+        git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 
-      echo " Provision Master"
-      ./bin/dap --provision-master
-      ./bin/dap --provision-follower
+        pushd ./conjur-intro
 
-      echo " Setup Policy "
-      echo " ========load policy====="
-      pwd
-      ls
-      cp ../policy/root.yml .
-      # cp ../tests/conjur_variable/policy/root.yml .
-      ./bin/cli conjur policy load root root.yml
-      echo " ========Set Variable value ansible/test-secret ====="
-      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-      echo " =======Set Variable value ansible/test-secret-in-file ====="
-      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+            docker-compose down -v
 
-      docker-compose  \
-      run \
-      --rm \
-      -w /src/cli \
-      --entrypoint /bin/bash \
-      client \
-        -c "conjur host rotate_api_key --host ansible/ansible-master
-      "> ANSIBLE_MASTER_AUTHN_API_KEY
-      cp ANSIBLE_MASTER_AUTHN_API_KEY ../
-      ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
-      echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
+            echo " Provision Master"
+            ./bin/dap --provision-master
+            ./bin/dap --provision-follower
 
-      echo " Setup CLI "
-        docker-compose  \
-        run \
-        --rm \
-        -w /src/cli \
-        --entrypoint /bin/bash \
-        client \
-          -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-          conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-          '
+            echo " Setup Policy "
+            echo " ========load policy====="
+            pwd
+            ls
+            cp ../policy/root.yml .
+            # cp ../tests/conjur_variable/policy/root.yml .
+            ./bin/cli conjur policy load root root.yml
+            echo " ========Set Variable value ansible/test-secret ====="
+            ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+            echo " =======Set Variable value ansible/test-secret-in-file ====="
+            ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
-        echo " ========testit 1====="
-        pwd
-        ls
-        cp conjur-enterprise.pem ../.
+            docker-compose  \
+            run \
+            --rm \
+            -w /src/cli \
+            --entrypoint /bin/bash \
+            client \
+                -c "conjur host rotate_api_key --host ansible/ansible-master
+            "> ANSIBLE_MASTER_AUTHN_API_KEY
+            cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+            ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
+            echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
-        # cp conjur-enterprise.pem ../tests/conjur_variable
+            echo " Setup CLI "
+                docker-compose  \
+                run \
+                --rm \
+                -w /src/cli \
+                --entrypoint /bin/bash \
+                client \
+                -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+                conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+                '
 
-        docker-compose  \
-        run \
-        --rm \
-        -w /src/cli \
-        --entrypoint /bin/bash \
-        client \
-          -c "
-              export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-              export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-              conjur authn authenticate
-            " > access_token
+                echo " ========testit 1====="
+                pwd
+                ls
+                cp conjur-enterprise.pem ../.
 
-        echo " ========testit 2====="
-        pwd
-        ls
-        cp access_token ../.
-        # cp access_token ../tests/conjur_variable
+                # cp conjur-enterprise.pem ../tests/conjur_variable
 
-      echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
-      CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
-      echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+                docker-compose  \
+                run \
+                --rm \
+                -w /src/cli \
+                --entrypoint /bin/bash \
+                client \
+                -c "
+                    export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+                    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+                    conjur authn authenticate
+                    " > access_token
+
+                echo " ========testit 2====="
+                pwd
+                ls
+                cp access_token ../.
+                # cp access_token ../tests/conjur_variable
+
+            echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
+            CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+            echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+        popd
   popd
 
 
-# cd conjur_variable
+ # cd conjur_variable
  echo "get current dir again"
  pwd
  ls
- pushd ../tests/conjur_variable
+ pushd ./tests/conjur_variable
 
        echo "inside conjur_variable now"
        docker build -t conjur_ansible:v1 .
