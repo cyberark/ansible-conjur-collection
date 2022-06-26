@@ -56,15 +56,15 @@ pipeline {
       }
     }
 
-    stage('Enterprise just for testing') {
-      steps {
-            //  sh 'chmod +x dev/start_enterprise_test.sh'
-            //  sh './dev/start_enterprise_test.sh'
-          sh 'chmod +x tests/conjur_variable/start_enterprise_test.sh'
-          sh './dev/start.sh -e start_enterprise_test.sh'
-          // sh './tests/conjur_variable/start_enterprise.sh'
-      }
-    }
+    // stage('Enterprise just for testing') {
+    //   steps {
+    //         //  sh 'chmod +x dev/start_enterprise_test.sh'
+    //         //  sh './dev/start_enterprise_test.sh'
+    //       sh 'chmod +x tests/conjur_variable/start_enterprise_test.sh'
+    //       sh './dev/start.sh -e start_enterprise_test.sh'
+    //       // sh './tests/conjur_variable/start_enterprise.sh'
+    //   }
+    // }
 
     stage('Build Release Artifacts') {
       when {

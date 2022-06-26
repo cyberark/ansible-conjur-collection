@@ -10,6 +10,9 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
+declare -x access_token=''
+
+
 function cleanup {
 pushd conjur-intro
   docker-compose down -v
@@ -61,6 +64,8 @@ function main() {
           '
         cp conjur-enterprise.pem ../tests/conjur_variable
 
+echo " Step to test1 "
+
         docker-compose  \
         run \
         --rm \
@@ -72,7 +77,11 @@ function main() {
               export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
               conjur authn authenticate
             " > access_token
+            echo " Step to test2 "
         cp access_token ../tests/conjur_variable
+
+      access_token=$(cat access_token)
+      echo "Pooja: ${access_token}"
 
       echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
       ls
