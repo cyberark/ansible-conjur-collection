@@ -52,17 +52,17 @@ function main() {
       ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
       echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
-      # echo " Setup CLI "
-      #   docker-compose  \
-      #   run \
-      #   --rm \
-      #   -w /src/cli \
-      #   --entrypoint /bin/bash \
-      #   client \
-      #     -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-      #     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-      #     '
-      #   cp conjur-enterprise.pem ../tests/conjur_variable
+      echo " Setup CLI "
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+          conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+          '
+        cp conjur-enterprise.pem ../tests/conjur_variable
 
 echo " Step to test1 "
 
@@ -73,16 +73,12 @@ echo " Step to test1 "
         --entrypoint /bin/bash \
         client \
           -c "
-              cp /root/conjur-demo.pem conjur-enterprise.pem
-              conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
               export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
               export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
               conjur authn authenticate
             " > access_token
             echo " Step to test2 "
         cp access_token ../tests/conjur_variable
-
-        cp conjur-enterprise.pem ../tests/conjur_variable
 
       access_token=$(cat access_token)
       echo "Pooja: ${access_token}"
