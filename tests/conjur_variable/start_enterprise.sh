@@ -23,8 +23,11 @@ function main() {
  echo "get current directory"
  pwd
  ls
+
     git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
+
+      docker-compose down -v
 
       echo " Provision Master"
       ./bin/dap --provision-master
