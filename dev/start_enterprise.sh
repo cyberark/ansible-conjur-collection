@@ -119,14 +119,14 @@ function main() {
             CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
             echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
         popd
-  popd
+#   popd
 
 
  # cd conjur_variable
  echo "get current dir again"
  pwd
  ls
- pushd ./tests/conjur_variable
+#  pushd ./tests/conjur_variable
 
        echo "inside conjur_variable now"
        docker build -t conjur_ansible:v1 .
