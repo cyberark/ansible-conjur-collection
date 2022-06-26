@@ -1,0 +1,4 @@
+unset CONJUR_AUTHN_API_KEY
+unset CONJUR_AUTHN_LOGIN
+export CONJUR_AUTHN_TOKEN_FILE=./access_token
+export CONJUR_CERT_FILE=./test_cases/retrieve-variable-with-authn-token-bad-cert/bad-cert.pem
