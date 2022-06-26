@@ -23,7 +23,7 @@ function main() {
  echo "get current directory"
  pwd
  ls
-    pushd ../tests/conjur_variable
+    # pushd ../tests/conjur_variable
 
         git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
 
@@ -119,7 +119,7 @@ function main() {
       run_test_cases
       echo " End of the tests "
 
-   popd
+  #  popd
 
    cleanup
 }
