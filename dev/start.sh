@@ -1,5 +1,4 @@
-#!/bin/bash
-set -ex
+#!/bin/bash -eu
 
 
 conjur_oss="false"
@@ -29,8 +28,8 @@ then
 elif [[ "$conjur_enterprise" == "true" ]]
 then
   pushd tests/conjur_variable
-    chmod +x start_enterprise.sh
-    ./start_enterprise.sh    # ./start.sh -e start_enterprise.sh  -- Jenkins
+    chmod +x start_enterprise_test.sh
+    ./start_enterprise_test.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
   popd
 else
   echo "You are not giving correct inputs."

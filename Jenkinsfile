@@ -36,7 +36,6 @@ pipeline {
 
     //     stage("Run conjur_variable unit tests") {
     //       steps {
-    //         sh 'chmod +x dev/test_unit.sh'
     //         sh './dev/test_unit.sh -r'
     //         publishHTML (target : [allowMissing: false,
     //           alwaysLinkToLastBuild: false,
@@ -52,13 +51,17 @@ pipeline {
 
     stage('Functional Tests Enterprise') {
       steps {
-             sh 'chmod +x dev/start_enterprise.sh'
-             sh './dev/start_enterprise.sh'
-          // sh 'chmod +x tests/conjur_variable/start_enterprise.sh'
-          // sh './dev/start.sh -e start_enterprise.sh'
-          // sh './tests/conjur_variable/start_enterprise.sh'
+          sh 'chmod +x tests/conjur_variable/start_enterprise.sh'
+          sh './tests/conjur_variable/start_enterprise.sh'
       }
     }
+
+    // stage('Enterprise just for testing') {
+    //   steps {
+    //       sh 'chmod +x tests/conjur_variable/start_enterprise_test.sh'
+    //       sh './dev/start.sh -e start_enterprise_test.sh'
+    //   }
+    // }
 
     stage('Build Release Artifacts') {
       when {
