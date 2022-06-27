@@ -28,7 +28,6 @@ then
 elif [[ "$conjur_enterprise" == "true" ]]
 then
   pushd tests/conjur_variable
-    chmod +x start_enterprise_test.sh
     ./start_enterprise_test.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
   popd
 else
