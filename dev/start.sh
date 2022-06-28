@@ -30,7 +30,9 @@ then
   # pushd tests/conjur_variable
   #   ./start_enterprise_test.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
   # popd
-
+  echo " testing pwd 2"
+  pwd
+  ls
   pushd ../.
   echo " testing pwd"
   pwd
