@@ -63,7 +63,7 @@ pipeline {
 
     stage('Enterprise just for testing') {
       steps {
-          sh './start_enterprise.sh'
+          sh './dev/start.sh -e start_enterprise.sh'
       }
     }
 
