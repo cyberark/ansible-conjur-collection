@@ -51,10 +51,10 @@ function main() {
       -w /src/cli \
       --entrypoint /bin/bash \
       client \
-        -c "conjur host rotate_api_key --host ansible/ansible-master
-        conjur policy load root root.yml
+        -c "conjur policy load root root.yml
         conjur variable values add ansible/test-secret test_secret_password
         conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+        conjur host rotate_api_key --host ansible/ansible-master
       "> ANSIBLE_MASTER_AUTHN_API_KEY
     echo " testing1 "
     pwd
