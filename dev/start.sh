@@ -33,12 +33,7 @@ then
   echo " testing pwd 2"
   pwd
   ls
-  pushd ../.
-  echo " testing pwd"
-  pwd
-  ls
     ./start_enterprise.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
-  popd
 else
   echo "You are not giving correct inputs."
   exit 1;
