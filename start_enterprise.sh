@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
 
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
@@ -35,11 +35,23 @@ function main() {
 
       echo " ========load policy====="
       cp ../tests/conjur_variable/policy/root.yml .
-      ./bin/cli conjur policy load root root.yml
-      echo " ========Set Variable value ansible/test-secret ====="
-      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-      echo " =======Set Variable value ansible/test-secret-in-file ====="
-      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+      # ./bin/cli conjur policy load root root.yml
+      # echo " ========Set Variable value ansible/test-secret ====="
+      # ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+      # echo " =======Set Variable value ansible/test-secret-in-file ====="
+      # ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -ec 'conjur policy load root root.yml
+          conjur variable values add ansible/test-secret test_secret_password
+          conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+          '
+
 
       docker-compose  \
       run \
