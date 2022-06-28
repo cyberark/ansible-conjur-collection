@@ -39,11 +39,11 @@ function main() {
       pwd
       ls
       cp ../tests/conjur_variable/policy/root.yml .
-      ./bin/cli conjur policy load root root.yml
-      echo " ========Set Variable value ansible/test-secret ====="
-      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-      echo " =======Set Variable value ansible/test-secret-in-file ====="
-      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+    #   ./bin/cli conjur policy load root root.yml
+    #   echo " ========Set Variable value ansible/test-secret ====="
+    #   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+    #   echo " =======Set Variable value ansible/test-secret-in-file ====="
+    #   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
       docker-compose  \
       run \
@@ -52,6 +52,9 @@ function main() {
       --entrypoint /bin/bash \
       client \
         -c "conjur host rotate_api_key --host ansible/ansible-master
+        conjur policy load root root.yml
+        conjur variable values add ansible/test-secret test_secret_password
+        conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
       "> ANSIBLE_MASTER_AUTHN_API_KEY
     echo " testing1 "
     pwd
