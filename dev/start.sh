@@ -24,16 +24,10 @@ done
 
 if [[  "$conjur_oss" == "true" ]]
 then
-  ./start_oss.sh    # ./start.sh -s start_oss.sh  -- Jenkins
+  ./start_oss.sh
 elif [[ "$conjur_enterprise" == "true" ]]
 then
-  # pushd tests/conjur_variable
-  #   ./start_enterprise_test.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
-  # popd
-  echo " testing pwd 2"
-  pwd
-  ls
-    ./start_enterprise.sh # ./start.sh -e start_enterprise_test.sh  -- Jenkins
+    ./start_enterprise.sh
 else
   echo "You are not giving correct inputs."
   exit 1;
