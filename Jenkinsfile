@@ -55,11 +55,18 @@ pipeline {
     //   }
     // }
 
+    // stage('Enterprise just for testing') {
+    //   steps {
+    //       sh './dev/start.sh -e start_enterprise_test.sh'
+    //   }
+    // }
+
     stage('Enterprise just for testing') {
       steps {
-          sh './dev/start.sh -e start_enterprise_test.sh'
+          sh './start_enterprise.sh'
       }
     }
+
 
     stage('Build Release Artifacts') {
       when {
