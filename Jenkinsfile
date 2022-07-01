@@ -49,9 +49,9 @@ pipeline {
     //   }
     // }
 
-    stage('Functional Tests Enterprise') {
+    stage('Run tests against Conjur Enterprise') {
       steps {
-          sh './dev/start.sh -e start_enterprise.sh'
+        sh './ci/test.sh -e -d conjur_variable'
       }
     }
 

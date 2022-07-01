@@ -11,12 +11,17 @@ role_directories=("conjur_host_identity")
 # Target directory that can be manually set by passing a value to the `-d` flag
 target=""
 
+# Flags to be applied to testing scripts
+flags=""
+
 # Print usage instructions
 function help {
     echo "Test runner for Ansible Conjur Collection"
 
     echo "-a        Run all test files in default test directories"
     echo "-d <arg>  Run test file in given directory. Valid options are: ${test_directories[*]} all"
+    echo "-e        Run tests against Conjur Enterprise. Default: Conjur Open Source"
+    echo "          This option is currently only available when testing against the conjur_variable plugin"
     echo "-h        View help and available commands"
     exit 1
 }
@@ -26,7 +31,7 @@ function help {
 function run_test {
     pushd "${PWD}/tests/${1}"
         echo "Running ${1} tests..."
-        ./test.sh
+        ./test.sh "$flags"
     popd
 }
 
@@ -76,14 +81,16 @@ if [[ $# -eq 0 ]] ; then
     help
 fi
 
-while getopts ahd: option; do
+while getopts aehd: option; do
   case "$option" in
         a) handle_input
             ;;
-        d) target=${OPTARG}
-            handle_input
+        e) flags="-e"
             ;;
         h) help
+            ;;
+        d) target=${OPTARG}
+            handle_input
             ;;
         * )
           echo "$1 is not a valid option"
