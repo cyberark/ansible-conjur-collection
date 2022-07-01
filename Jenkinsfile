@@ -61,6 +61,13 @@ pipeline {
     //   }
     // }
 
+    // stage('Run tests against Conjur Enterprise') {
+    //   steps {
+    //     sh './test_test.sh'
+    //   }
+    // }
+
+
     stage('Build Release Artifacts') {
       when {
         anyOf {

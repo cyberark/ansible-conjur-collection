@@ -54,9 +54,7 @@ function wait_for_conjur {
 function fetch_ssl_certs {
   echo "Fetching SSL certs"
   if [[ "${enterprise}" == "true" ]]; then
-    # docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
-    docker-compose exec -T "${cli_service}" cp /root/conjur-demo.pem conjur-enterprise.pem
-    echo "everything is fine"
+    docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
   else
     docker-compose exec -T conjur_https cat cert.crt > conjur.pem
   fi
@@ -136,16 +134,26 @@ function setup_conjur_enterprise() {
       "${cli_service}" \
       infinity
 
+    # echo "Authenticate Conjur CLI container(cli_service) : ${cli_service}"
+    # docker-compose exec "${cli_service}" \
+    #   /bin/bash -c "
+    #     if [ ! -e /root/conjur-demo.pem ]; then
+    #       yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
+    #     fi
+    #     conjur authn login -u admin -p MySecretP@ss1
+    #     hostname -I
+    #   "
+
+
+    # ===========
     echo "Authenticate Conjur CLI container(cli_service) : ${cli_service}"
     docker-compose exec "${cli_service}" \
       /bin/bash -c "
-        if [ ! -e /root/conjur-demo.pem ]; then
           yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
-        fi
         conjur authn login -u admin -p MySecretP@ss1
         hostname -I
       "
-
+    # ===========
    echo "testing1"
     fetch_ssl_certs
     setup_conjur_resources
