@@ -13,28 +13,28 @@ declare -x DOCKER_NETWORK="default"
 
 enterprise="false"
 cli_service="conjur_cli"
-# test_dir="$(pwd)"
+test_dir="$(pwd)"
 
-# function cleanup {
-#   echo 'Removing test environment'
-#   echo '---'
+function cleanup {
+  echo 'Removing test environment'
+  echo '---'
 
-#   # Escape conjur-intro dir if Enterprise setup fails
-#   cd "${test_dir}"
+  # Escape conjur-intro dir if Enterprise setup fails
+  cd "${test_dir}"
 
-#   if [[ -d conjur-intro && "$enterprise" == "true" ]]; then
-#     pushd conjur-intro
-#       docker-compose down -v
-#     popd
-#     rm -rf conjur-intro
-#   fi
+  if [[ -d conjur-intro && "$enterprise" == "true" ]]; then
+    pushd conjur-intro
+      docker-compose down -v
+    popd
+    rm -rf conjur-intro
+  fi
 
-#   docker-compose down -v
-#   rm -f conjur-enterprise.pem \
-#         conjur.pem \
-#         access_token
-# }
-# trap cleanup EXIT
+  docker-compose down -v
+  rm -f conjur-enterprise.pem \
+        conjur.pem \
+        access_token
+}
+trap cleanup EXIT
 
 while getopts 'e' flag; do
   case "${flag}" in
@@ -44,7 +44,7 @@ while getopts 'e' flag; do
    esac
 done
 
-# cleanup
+cleanup
 
 function wait_for_conjur {
   echo "Waiting for Conjur server to come up"
@@ -55,8 +55,6 @@ function fetch_ssl_certs {
   echo "Fetching SSL certs"
   if [[ "${enterprise}" == "true" ]]; then
     docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
-    # docker-compose exec -T "${cli_service}" cp /root/conjur-demo.pem conjur-enterprise.pem
-    echo "everything is fine"
   else
     docker-compose exec -T conjur_https cat cert.crt > conjur.pem
   fi
@@ -83,7 +81,7 @@ function setup_admin_api_key {
   if [[ "$enterprise" == "true" ]]; then
     CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur user rotate_api_key)"
   else
-    CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key "${CONJUR_ACCOUNT}":user:admin)"
+    CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key ${CONJUR_ACCOUNT}:user:admin)"
   fi
 }
 
@@ -126,17 +124,30 @@ function setup_conjur_enterprise() {
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
-    cp ../policy/root.yml .
+    # cp ../policy/root.yml .
+
+
+   # ===========
+      echo " ========load policy====="
+      cp ../tests/conjur_variable/policy/root.yml .
+      ./bin/cli conjur policy load root root.yml
+      echo " ========Set Variable value ansible/test-secret ====="
+      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+      echo " =======Set Variable value ansible/test-secret-in-file ====="
+      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+
+   # ===========
 
     # Run 'sleep infinity' in the CLI container, so the scripts
     # have access to an alive and authenticated CLI until the script terminates
-    docker-compose run -d \
-      -w /src/cli \
-      --entrypoint sleep \
-      "${cli_service}" \
-      infinity
 
-    # echo "Authenticate Conjur CLI container(cli_service) : ${cli_service}"
+    # docker-compose run -d \
+    #   -w /src/cli \
+    #   --entrypoint sleep \
+    #   "${cli_service}" \
+    #   infinity
+
+    # echo "Authenticate Conjur CLI container"
     # docker-compose exec "${cli_service}" \
     #   /bin/bash -c "
     #     if [ ! -e /root/conjur-demo.pem ]; then
@@ -146,7 +157,6 @@ function setup_conjur_enterprise() {
     #     hostname -I
     #   "
 
-   echo "testing1"
     fetch_ssl_certs
     setup_conjur_resources
     setup_admin_api_key
