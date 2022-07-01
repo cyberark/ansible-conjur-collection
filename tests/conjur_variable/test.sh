@@ -146,11 +146,6 @@ function setup_conjur_enterprise() {
     #     hostname -I
     #   "
 
-      echo " ========Set Variable value ansible/test-secret ====="
-      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-      echo " =======Set Variable value ansible/test-secret-in-file ====="
-      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-
    echo "testing1"
     fetch_ssl_certs
     setup_conjur_resources
