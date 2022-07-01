@@ -15,13 +15,7 @@ declare -x cli_cid=''
 
 declare -x access_token=''
 
-function cleanup {
-pushd conjur-intro
-  docker-compose down -v
-popd
-}
 
-trap cleanup EXIT
 
 function main() {
 
@@ -199,3 +193,12 @@ function teardown_and_setup {
   docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
   docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
 }
+
+function cleanup {
+pushd conjur-intro
+  docker-compose down -v
+popd
+}
+
+
+trap cleanup EXIT
