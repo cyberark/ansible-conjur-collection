@@ -54,8 +54,8 @@ function wait_for_conjur {
 function fetch_ssl_certs {
   echo "Fetching SSL certs"
   if [[ "${enterprise}" == "true" ]]; then
-    # docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
-    docker-compose exec -T "${cli_service}" cp /root/conjur-demo.pem conjur-enterprise.pem
+    docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
+    # docker-compose exec -T "${cli_service}" cp /root/conjur-demo.pem conjur-enterprise.pem
     echo "everything is fine"
   else
     docker-compose exec -T conjur_https cat cert.crt > conjur.pem
@@ -149,6 +149,7 @@ function setup_conjur_enterprise() {
     echo "Authenticate Conjur CLI container(cli_service) : ${cli_service}"
     docker-compose exec "${cli_service}" \
       /bin/bash -c "
+      conjur policy load root root.yml
       conjur variable values add ansible/test-secret test_secret_password
       conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
       "
