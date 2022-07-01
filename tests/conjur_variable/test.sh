@@ -81,7 +81,7 @@ function setup_admin_api_key {
   if [[ "$enterprise" == "true" ]]; then
     CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur user rotate_api_key)"
   else
-    CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key ${CONJUR_ACCOUNT}:user:admin)"
+    CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key "${CONJUR_ACCOUNT}":user:admin)"
   fi
 }
 
