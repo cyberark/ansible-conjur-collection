@@ -107,7 +107,8 @@ function main() {
        conjur_ansible:v1 \
 
        echo " testing the ansible_cid "
-       ansible_cid=$(docker-compose ps -q ansible_container)
+    #    ansible_cid=$(docker-compose ps -q ansible_container)
+       ansible_cid=$(docker container ls  | grep 'ansible_container' | awk '{print $1}')
        echo "line 116 ansible_cid value is : ${ansible_cid}"
 
       echo "Running tests"
