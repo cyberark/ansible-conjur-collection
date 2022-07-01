@@ -26,8 +26,7 @@ function cleanup {
     pushd conjur-intro
       docker-compose down -v
     popd
-    chmod +x conjur-intro
-    rm -rf conjur-intro
+    # rm -rf conjur-intro
   fi
 
   docker-compose down -v
