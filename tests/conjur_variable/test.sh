@@ -11,8 +11,11 @@ declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 declare -x DOCKER_NETWORK="default"
 
-enterprise="false"
-cli_service="conjur_cli"
+# enterprise="false"
+# cli_service="conjur_cli"
+
+enterprise="true"
+cli_service="client"
 # test_dir="$(pwd)"
 
 # function cleanup {
@@ -36,15 +39,17 @@ cli_service="conjur_cli"
 # }
 # trap cleanup EXIT
 
-while getopts 'e' flag; do
-  case "${flag}" in
-    e) enterprise="true"
-       cli_service="client" ;;
-    *) exit 1 ;;
-   esac
-done
+# while getopts 'e' flag; do
+#   case "${flag}" in
+#     e) enterprise="true"
+#        cli_service="client" ;;
+#     *) exit 1 ;;
+#    esac
+# done
 
-cleanup
+
+
+# cleanup
 
 function wait_for_conjur {
   echo "Waiting for Conjur server to come up"

@@ -49,11 +49,11 @@ pipeline {
     //   }
     // }
 
-    stage('Run tests against Conjur Enterprise') {
-      steps {
-        sh './ci/test.sh -e -d conjur_variable'
-      }
-    }
+    // stage('Run tests against Conjur Enterprise') {
+    //   steps {
+    //     sh './ci/test.sh -e -d conjur_variable'
+    //   }
+    // }
 
     // stage('Run tests against Conjur Enterprise') {
     //   steps {
@@ -61,11 +61,11 @@ pipeline {
     //   }
     // }
 
-    // stage('Run tests against Conjur Enterprise') {
-    //   steps {
-    //     sh './test_test.sh'
-    //   }
-    // }
+    stage('Run tests against Conjur Enterprise') {
+      steps {
+        sh './test_test.sh'
+      }
+    }
 
 
     stage('Build Release Artifacts') {
