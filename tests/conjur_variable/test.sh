@@ -30,9 +30,9 @@ function cleanup {
   fi
 
   docker-compose down -v
-  rm -f conjur-enterprise.pem \
-        conjur.pem \
-        access_token
+  # rm -f conjur-enterprise.pem \
+  #       conjur.pem \
+  #       access_token
 }
 trap cleanup EXIT
 

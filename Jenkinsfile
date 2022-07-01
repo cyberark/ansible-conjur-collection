@@ -49,17 +49,17 @@ pipeline {
     //   }
     // }
 
-    // stage('Run tests against Conjur Enterprise') {
-    //   steps {
-    //     sh './ci/test.sh -e -d conjur_variable'
-    //   }
-    // }
-
     stage('Run tests against Conjur Enterprise') {
       steps {
-        sh './testing_role.sh'
+        sh './ci/test.sh -e -d conjur_variable'
       }
     }
+
+    // stage('Run tests against Conjur Enterprise') {
+    //   steps {
+    //     sh './testing_role.sh'
+    //   }
+    // }
 
     stage('Build Release Artifacts') {
       when {
