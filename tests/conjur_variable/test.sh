@@ -134,16 +134,16 @@ function setup_conjur_enterprise() {
       "${cli_service}" \
       infinity
 
-    echo "Authenticate Conjur CLI container"
-    docker-compose exec "${cli_service}" \
-      /bin/bash -c "
-        if [ ! -e /root/conjur-demo.pem ]; then
-          yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
-        fi
-        conjur authn login -u admin -p MySecretP@ss1
-        hostname -I
-      "
-
+    # echo "Authenticate Conjur CLI container(cli_service) : ${cli_service}"
+    # docker-compose exec "${cli_service}" \
+    #   /bin/bash -c "
+    #     if [ ! -e /root/conjur-demo.pem ]; then
+    #       yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
+    #     fi
+    #     conjur authn login -u admin -p MySecretP@ss1
+    #     hostname -I
+    #   "
+   echo "testing1"
     fetch_ssl_certs
     setup_conjur_resources
     setup_admin_api_key
