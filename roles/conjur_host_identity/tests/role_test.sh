@@ -114,7 +114,7 @@ echo "get current directory"
             pwd
             ls
 
-        pushd ./roles/conjur_host_identity/tests
+        pushd ./roles/conjur_host_identity
             echo " ========testit 3====="
             docker build -t conjur_ansible:v1 .
             echo " ========testit 4====="
@@ -159,13 +159,20 @@ function run_test_case {
     #   docker exec -t ansible_container bash -exc
     #   cd tests
     docker exec ansible_container env HFTOKEN="${hf_token}" bash -ec "
-      ansible-playbook test_cases/${test_case}/playbook.yml
+    echo " inside the ansible_container first"
+    pwd
+    ls
+    #   cd tests
+    #   ansible-playbook test_cases/${test_case}/playbook.yml
     "
     if [ "${test_case}" == "configure-conjur-identity" ]
     then
           docker exec ansible_container bash -ec "
+            echo " inside the ansible_container second "
+            pwd
+            ls
             # cd tests
-            py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+            # py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
           "
     fi
   else
