@@ -157,7 +157,7 @@ function run_test_case {
   if [ -n "$test_case" ]
   then
 #   docker exec -t ansible_container bash -exc
-    docker exec ansible_container env HFTOKEN="$(hf_token)" bash -ec "
+    docker exec ansible_container env HFTOKEN="${hf_token}" bash -ec "
       cd tests
       ansible-playbook test_cases/${test_case}/playbook.yml
     "
