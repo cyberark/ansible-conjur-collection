@@ -10,13 +10,13 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
-function cleanup {
-pushd conjur-intro
-  docker-compose down -v
-popd
-}
+# function cleanup {
+# pushd conjur-intro
+#   docker-compose down -v
+# popd
+# }
 
-trap cleanup EXIT
+# trap cleanup EXIT
 
 function main() {
 
