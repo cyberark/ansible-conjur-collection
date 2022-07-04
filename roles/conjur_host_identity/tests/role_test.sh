@@ -65,8 +65,9 @@ echo "get current directory"
                 --entrypoint /bin/bash \
                 client \
                 -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-                conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
                 '
+
+                # conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
 
                 echo " ========testit 1====="
                 pwd
