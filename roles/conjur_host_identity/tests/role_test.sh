@@ -165,11 +165,11 @@ function teardown_and_setup {
 }
 
 function run_test_case {
-  echo "---- testing 101 ${test_case} ----"
-  pwd
-  local test_case=$1
-  if [ -n "$test_case" ]
-  then
+#   echo "---- testing 101 ${test_case} ----"
+#   pwd
+#   local test_case=$1
+#   if [ -n "$test_case" ]
+#   then
   echo "---- testing 102 ----"
   echo "hf_token ${hf_token}"
   echo "containerid ${containerid}"
@@ -178,15 +178,17 @@ function run_test_case {
     # echo " pwd "
     # pwd
     # "
-
+  echo "---- testing 110 ----"
     docker exec -t ansible_container bash -exc "
+    ls
     echo " pwd "
     pwd
     "
-  else
-    echo ERROR: run_test called with no argument 1>&2
-    exit 1
-  fi
+#   else
+#     echo ERROR: run_test called with no argument 1>&2
+#     exit 1
+#   fi
+  echo "---- testing 120 ----"
 }
 
     # docker exec -t "${containerid}" bash -exc "
