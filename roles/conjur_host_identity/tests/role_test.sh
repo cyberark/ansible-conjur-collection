@@ -174,10 +174,21 @@ function run_test_case {
   echo "hf_token ${hf_token}"
   echo "containerid ${containerid}"
 
-    docker exec -i "${containerid}" bin/bash -ec "
+    # docker exec -i "${containerid}" bin/bash -ec "
+    # echo " pwd "
+    # pwd
+    # "
+
+    docker exec -T ansible_container bash -exc "
     echo " pwd "
     pwd
     "
+  else
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
+  fi
+}
+
     # docker exec -t "${containerid}" bash -exc "
     #   export HFTOKEN=${hf_token}
     #   echo "---- testing 103 ----"
@@ -193,11 +204,7 @@ function run_test_case {
     #         py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
     #       "
     # fi
-  else
-    echo ERROR: run_test called with no argument 1>&2
-    exit 1
-  fi
-}
+
 
 
 # function run_test_cases {
