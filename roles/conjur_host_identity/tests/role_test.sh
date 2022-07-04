@@ -33,6 +33,8 @@ echo "get current directory"
             ./bin/dap --provision-follower
 
             echo " Setup Policy "
+            pwd
+            ls
             cp ../policy/root.yml .
             ./bin/cli conjur policy load root root.yml
             echo " ========Set Variable value ansible/test-secret ====="
@@ -64,7 +66,8 @@ echo "get current directory"
                 '
 
                 echo " ========testit 1====="
-
+                pwd
+                ls
                 cp conjur-enterprise.pem ../.
 
                 docker-compose  \
@@ -80,6 +83,7 @@ echo "get current directory"
                     " > access_token
 
                 echo " ========testit 2====="
+                pwd
                 ls
                 cp access_token ../.
 
