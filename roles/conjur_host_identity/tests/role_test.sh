@@ -124,6 +124,7 @@ echo "get current directory"
             --name ansible_container \
             --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity:/cyberark/cyberark.conjur.conjur-host-identity" \
             --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity/tests:cyberark/tests" \
+            --volume "/var/run/docker.sock:/var/run/docker.sock" \
             --network dap_net \
             -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
             -e "CONJUR_ACCOUNT=demo" \
