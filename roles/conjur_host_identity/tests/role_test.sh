@@ -139,7 +139,9 @@ echo "get current directory"
               echo "Running tests"
               # containerid=sudo docker ps -aqf "name=ansible_container"
               containerid=$(docker ps -aqf "name=ansible_container")
-              echo " container Id is ${containerid} "
+              echo " container Id 1 is ${containerid} "
+            #   ansible_cid=$(docker-compose ps -q ansible)
+            #   echo " container Id 2 is ${ansible_cid} "
               run_test_cases
               echo " End of the tests "
 
@@ -150,6 +152,7 @@ echo "get current directory"
 
 
 function run_test_cases {
+ echo "---- testing 107 ----"
   for test_case in test_cases/*; do
     teardown_and_setup
     run_test_case "$(basename -- "$test_case")"
@@ -168,7 +171,10 @@ function run_test_case {
   if [ -n "$test_case" ]
   then
   echo "---- testing 102 ----"
-    docker exec "${containerid}" env HFTOKEN="${hf_token}" bash -ec "
+  echo "hf_token ${hf_token}"
+  echo "containerid ${containerid}"
+
+    docker exec -t "${containerid}" env HFTOKEN="${hf_token}" bash -exc "
       echo "---- testing 103 ----"
       pwd
       ls
