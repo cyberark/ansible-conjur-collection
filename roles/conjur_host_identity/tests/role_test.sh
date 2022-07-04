@@ -150,47 +150,75 @@ echo "get current directory"
    # cleanup
 }
 
-
 function run_test_cases {
- echo "---- testing 107 ----"
   for test_case in test_cases/*; do
     teardown_and_setup
     run_test_case "$(basename -- "$test_case")"
   done
 }
 
+function run_test_case {
+  echo "---- testing ${test_case} ----"
+  local test_case=$1
+  if [ -n "$test_case" ]
+  then
+    docker exec -t ansible_container env HFTOKEN="${hf_token}" bash -exc "
+      cd tests
+      ansible-playbook test_cases/${test_case}/playbook.yml
+    "
+    # if [ "${test_case}" == "configure-conjur-identity" ]
+    # then
+    #       docker exec -t ansible_container bash -exc "
+    #         cd tests
+    #         py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+    #       "
+    # fi
+  else
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
+  fi
+}
+
+# function run_test_cases {
+#  echo "---- testing 107 ----"
+#   for test_case in test_cases/*; do
+#     teardown_and_setup
+#     run_test_case "$(basename -- "$test_case")"
+#   done
+# }
+
 function teardown_and_setup {
   docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
   docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
 }
 
-function run_test_case {
-#   echo "---- testing 101 ${test_case} ----"
-#   pwd
-#   local test_case=$1
-#   if [ -n "$test_case" ]
-#   then
-  echo "---- testing 102 ----"
-  echo "hf_token ${hf_token}"
-  echo "containerid ${containerid}"
+# function run_test_case {
+# #   echo "---- testing 101 ${test_case} ----"
+# #   pwd
+# #   local test_case=$1
+# #   if [ -n "$test_case" ]
+# #   then
+#   echo "---- testing 102 ----"
+#   echo "hf_token ${hf_token}"
+#   echo "containerid ${containerid}"
 
-    # docker exec -i "${containerid}" bin/bash -ec "
-    # echo " pwd "
-    # pwd
-    # "
+#     # docker exec -i "${containerid}" bin/bash -ec "
+#     # echo " pwd "
+#     # pwd
+#     # "
 
-  echo "---- testing 110 ----"
-    docker exec -t ansible_container bash -exc "
-    ls
-    echo " pwd "
-    pwd
-    "
-        #   else
-        #     echo ERROR: run_test called with no argument 1>&2
-        #     exit 1
-        #   fi
-  echo "---- testing 120 ----"
-}
+#   echo "---- testing 110 ----"
+#     docker exec -t ansible_container bash -exc "
+#     ls
+#     echo " pwd "
+#     pwd
+#     "
+#         #   else
+#         #     echo ERROR: run_test called with no argument 1>&2
+#         #     exit 1
+#         #   fi
+#   echo "---- testing 120 ----"
+# }
 
     # docker exec -t "${containerid}" bash -exc "
     #   export HFTOKEN=${hf_token}
