@@ -114,7 +114,7 @@ echo "get current directory"
             pwd
             ls
 
-        pushd ./roles/conjur_host_identity
+        pushd ./roles/conjur_host_identity/tests
             echo " ========testit 3====="
             docker build -t conjur_ansible:v1 .
             echo " ========testit 4====="
@@ -152,7 +152,10 @@ function run_test_cases {
 }
 
 function run_test_case {
-  echo "---- testing ${test_case} ----"
+  echo "---- testing pwd ${test_case} ----"
+  pwd
+  ls
+
   local test_case=$1
   if [ -n "$test_case" ]
   then
