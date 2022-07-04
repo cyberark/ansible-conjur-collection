@@ -91,6 +91,20 @@ echo "get current directory"
                 ls
                 cp access_token ../.
 
+            echo " Get hf_token value "
+
+            docker-compose  \
+            run \
+            --rm \
+            -w /src/cli \
+            --entrypoint /bin/bash \
+            client \
+                -c "conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r '.[0].token'"> hf_token
+
+            cp hf_token ../
+            hf_token=$(cat hf_token)
+            echo "hf_token: ${hf_token}"
+
             echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
             CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
             echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
