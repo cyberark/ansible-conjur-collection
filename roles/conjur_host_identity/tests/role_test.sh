@@ -137,7 +137,8 @@ echo "get current directory"
             conjur_ansible:v1 \
 
               echo "Running tests"
-              containerid=sudo docker ps -aqf "name=ansible_container"
+              # containerid=sudo docker ps -aqf "name=ansible_container"
+              containerid=$(docker ps -aqf "name=ansible_container")
               echo " container Id is ${containerid} "
               run_test_cases
               echo " End of the tests "
@@ -167,7 +168,7 @@ function run_test_case {
   if [ -n "$test_case" ]
   then
   echo "---- testing 102 ----"
-    docker exec "${containerid}" env HFTOKEN="$(hf_token)" bash -ec "
+    docker exec "${containerid}" env HFTOKEN="${hf_token}" bash -ec "
       echo "---- testing 103 ----"
       pwd
       ls

@@ -7,13 +7,13 @@ function clean {
   docker-compose down -v
   rm -rf inventory.tmp
 }
-function finish {
-  rv=$?
-  clean || true
-  exit $rv
-}
-trap finish EXIT
-clean
+# function finish {
+#   rv=$?
+#   clean || true
+#   exit $rv
+# }
+# trap finish EXIT
+# clean
 
 # normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME
