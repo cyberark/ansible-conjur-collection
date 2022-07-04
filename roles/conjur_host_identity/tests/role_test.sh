@@ -9,6 +9,7 @@ export COMPOSE_PROJECT_NAME
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
+declare -x containerid=''
 
 # function cleanup {
 # pushd conjur-intro
@@ -136,6 +137,8 @@ echo "get current directory"
             conjur_ansible:v1 \
 
               echo "Running tests"
+              containerid=sudo docker ps -aqf "name=ansible_container"
+              echo " container Id is ${containerid} "
               run_test_cases
               echo " End of the tests "
 
@@ -144,6 +147,7 @@ echo "get current directory"
    # cleanup
 }
 
+
 function run_test_cases {
   for test_case in test_cases/*; do
     teardown_and_setup
@@ -151,16 +155,56 @@ function run_test_cases {
   done
 }
 
+function teardown_and_setup {
+  docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
+  docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
+}
+
 function run_test_case {
-  echo "---- testing pwd ${test_case} ----"
+  echo "---- testing 101 ${test_case} ----"
   pwd
-  ls
-  echo " this is hf_token value :- ${hf_token}"
-    docker exec -t ansible_container bash -exc "
-    echo " inside the ansible_container first"
-    pwd
-    ls
+  local test_case=$1
+  if [ -n "$test_case" ]
+  then
+  echo "---- testing 102 ----"
+    docker exec "${containerid}" env HFTOKEN="$(hf_token)" bash -ec "
+      echo "---- testing 103 ----"
+      pwd
+      ls
+      cd tests
+      ansible-playbook test_cases/${test_case}/playbook.yml
     "
+    if [ "${test_case}" == "configure-conjur-identity" ]
+    then
+          docker exec "${containerid}" bash -ec "
+            cd tests
+            py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+          "
+    fi
+  else
+    echo ERROR: run_test called with no argument 1>&2
+    exit 1
+  fi
+}
+
+
+# function run_test_cases {
+#   for test_case in test_cases/*; do
+#     teardown_and_setup
+#     run_test_case "$(basename -- "$test_case")"
+#   done
+# }
+
+# function run_test_case {
+#   echo "---- testing pwd ${test_case} ----"
+#   pwd
+#   ls
+#   echo " this is hf_token value :- ${hf_token}"
+#     docker exec -t ansible_container bash -exc "
+#     echo " inside the ansible_container first"
+#     pwd
+#     ls
+#     "
 
 
 #   local test_case=$1
@@ -185,12 +229,9 @@ function run_test_case {
 #     echo ERROR: run_test called with no argument 1>&2
 #     exit 1
 #   fi
-}
+# }
 
-function teardown_and_setup {
-  docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
-  docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
-}
+
 
 # function run_test_cases {
 #   for test_case in test_cases/*; do
