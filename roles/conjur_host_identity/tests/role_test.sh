@@ -156,32 +156,35 @@ function run_test_case {
   pwd
   ls
 
-  local test_case=$1
-  if [ -n "$test_case" ]
-  then
-    #   docker exec -t ansible_container bash -exc
-    #   cd tests
     docker exec ansible_container env HFTOKEN="${hf_token}" bash -ec "
     echo " inside the ansible_container first"
     pwd
     ls
-    #   cd tests
-    #   ansible-playbook test_cases/${test_case}/playbook.yml
     "
-    if [ "${test_case}" == "configure-conjur-identity" ]
-    then
-          docker exec ansible_container bash -ec "
-            echo " inside the ansible_container second "
-            pwd
-            ls
-            # cd tests
-            # py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
-          "
-    fi
-  else
-    echo ERROR: run_test called with no argument 1>&2
-    exit 1
-  fi
+
+
+#   local test_case=$1
+#   if [ -n "$test_case" ]
+#   then
+#     #   docker exec -t ansible_container bash -exc
+#     #   cd tests
+#     docker exec ansible_container env HFTOKEN="${hf_token}" bash -ec "
+#     echo " inside the ansible_container first"
+#     pwd
+#     ls
+#     "
+#     if [ "${test_case}" == "configure-conjur-identity" ]
+#     then
+#           docker exec ansible_container bash -ec "
+#             echo " inside the ansible_container second "
+#             pwd
+#             ls
+#           "
+#     fi
+#   else
+#     echo ERROR: run_test called with no argument 1>&2
+#     exit 1
+#   fi
 }
 
 function teardown_and_setup {
