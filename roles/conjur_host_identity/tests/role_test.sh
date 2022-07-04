@@ -174,7 +174,10 @@ function run_test_case {
   echo "hf_token ${hf_token}"
   echo "containerid ${containerid}"
 
-    docker exec -it "${containerid}" bin/bash -ec " pwd "
+    docker exec -i "${containerid}" bin/bash -ec "
+    echo " pwd "
+    pwd
+    "
     # docker exec -t "${containerid}" bash -exc "
     #   export HFTOKEN=${hf_token}
     #   echo "---- testing 103 ----"
