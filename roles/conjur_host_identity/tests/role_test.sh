@@ -178,16 +178,17 @@ function run_test_case {
     # echo " pwd "
     # pwd
     # "
+
   echo "---- testing 110 ----"
     docker exec -t ansible_container bash -exc "
     ls
     echo " pwd "
     pwd
     "
-#   else
-#     echo ERROR: run_test called with no argument 1>&2
-#     exit 1
-#   fi
+        #   else
+        #     echo ERROR: run_test called with no argument 1>&2
+        #     exit 1
+        #   fi
   echo "---- testing 120 ----"
 }
 
