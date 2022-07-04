@@ -155,8 +155,8 @@ function run_test_case {
   echo "---- testing pwd ${test_case} ----"
   pwd
   ls
-
-    docker exec ansible_container env HFTOKEN="${hf_token}" bash -ec "
+  echo " this is hf_token value :- ${hf_token}"
+    docker exec -t ansible_container bash -exc "
     echo " inside the ansible_container first"
     pwd
     ls
