@@ -156,15 +156,15 @@ function run_test_case {
   local test_case=$1
   if [ -n "$test_case" ]
   then
-#   docker exec -t ansible_container bash -exc
+    #   docker exec -t ansible_container bash -exc
+    #   cd tests
     docker exec ansible_container env HFTOKEN="${hf_token}" bash -ec "
-      cd tests
       ansible-playbook test_cases/${test_case}/playbook.yml
     "
     if [ "${test_case}" == "configure-conjur-identity" ]
     then
           docker exec ansible_container bash -ec "
-            cd tests
+            # cd tests
             py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
           "
     fi
