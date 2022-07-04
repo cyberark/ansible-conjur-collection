@@ -179,7 +179,7 @@ function run_test_case {
     # pwd
     # "
 
-    docker exec -T ansible_container bash -exc "
+    docker exec -t ansible_container bash -exc "
     echo " pwd "
     pwd
     "
