@@ -135,9 +135,9 @@ echo "get current directory"
             --workdir "/cyberark" \
             conjur_ansible:v1 \
 
-            #   echo "Running tests"
-            #   run_test_cases
-            #   echo " End of the tests "
+              echo "Running tests"
+              run_test_cases
+              echo " End of the tests "
 
         popd
 
@@ -146,33 +146,68 @@ echo "get current directory"
 
 function run_test_cases {
   for test_case in test_cases/*; do
+    teardown_and_setup
     run_test_case "$(basename -- "$test_case")"
   done
 }
-function run_test_case {
-  local test_case=$1
-  echo "---- testing ${test_case} ----"
 
-  if [ -z "$test_case" ]; then
+function run_test_case {
+  echo "---- testing ${test_case} ----"
+  local test_case=$1
+  if [ -n "$test_case" ]
+  then
+#   docker exec -t ansible_container bash -exc
+    docker exec ansible_container env HFTOKEN="$(hf_token)" bash -ec "
+      cd tests
+      ansible-playbook test_cases/${test_case}/playbook.yml
+    "
+    if [ "${test_case}" == "configure-conjur-identity" ]
+    then
+          docker exec ansible_container bash -ec "
+            cd tests
+            py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+          "
+    fi
+  else
     echo ERROR: run_test called with no argument 1>&2
     exit 1
   fi
-
-  docker exec -t ansible_container bash -exc "
-    cd tests/conjur_variable
-
-    # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env_enterprise' ]; then
-      . ./test_cases/${test_case}/env_enterprise
-    fi
-
-    # You can add -vvvv here for debugging
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
-
-    # py.test --junitxml='./junit/${test_case}' \
-    #   --connection docker \
-    #   -v 'test_cases/${test_case}/tests/test_default.py'
-  "
 }
+
+function teardown_and_setup {
+  docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
+  docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
+}
+
+# function run_test_cases {
+#   for test_case in test_cases/*; do
+#     run_test_case "$(basename -- "$test_case")"
+#   done
+# }
+# function run_test_case {
+#   local test_case=$1
+#   echo "---- testing ${test_case} ----"
+
+#   if [ -z "$test_case" ]; then
+#     echo ERROR: run_test called with no argument 1>&2
+#     exit 1
+#   fi
+
+#   docker exec -t ansible_container bash -exc "
+#     cd tests/conjur_variable
+
+#     # If env vars were provided, load them
+#     if [ -e 'test_cases/${test_case}/env_enterprise' ]; then
+#       . ./test_cases/${test_case}/env_enterprise
+#     fi
+
+#     # You can add -vvvv here for debugging
+#     ansible-playbook 'test_cases/${test_case}/playbook.yml'
+
+#     # py.test --junitxml='./junit/${test_case}' \
+#     #   --connection docker \
+#     #   -v 'test_cases/${test_case}/tests/test_default.py'
+#   "
+# }
 
 main
