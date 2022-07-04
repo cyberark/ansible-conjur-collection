@@ -121,7 +121,7 @@ echo "get current directory"
     #   echo " End of the tests "
 
 
-   cleanup
+   # cleanup
 }
 
 function run_test_cases {
