@@ -35,7 +35,9 @@ echo "get current directory"
             echo " Setup Policy "
             pwd
             ls
-            cp ../policy/root.yml .
+
+            cp ../roles/conjur_host_identity/tests/policy/root.yml .
+            # cp ../policy/root.yml .
             ./bin/cli conjur policy load root root.yml
             echo " ========Set Variable value ansible/test-secret ====="
             ./bin/cli conjur variable values add ansible/test-secret test_secret_password
