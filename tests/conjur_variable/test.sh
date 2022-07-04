@@ -121,6 +121,55 @@ function setup_conjur_open_source()  {
   setup_access_token
 }
 
+function fetch_master_api_key(){
+      docker-compose  \
+      run \
+      --rm \
+      -w /src/cli \
+      --entrypoint /bin/bash \
+      client \
+        -c "conjur host rotate_api_key --host ansible/ansible-master
+      "> ANSIBLE_MASTER_AUTHN_API_KEY
+
+      cp ANSIBLE_MASTER_AUTHN_API_KEY ../
+      ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
+      echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
+
+}
+
+function fetch_enterprise_conjur_certs()
+{
+       docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+          conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+          '
+        cp conjur-enterprise.pem ../tests/conjur_variable
+}
+
+function setup_enterprise_access_token(){
+
+        docker-compose  \
+        run \
+        --rm \
+        -w /src/cli \
+        --entrypoint /bin/bash \
+        client \
+          -c "
+              export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
+              export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+              conjur authn authenticate
+            " > access_token
+        cp access_token ../tests/conjur_variable
+
+        access_token=$(cat access_token)
+        echo "access_token: ${access_token}"
+}
+
 function setup_conjur_enterprise() {
   git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
@@ -162,11 +211,19 @@ function setup_conjur_enterprise() {
     #     hostname -I
     #   "
 
-    fetch_ssl_certs
-    setup_conjur_resources
-    setup_admin_api_key
-    setup_ansible_api_key
-    setup_access_token
+     fetch_master_api_key
+     fetch_enterprise_conjur_certs
+     setup_enterprise_access_token
+
+      echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
+      CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+      echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
+
+    # fetch_ssl_certs
+    # setup_conjur_resources
+    # setup_admin_api_key
+    # setup_ansible_api_key
+    # setup_access_token
 
     echo "Relocate credential files"
     mv conjur-enterprise.pem ../.
