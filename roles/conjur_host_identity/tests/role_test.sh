@@ -122,7 +122,7 @@ echo "get current directory"
             docker run \
             -d -t \
             --name ansible_container \
-            --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity/tests:cyberark/tests" \
+            --volume "$(pwd):cyberark/tests" \
             --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity":/cyberark/cyberark.conjur.conjur-host-identity \
             --network dap_net \
             -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
@@ -135,6 +135,8 @@ echo "get current directory"
             -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
             --workdir "/cyberark" \
             conjur_ansible:v1 \
+
+            # --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity/tests:cyberark/tests" \
 
               echo "Running tests"
               # containerid=sudo docker ps -aqf "name=ansible_container"
