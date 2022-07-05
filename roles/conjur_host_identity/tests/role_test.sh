@@ -114,6 +114,7 @@ echo "get current directory"
 
         pushd ./roles/conjur_host_identity/tests
             echo " ========testit 3====="
+            ls
             docker build -t conjur_ansible:v1 .
             echo " ========testit 4====="
             docker run \
@@ -125,12 +126,13 @@ echo "get current directory"
             -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
             -e "CONJUR_ACCOUNT=demo" \
             -e "CONJUR_AUTHN_LOGIN=admin" \
-            -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
             -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
             -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur-enterprise.pem" \
             -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
             --workdir "/cyberark" \
             conjur_ansible:v1 \
+
+                            #   -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
 
               #   -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
 
