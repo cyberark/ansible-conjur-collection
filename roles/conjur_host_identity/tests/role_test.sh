@@ -122,7 +122,7 @@ echo "get current directory"
             docker run \
             -d -t \
             --name ansible_container \
-            --volume "$(pwd):cyberark/tests" \
+            --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity/tests:/cyberark/tests" \
             --volume "$(git rev-parse --show-toplevel)/roles/conjur_host_identity":/cyberark/cyberark.conjur.conjur-host-identity \
             --network dap_net \
             -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
