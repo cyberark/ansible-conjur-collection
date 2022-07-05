@@ -69,7 +69,7 @@ pipeline {
 
     stage('Run tests against Conjur Enterprise') {
       steps {
-        sh './roles/conjur_host_identity/tests/role_test.sh'
+        sh './roles/conjur_host_identity/tests/common.sh'
       }
     }
 
