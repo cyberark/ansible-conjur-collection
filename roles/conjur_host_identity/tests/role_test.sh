@@ -127,11 +127,12 @@ echo "get current directory"
             -e "CONJUR_AUTHN_LOGIN=admin" \
             -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
             -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
-            -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
             -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
             -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
             --workdir "/cyberark" \
             conjur_ansible:v1 \
+
+              #   -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
 
               echo "Running tests"
               containerid=$(docker ps -aqf "name=ansible_container")
