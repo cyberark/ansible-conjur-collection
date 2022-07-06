@@ -53,10 +53,12 @@ function wait_for_conjur {
   docker-compose exec -T conjur conjurctl wait -r 30 -p 3000
 }
 
+    # docker exec -t "${CONTAINER_ID}" /bin/bash -c "
+
 function fetch_ssl_certs {
   echo "Fetching SSL certs"
   if [[ "${enterprise}" == "true" ]]; then
-    docker exec -it "${CONTAINER_ID}" cat /root/conjur-demo.pem > conjur-enterprise.pem
+    docker exec -t "${CONTAINER_ID}" cat /root/conjur-demo.pem > conjur-enterprise.pem
     # docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
   else
     docker-compose exec -T conjur_https cat cert.crt > conjur.pem
@@ -71,11 +73,18 @@ function setup_conjur_resources {
     policy_path="/policy/${policy_path}"
   fi
 
-  docker-compose exec -T "${cli_service}" bash -c "
+  # docker-compose exec -T "${cli_service}" bash -c "
+  #   conjur policy load root ${policy_path}
+  #   conjur variable values add ansible/test-secret test_secret_password
+  #   conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+  #   conjur variable values add 'ansible/var with spaces' var_with_spaces_secret_password
+  # "
+
+    docker exec -t "${CONTAINER_ID}" /bin/bash -c "
     conjur policy load root ${policy_path}
     conjur variable values add ansible/test-secret test_secret_password
     conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-    conjur variable values add 'ansible/var with spaces' var_with_spaces_secret_password
+    conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
   "
 }
 
