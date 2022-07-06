@@ -239,8 +239,6 @@ function setup_conjur_enterprise() {
       ./bin/dap --provision-master
       ./bin/dap --provision-follower
 
-      docker-compose up -d --build
-
       echo " ========load policy====="
       cp ../tests/conjur_variable/policy/root.yml .
       echo " ========load policy 2 ====="
