@@ -155,7 +155,7 @@ function setup_conjur_enterprise() {
     echo " container id ${CONTAINER_ID}"
 
     echo "Authenticate Conjur CLI container"
-    docker exec -it "${CONTAINER_ID}" \
+    docker exec -t "${CONTAINER_ID}" \
       /bin/bash -c "
         if [ ! -e /root/conjur-demo.pem ]; then
           yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
