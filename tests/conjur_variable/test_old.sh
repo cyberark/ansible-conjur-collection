@@ -157,21 +157,43 @@ function run_test_case {
 
 #  ====== common start =======
 
-function setup_conjur_resources {
-  echo "Configuring Conjur via CLI"
+    function setup_conjur_resources {
+    echo "Configuring Conjur via CLI"
 
-  policy_path="root.yml"
-  if [[ "${enterprise}" == "false" ]]; then
-    policy_path="/policy/${policy_path}"
-  fi
+    policy_path="root.yml"
+    if [[ "${enterprise}" == "false" ]]; then
+        policy_path="/policy/${policy_path}"
+    fi
 
-  docker-compose exec -T "${cli_service}" bash -c "
-    conjur policy load root ${policy_path}
-    conjur variable values add ansible/test-secret test_secret_password
-    conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-    conjur variable values add 'ansible/var with spaces' var_with_spaces_secret_password
-  "
-}
+    echo " test enterprise value ${enterprise} "
+    echo " test  value ${enterprise} "
+
+
+    docker-compose exec -T "${cli_service}" bash -c "
+        conjur policy load root ${policy_path}
+        conjur variable values add ansible/test-secret test_secret_password
+        conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+        conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+    "
+    }
+
+    function setup_admin_api_key {
+    echo "Fetching admin API key"
+    if [[ "$enterprise" == "true" ]]; then
+        CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur user rotate_api_key)"
+    else
+        CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key ${CONJUR_ACCOUNT}:user:admin)"
+    fi
+    }
+
+    function fetch_ssl_certs {
+    echo "Fetching SSL certs"
+    if [[ "${enterprise}" == "true" ]]; then
+        docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
+    else
+        docker-compose exec -T conjur_https cat cert.crt > conjur.pem
+    fi
+    }
 
 #  =======  Common end =======
 
@@ -214,15 +236,17 @@ function setup_conjur_enterprise() {
       ANSIBLE_MASTER_AUTHN_API_KEY=$(cat ANSIBLE_MASTER_AUTHN_API_KEY)
       echo "ANSIBLE_MASTER_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}"
 
-        docker-compose  \
-        run \
-        --rm \
-        -w /src/cli \
-        --entrypoint /bin/bash \
-        client \
-          -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
-          conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-          '
+        fetch_ssl_certs
+
+        # docker-compose  \
+        # run \
+        # --rm \
+        # -w /src/cli \
+        # --entrypoint /bin/bash \
+        # client \
+        #   -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem
+        #   conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+        #   '
         cp conjur-enterprise.pem ../tests/conjur_variable
 
         docker-compose  \
@@ -242,7 +266,8 @@ function setup_conjur_enterprise() {
         echo "access_token: ${access_token}"
 
         echo " Get CONJUR_ADMIN_AUTHN_API_KEY value "
-        CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
+        setup_admin_api_key
+        # CONJUR_ADMIN_AUTHN_API_KEY="$(./bin/cli conjur user rotate_api_key|tail -n 1| tr -d '\r')"
         echo "CONJUR_ADMIN_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}"
   popd
 
