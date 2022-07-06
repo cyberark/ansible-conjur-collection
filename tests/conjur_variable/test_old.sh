@@ -161,13 +161,13 @@ function run_test_case {
     function setup_conjur_resources {
     echo "Configuring Conjur via CLI"
 
-    policy_path="root.yml"
-    if [[ "${enterprise}" == "false" ]]; then
-        policy_path="/policy/${policy_path}"
-    fi
+    # policy_path="root.yml"
+    # if [[ "${enterprise}" == "false" ]]; then
+    #     policy_path="/policy/${policy_path}"
+    # fi
 
-    echo " test enterprise value ${enterprise} "
-    echo " test  value ${enterprise} "
+    # echo " test enterprise value ${enterprise} "
+    # echo " test  value ${enterprise} "
 
 
     # docker-compose exec -T "${cli_service}" bash -c "
@@ -230,10 +230,11 @@ function setup_conjur_enterprise() {
       ./bin/dap --provision-master
       ./bin/dap --provision-follower
 
-    #   docker-compose up -d --build client
+      docker-compose up -d --build
 
       echo " ========load policy====="
       cp ../tests/conjur_variable/policy/root.yml .
+      echo " ========load policy 2 ====="
 
      ./bin/cli conjur policy load root root.yml
 
