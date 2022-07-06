@@ -73,9 +73,15 @@ pipeline {
     //   }
     // }
 
+    // stage('Run tests against Conjur Enterprise') {
+    //   steps {
+    //     sh './tests/conjur_variable/test_old.sh'
+    //   }
+    // }
+
     stage('Run tests against Conjur Enterprise') {
       steps {
-        sh './tests/conjur_variable/test_old.sh'
+        sh './test_old.sh'
       }
     }
 
