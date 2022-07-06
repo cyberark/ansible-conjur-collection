@@ -132,7 +132,7 @@ function setup_conjur_enterprise() {
     ls
 
 
-    cp ../policy/root.yml .
+    cp ../tests/conjur_variable/policy/root.yml .
 
     # Run 'sleep infinity' in the CLI container, so the scripts
     # have access to an alive and authenticated CLI until the script terminates
