@@ -177,26 +177,28 @@ function run_test_case {
     #     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
     # "
 
-    # conjur policy load root ${policy_path}
+    # docker exec -t client bash -exc "
+    #     conjur policy load root ${policy_path}
+    #     conjur variable values add ansible/test-secret test_secret_password
+    #     conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+    #     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+    # "
 
-    docker exec -t client bash -exc "
-        conjur policy load root ${policy_path}
-        conjur variable values add ansible/test-secret test_secret_password
-        conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-        conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
-    "
-
-    #   ./bin/cli conjur policy load root root.yml
-    #   echo " ========Set Variable value ansible/test-secret ====="
-    #   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-    #   echo " =======Set Variable value ansible/test-secret-in-file ====="
-    #   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+      echo " ======== testing 11 "
+      ./bin/cli conjur policy load root "${policy_path}"
+      echo " ========Set Variable value ansible/test-secret ====="
+      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+      echo " =======Set Variable value ansible/test-secret-in-file ====="
+      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
     }
     function setup_admin_api_key {
     echo "Fetching admin API key"
     if [[ "$enterprise" == "true" ]]; then
-        CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur user rotate_api_key)"
+    echo "Fetching admin API key 2 "
+    # CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur user rotate_api_key)"
+    CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose run --rm -w /src/cli --entrypoint /bin/bash ${cli_service} -ec 'cp /root/conjur-demo.pem conjur-enterprise.pem')"
+
     else
         CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key ${CONJUR_ACCOUNT}:user:admin)"
     fi
@@ -237,16 +239,15 @@ function setup_conjur_enterprise() {
       cp ../tests/conjur_variable/policy/root.yml .
       echo " ========load policy 2 ====="
 
-    #  ./bin/cli conjur policy load root root.yml
-
       setup_conjur_resources
 
-
+    #  ./bin/cli conjur policy load root root.yml
     #   echo " ========Set Variable value ansible/test-secret ====="
     #   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
     #   echo " =======Set Variable value ansible/test-secret-in-file ====="
     #   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
+     echo " ========testing 99 ====="
       docker-compose  \
       run \
       --rm \
