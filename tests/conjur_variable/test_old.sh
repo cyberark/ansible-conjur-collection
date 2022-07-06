@@ -192,10 +192,12 @@ function run_test_case {
     fi
     }
 
+    #   cp /root/conjur-demo.pem conjur-enterprise.pem
+
     function fetch_ssl_certs {
     echo "Fetching SSL certs"
     if [[ "${enterprise}" == "true" ]]; then
-        docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
+        docker-compose exec -T client cat /root/conjur-demo.pem > conjur-enterprise.pem
     else
         docker-compose exec -T conjur_https cat cert.crt > conjur.pem
     fi
