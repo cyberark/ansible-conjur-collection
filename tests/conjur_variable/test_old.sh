@@ -28,10 +28,19 @@ function main()
   if [[ "$enterprise" == "true" ]]; then
     echo "Deploying Conjur Enterprise"
 
+    # export DOCKER_NETWORK="dap_net"
+    # export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
+    # export CONJUR_ACCOUNT="demo"
+    # export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur-enterprise.pem"
+
     export DOCKER_NETWORK="dap_net"
     export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
     export CONJUR_ACCOUNT="demo"
     export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur-enterprise.pem"
+
+    export CONJUR_AUTHN_LOGIN="admin"
+    export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur_variable/conjur-enterprise.pem"
+
 
     setup_conjur_enterprise
   else
@@ -208,19 +217,37 @@ function setup_conjur_enterprise() {
   pushd ./tests/conjur_variable
 
        docker build -t conjur_ansible:v1 .
+    #    docker run \
+    #    -d -t \
+    #    --name ansible_container \
+    #    --volume "$(git rev-parse --show-toplevel):/cyberark" \
+    #    --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
+    #    --network dap_net \
+    #    -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
+    #    -e "CONJUR_ACCOUNT=demo" \
+    #    -e "CONJUR_AUTHN_LOGIN=admin" \
+    #    -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
+    #    -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
+    #    -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+    #    -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+    #    -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
+    #    --workdir "/cyberark" \
+    #    conjur_ansible:v1 \
+
+
        docker run \
        -d -t \
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
        --network dap_net \
-       -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-       -e "CONJUR_ACCOUNT=demo" \
-       -e "CONJUR_AUTHN_LOGIN=admin" \
+       -e "CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL}" \
+       -e "CONJUR_ACCOUNT=${CONJUR_ACCOUNT}" \
+       -e "CONJUR_AUTHN_LOGIN=${CONJUR_AUTHN_LOGIN}" \
        -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
        -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
        -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-       -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
+       -e "ANSIBLE_CONJUR_CERT_FILE=${ANSIBLE_CONJUR_CERT_FILE}" \
        -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
        --workdir "/cyberark" \
        conjur_ansible:v1 \
