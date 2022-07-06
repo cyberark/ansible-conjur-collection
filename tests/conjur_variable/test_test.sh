@@ -11,8 +11,10 @@ declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 declare -x DOCKER_NETWORK="default"
 
-enterprise="false"
-cli_service="conjur_cli"
+declare -x CONTAINER_ID=''
+
+enterprise="true"
+cli_service="client"
 # test_dir="$(pwd)"
 
 # function cleanup {
@@ -54,7 +56,8 @@ function wait_for_conjur {
 function fetch_ssl_certs {
   echo "Fetching SSL certs"
   if [[ "${enterprise}" == "true" ]]; then
-    docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
+    docker exec -it "${CONTAINER_ID}" cat /root/conjur-demo.pem > conjur-enterprise.pem
+    # docker-compose exec -T "${cli_service}" cat /root/conjur-demo.pem > conjur-enterprise.pem
   else
     docker-compose exec -T conjur_https cat cert.crt > conjur.pem
   fi
@@ -134,8 +137,15 @@ function setup_conjur_enterprise() {
       "${cli_service}" \
       infinity
 
+    # docker exec -it <mycontainer> bash
+
+    CONTAINER_ID=containerid=$(docker ps -aqf "name=client")
+    export CONTAINER_ID
+
+    echo " container id ${CONTAINER_ID}"
+
     echo "Authenticate Conjur CLI container"
-    docker-compose exec "${cli_service}" \
+    docker exec -it "${CONTAINER_ID}" \
       /bin/bash -c "
         if [ ! -e /root/conjur-demo.pem ]; then
           yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
@@ -143,6 +153,16 @@ function setup_conjur_enterprise() {
         conjur authn login -u admin -p MySecretP@ss1
         hostname -I
       "
+
+
+    # docker-compose exec "${cli_service}" \
+    #   /bin/bash -c "
+    #     if [ ! -e /root/conjur-demo.pem ]; then
+    #       yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
+    #     fi
+    #     conjur authn login -u admin -p MySecretP@ss1
+    #     hostname -I
+    #   "
 
     fetch_ssl_certs
     setup_conjur_resources
