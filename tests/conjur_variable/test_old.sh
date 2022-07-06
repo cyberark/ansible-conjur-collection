@@ -37,11 +37,25 @@ function main()
     export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
     export CONJUR_ACCOUNT="demo"
     export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur-enterprise.pem"
-
     export CONJUR_AUTHN_LOGIN="admin"
     export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur_variable/conjur-enterprise.pem"
 
+    export ANSIBLE_ROOT=":/cyberark"
 
+    ANSIBLE_PLUGIN=""'/plugins'""
+
+    export ANSIBLE_PLUGIN
+    export ANSIBLE_PLUGIN_PATH=":/root/.ansible/plugins"
+    conjur_variable_test_path=$(git rev-parse --show-toplevel)$ANSIBLE_ROOT
+    conjur_variable_test_plugins=$(git rev-parse --show-toplevel)$ANSIBLE_PLUGIN$ANSIBLE_PLUGIN_PATH
+
+    echo "it is conjur_variable_test_path ${conjur_variable_test_path}"
+    echo "it is conjur_variable_test_plugins ${conjur_variable_test_plugins}"
+
+    export conjur_variable_test_plugins
+    export conjur_variable_test_path
+
+  echo " $conjur_variable_test_path "
     setup_conjur_enterprise
   else
     echo "Deploying Conjur Open Source"
@@ -234,12 +248,14 @@ function setup_conjur_enterprise() {
     #    --workdir "/cyberark" \
     #    conjur_ansible:v1 \
 
+    #    --volume "$(git rev-parse --show-toplevel):/cyberark" \
+    #    --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
 
        docker run \
        -d -t \
        --name ansible_container \
-       --volume "$(git rev-parse --show-toplevel):/cyberark" \
-       --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
+       --volume "${conjur_variable_test_path}" \
+       --volume "${conjur_variable_test_plugins}" \
        --network "${DOCKER_NETWORK}" \
        -e "CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL}" \
        -e "CONJUR_ACCOUNT=${CONJUR_ACCOUNT}" \
