@@ -166,8 +166,7 @@ function run_test_case {
     #     policy_path="/policy/${policy_path}"
     # fi
 
-    # echo " test enterprise value ${enterprise} "
-    # echo " test  value ${enterprise} "
+    echo " test enterprise value ${cli_service} "
 
 
     # docker-compose exec -T "${cli_service}" bash -c "
@@ -177,19 +176,26 @@ function run_test_case {
     #     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
     # "
 
-    # docker exec -t client bash -exc "
+    # docker-compose exec -t client bash -exc "
     #     conjur policy load root ${policy_path}
     #     conjur variable values add ansible/test-secret test_secret_password
     #     conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
     #     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
     # "
 
-      echo " ======== testing 11 "
-      ./bin/cli conjur policy load root "${policy_path}"
-      echo " ========Set Variable value ansible/test-secret ====="
-      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-      echo " =======Set Variable value ansible/test-secret-in-file ====="
-      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+    docker-compose run --rm -w /src/cli --entrypoint /bin/bash "${cli_service}" -ec "
+        conjur policy load root ${policy_path}
+        conjur variable values add ansible/test-secret test_secret_password
+        conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+        conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
+    "
+
+    #   echo " ======== testing 11 "
+    #   ./bin/cli conjur policy load root "${policy_path}"
+    #   echo " ========Set Variable value ansible/test-secret ====="
+    #   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+    #   echo " =======Set Variable value ansible/test-secret-in-file ====="
+    #   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
     }
     function setup_admin_api_key {
