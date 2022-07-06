@@ -175,14 +175,14 @@ function run_test_case {
     #     conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
     #     conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
     # "
-    # }
+    #
 
       ./bin/cli conjur policy load root root.yml
       echo " ========Set Variable value ansible/test-secret ====="
       ./bin/cli conjur variable values add ansible/test-secret test_secret_password
       echo " =======Set Variable value ansible/test-secret-in-file ====="
       ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-
+    }
     function setup_admin_api_key {
     echo "Fetching admin API key"
     if [[ "$enterprise" == "true" ]]; then
