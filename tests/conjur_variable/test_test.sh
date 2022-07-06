@@ -127,6 +127,11 @@ function setup_conjur_enterprise() {
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
 
+    echo "testing 1 "
+    pwd
+    ls
+
+
     cp ../policy/root.yml .
 
     # Run 'sleep infinity' in the CLI container, so the scripts
