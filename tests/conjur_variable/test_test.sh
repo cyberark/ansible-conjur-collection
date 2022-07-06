@@ -91,7 +91,7 @@ function setup_conjur_resources {
 function setup_admin_api_key {
   echo "Fetching admin API key"
   if [[ "$enterprise" == "true" ]]; then
-    CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur user rotate_api_key)"
+    CONJUR_ADMIN_AUTHN_API_KEY="$(docker exec -t "${CONTAINER_ID}" conjur user rotate_api_key)"
   else
     CONJUR_ADMIN_AUTHN_API_KEY="$(docker-compose exec -T conjur conjurctl role retrieve-key ${CONJUR_ACCOUNT}:user:admin)"
   fi
@@ -99,12 +99,12 @@ function setup_admin_api_key {
 
 function setup_ansible_api_key {
   echo "Fetching Ansible master host credentials"
-  ANSIBLE_MASTER_AUTHN_API_KEY="$(docker-compose exec -T ${cli_service} conjur host rotate_api_key --host ansible/ansible-master)"
+  ANSIBLE_MASTER_AUTHN_API_KEY="$(docker exec -t "${CONTAINER_ID}" conjur host rotate_api_key --host ansible/ansible-master)"
 }
 
 function setup_access_token {
   echo "Get Access Token"
-  docker-compose exec -T "${cli_service}" bash -c "
+  docker exec -t "${CONTAINER_ID}" bash -c "
     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
     conjur authn authenticate
