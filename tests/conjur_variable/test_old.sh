@@ -240,7 +240,7 @@ function setup_conjur_enterprise() {
        --name ansible_container \
        --volume "$(git rev-parse --show-toplevel):/cyberark" \
        --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
-       --network dap_net \
+       --network "${DOCKER_NETWORK}" \
        -e "CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL}" \
        -e "CONJUR_ACCOUNT=${CONJUR_ACCOUNT}" \
        -e "CONJUR_AUTHN_LOGIN=${CONJUR_AUTHN_LOGIN}" \
@@ -257,7 +257,7 @@ function setup_conjur_enterprise() {
       echo " End of the tests "
   popd
 
-  cleanup
+#   cleanup
 }
 
 function run_test_cases {
