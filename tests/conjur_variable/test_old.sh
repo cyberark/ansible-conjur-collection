@@ -63,6 +63,7 @@ function main()
   fi
 }
 
+
 function setup_conjur_open_source() {
   docker-compose up -d --build conjur \
                                conjur_https \
@@ -224,6 +225,8 @@ function setup_conjur_enterprise() {
 
       docker-compose down -v
 
+      docker-compose up -d --build client
+
       echo " Provision Master"
       ./bin/dap --provision-master
       ./bin/dap --provision-follower
@@ -233,7 +236,7 @@ function setup_conjur_enterprise() {
 
       setup_conjur_resources
 
-    #   ./bin/cli conjur policy load root root.yml
+    #  ./bin/cli conjur policy load root root.yml
     #   echo " ========Set Variable value ansible/test-secret ====="
     #   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
     #   echo " =======Set Variable value ansible/test-secret-in-file ====="
