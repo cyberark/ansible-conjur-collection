@@ -134,6 +134,9 @@ function setup_conjur_enterprise() {
 
     cp ../tests/conjur_variable/policy/root.yml .
 
+    echo "testing 2 "
+
+
     # Run 'sleep infinity' in the CLI container, so the scripts
     # have access to an alive and authenticated CLI until the script terminates
     docker-compose run -d \
@@ -141,6 +144,8 @@ function setup_conjur_enterprise() {
       --entrypoint sleep \
       "${cli_service}" \
       infinity
+
+    echo "testing 3 "
 
     # docker exec -it <mycontainer> bash
 
