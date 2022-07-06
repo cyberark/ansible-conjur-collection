@@ -21,50 +21,45 @@ declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x ANSIBLE_CONJUR_CERT_FILE=''
 
 enterprise="true"
-# cli_service="client"
+cli_service="client"
 
 function main()
 {
   if [[ "$enterprise" == "true" ]]; then
-    echo "Deploying Conjur Enterprise"
+            echo "Deploying Conjur Enterprise"
 
-    # export DOCKER_NETWORK="dap_net"
-    # export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
-    # export CONJUR_ACCOUNT="demo"
-    # export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur-enterprise.pem"
+            export DOCKER_NETWORK="dap_net"
+            export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
+            export CONJUR_ACCOUNT="demo"
+            export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur-enterprise.pem"
+            export CONJUR_AUTHN_LOGIN="admin"
+            export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur_variable/conjur-enterprise.pem"
 
-    export DOCKER_NETWORK="dap_net"
-    export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
-    export CONJUR_ACCOUNT="demo"
-    export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur-enterprise.pem"
-    export CONJUR_AUTHN_LOGIN="admin"
-    export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur_variable/conjur-enterprise.pem"
+            export ANSIBLE_ROOT=":/cyberark"
 
-    export ANSIBLE_ROOT=":/cyberark"
+            ANSIBLE_PLUGIN=""'/plugins'""
 
-    ANSIBLE_PLUGIN=""'/plugins'""
+            export ANSIBLE_PLUGIN
+            export ANSIBLE_PLUGIN_PATH=":/root/.ansible/plugins"
+            conjur_variable_test_path=$(git rev-parse --show-toplevel)$ANSIBLE_ROOT
+            conjur_variable_test_plugins=$(git rev-parse --show-toplevel)$ANSIBLE_PLUGIN$ANSIBLE_PLUGIN_PATH
 
-    export ANSIBLE_PLUGIN
-    export ANSIBLE_PLUGIN_PATH=":/root/.ansible/plugins"
-    conjur_variable_test_path=$(git rev-parse --show-toplevel)$ANSIBLE_ROOT
-    conjur_variable_test_plugins=$(git rev-parse --show-toplevel)$ANSIBLE_PLUGIN$ANSIBLE_PLUGIN_PATH
+            echo "it is conjur_variable_test_path ${conjur_variable_test_path}"
+            echo "it is conjur_variable_test_plugins ${conjur_variable_test_plugins}"
 
-    echo "it is conjur_variable_test_path ${conjur_variable_test_path}"
-    echo "it is conjur_variable_test_plugins ${conjur_variable_test_plugins}"
+            export conjur_variable_test_plugins
+            export conjur_variable_test_path
 
-    export conjur_variable_test_plugins
-    export conjur_variable_test_path
-
-  echo " $conjur_variable_test_path "
-    setup_conjur_enterprise
+            echo " $conjur_variable_test_path "
+            setup_conjur_enterprise
   else
-    echo "Deploying Conjur Open Source"
+            echo "Deploying Conjur Open Source"
 
-    export CONJUR_APPLIANCE_URL="https://conjur-https"
-    export CONJUR_ACCOUNT="cucumber"
-    export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur.pem"
+            export CONJUR_APPLIANCE_URL="https://conjur-https"
+            export CONJUR_ACCOUNT="cucumber"
+            export ANSIBLE_CONJUR_CERT_FILE="/cyberark/tests/conjur.pem"
 
-    setup_conjur_open_source
+            setup_conjur_open_source
   fi
 }
 
@@ -160,6 +155,26 @@ function run_test_case {
   "
 }
 
+#  ====== common start =======
+
+function setup_conjur_resources {
+  echo "Configuring Conjur via CLI"
+
+  policy_path="root.yml"
+  if [[ "${enterprise}" == "false" ]]; then
+    policy_path="/policy/${policy_path}"
+  fi
+
+  docker-compose exec -T "${cli_service}" bash -c "
+    conjur policy load root ${policy_path}
+    conjur variable values add ansible/test-secret test_secret_password
+    conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+    conjur variable values add 'ansible/var with spaces' var_with_spaces_secret_password
+  "
+}
+
+#  =======  Common end =======
+
 
 # ======== Enterprise Start =============
 
@@ -177,11 +192,14 @@ function setup_conjur_enterprise() {
 
       echo " ========load policy====="
       cp ../tests/conjur_variable/policy/root.yml .
-      ./bin/cli conjur policy load root root.yml
-      echo " ========Set Variable value ansible/test-secret ====="
-      ./bin/cli conjur variable values add ansible/test-secret test_secret_password
-      echo " =======Set Variable value ansible/test-secret-in-file ====="
-      ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+
+      setup_conjur_resources
+
+    #   ./bin/cli conjur policy load root root.yml
+    #   echo " ========Set Variable value ansible/test-secret ====="
+    #   ./bin/cli conjur variable values add ansible/test-secret test_secret_password
+    #   echo " =======Set Variable value ansible/test-secret-in-file ====="
+    #   ./bin/cli conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
 
       docker-compose  \
       run \
@@ -231,25 +249,6 @@ function setup_conjur_enterprise() {
   pushd ./tests/conjur_variable
 
        docker build -t conjur_ansible:v1 .
-    #    docker run \
-    #    -d -t \
-    #    --name ansible_container \
-    #    --volume "$(git rev-parse --show-toplevel):/cyberark" \
-    #    --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
-    #    --network dap_net \
-    #    -e "CONJUR_APPLIANCE_URL=https://conjur-master.mycompany.local" \
-    #    -e "CONJUR_ACCOUNT=demo" \
-    #    -e "CONJUR_AUTHN_LOGIN=admin" \
-    #    -e "ANSIBLE_MASTER_AUTHN_API_KEY=${ANSIBLE_MASTER_AUTHN_API_KEY}" \
-    #    -e "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" \
-    #    -e "CONJUR_ADMIN_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-    #    -e "ANSIBLE_CONJUR_CERT_FILE=/cyberark/tests/conjur_variable/conjur-enterprise.pem" \
-    #    -e "CONJUR_AUTHN_API_KEY=${CONJUR_ADMIN_AUTHN_API_KEY}" \
-    #    --workdir "/cyberark" \
-    #    conjur_ansible:v1 \
-
-    #    --volume "$(git rev-parse --show-toplevel):/cyberark" \
-    #    --volume "$(git rev-parse --show-toplevel)/plugins":/root/.ansible/plugins \
 
        docker run \
        -d -t \
@@ -281,6 +280,7 @@ function run_test_cases {
     run_test_case "$(basename -- "$test_case")"
   done
 }
+
 function run_test_case {
   local test_case=$1
   echo "---- testing ${test_case} ----"
@@ -290,20 +290,22 @@ function run_test_case {
     exit 1
   fi
 
-  docker exec -t ansible_container bash -exc "
+  env_file="env"
+  if [[ "$enterprise" == "true" ]]; then
+    env_file="env_enterprise"
+  fi
+
+  docker-compose exec -T ansible bash -exc "
     cd tests/conjur_variable
 
     # If env vars were provided, load them
-    if [ -e 'test_cases/${test_case}/env_enterprise' ]; then
-      . ./test_cases/${test_case}/env_enterprise
+    if [ -e 'test_cases/${test_case}/${env_file}' ]; then
+      . ./test_cases/${test_case}/${env_file}
     fi
 
     # You can add -vvvv here for debugging
     ansible-playbook 'test_cases/${test_case}/playbook.yml'
 
-    # py.test --junitxml='./junit/${test_case}' \
-    #   --connection docker \
-    #   -v 'test_cases/${test_case}/tests/test_default.py'
   "
 }
 
