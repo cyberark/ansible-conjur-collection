@@ -161,7 +161,7 @@ function run_test_case {
     function setup_conjur_resources {
     echo "Configuring Conjur via CLI"
 
-    # policy_path="root.yml"
+    policy_path="root.yml"
     # if [[ "${enterprise}" == "false" ]]; then
     #     policy_path="/policy/${policy_path}"
     # fi
@@ -180,6 +180,7 @@ function run_test_case {
     # conjur policy load root ${policy_path}
 
     docker exec -t client bash -exc "
+        conjur policy load root ${policy_path}
         conjur variable values add ansible/test-secret test_secret_password
         conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
         conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
@@ -236,7 +237,7 @@ function setup_conjur_enterprise() {
       cp ../tests/conjur_variable/policy/root.yml .
       echo " ========load policy 2 ====="
 
-     ./bin/cli conjur policy load root root.yml
+    #  ./bin/cli conjur policy load root root.yml
 
       setup_conjur_resources
 
