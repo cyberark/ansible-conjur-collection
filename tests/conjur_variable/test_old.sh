@@ -225,11 +225,11 @@ function setup_conjur_enterprise() {
 
       docker-compose down -v
 
-      docker-compose up -d --build client
-
       echo " Provision Master"
       ./bin/dap --provision-master
       ./bin/dap --provision-follower
+
+      docker-compose up
 
       echo " ========load policy====="
       cp ../tests/conjur_variable/policy/root.yml .
