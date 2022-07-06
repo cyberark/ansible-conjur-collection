@@ -215,7 +215,7 @@ function run_test_case {
     env_file="env_enterprise"
   fi
 
-  docker-compose exec -T ansible bash -exc "
+  docker exec -t ansible bash -exc "
     cd tests/conjur_variable
 
     # If env vars were provided, load them
