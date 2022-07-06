@@ -149,7 +149,7 @@ function setup_conjur_enterprise() {
 
     # docker exec -it <mycontainer> bash
 
-    CONTAINER_ID=containerid=$(docker ps -aqf "name=client")
+    CONTAINER_ID=$(docker ps -aqf "name=client")
     export CONTAINER_ID
 
     echo " container id ${CONTAINER_ID}"
