@@ -108,7 +108,8 @@ function setup_access_token {
     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
     conjur authn authenticate
-  " > access_token
+  "
+  # > access_token
 }
 
 function setup_conjur_open_source()  {
