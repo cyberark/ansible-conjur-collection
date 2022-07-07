@@ -86,6 +86,7 @@ function setup_conjur_resources {
     conjur policy load root ${policy_path}
     conjur variable values add ansible/test-secret test_secret_password
     conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
+    conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
   "
 }
 
@@ -167,15 +168,15 @@ function setup_conjur_enterprise() {
 
     echo " container id ${CONTAINER_ID}"
 
-    # echo "Authenticate Conjur CLI container"
-    # docker exec -t "${CONTAINER_ID}" \
-    #   /bin/bash -c "
-    #     if [ ! -e /root/conjur-demo.pem ]; then
-    #       yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
-    #     fi
-    #     conjur authn login -u admin -p MySecretP@ss1
-    #     hostname -I
-    #   "
+    echo "Authenticate Conjur CLI container"
+    docker exec -t "${CONTAINER_ID}" \
+      /bin/bash -c "
+        if [ ! -e /root/conjur-demo.pem ]; then
+          yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
+        fi
+        conjur authn login -u admin -p MySecretP@ss1
+        hostname -I
+      "
 
 
     # docker-compose exec "${cli_service}" \
@@ -187,9 +188,9 @@ function setup_conjur_enterprise() {
     #     hostname -I
     #   "
 
-    setup_conjur_resources
-    fetch_ssl_certs
     # setup_conjur_resources
+    fetch_ssl_certs
+    setup_conjur_resources
     setup_admin_api_key
     setup_ansible_api_key
     setup_access_token
