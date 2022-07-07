@@ -186,8 +186,9 @@ function setup_conjur_enterprise() {
     #     hostname -I
     #   "
 
-    fetch_ssl_certs
     setup_conjur_resources
+    fetch_ssl_certs
+    # setup_conjur_resources
     setup_admin_api_key
     setup_ansible_api_key
     setup_access_token
