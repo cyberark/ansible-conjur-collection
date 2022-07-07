@@ -84,7 +84,7 @@ function setup_conjur_resources {
     conjur policy load root ${policy_path}
     conjur variable values add ansible/test-secret test_secret_password
     conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-    conjur variable values add 'ansible/var with spaces' var_with_spaces_secret_password
+    conjur variable values add "ansible/var with spaces" var_with_spaces_secret_password
   "
 }
 
