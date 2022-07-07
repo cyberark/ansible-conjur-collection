@@ -104,12 +104,14 @@ function setup_ansible_api_key {
 
 function setup_access_token {
   echo "Get Access Token ${ANSIBLE_MASTER_AUTHN_API_KEY}"
-  docker exec -t "${CONTAINER_ID}" bin/bash -c "
+  docker exec -t "${CONTAINER_ID}" bash -c "
     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
-    export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
+    export CONJUR_AUTHN_API_KEY=$ANSIBLE_MASTER_AUTHN_API_KEY
     conjur authn authenticate
   "
   # > access_token
+
+  # export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
 }
 
 function setup_conjur_open_source()  {
