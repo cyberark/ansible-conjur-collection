@@ -18,7 +18,7 @@ pipeline {
       }
     }
 
-    stage('Run tests') {
+    stage('Run Open Source tests') {
       parallel {
         stage("Test conjur_variable lookup plugin") {
           steps {
@@ -44,6 +44,24 @@ pipeline {
               reportFiles: 'index.html',
               reportName: 'Ansible Coverage Report',
               reportTitles: 'Conjur Ansible Collection report'])
+          }
+        }
+      }
+    }
+
+    stage('Run Enterprise tests') {
+      stages {
+        stage("Test conjur_variable lookup plugin") {
+          steps {
+            sh './ci/test.sh -e -d conjur_variable'
+            junit 'tests/conjur_variable/junit/*'
+          }
+        }
+
+        stage("Test conjur_host_identity role") {
+          steps {
+            sh './ci/test.sh -e -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
       }

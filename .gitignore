@@ -9,8 +9,10 @@ tests/*/junit/
 tests/*/reports/
 
 tests/*/conjur.pem
+tests/*/conjur-enterprise.pem
 tests/*/access_token
 **/test-files/output
+**/conjur-intro/
 bot
 coverage
 junit
@@ -19,7 +21,6 @@ reports
 *.js
 *.html
 output/
-
 
 # Pycache directories and files
 **/__pycache__/
