@@ -10,7 +10,7 @@
 #    - devel
 #
 #Python versions:
-#    - Python 3.8
+#    - Python 3.9
 
 name: CI
 on:
@@ -38,7 +38,7 @@ jobs:
           - stable-2.12
           - devel
         python:
-          - 3.8
+          - 3.9
     runs-on: ubuntu-latest
     steps:
 
@@ -83,7 +83,7 @@ jobs:
           - stable-2.12
           - devel
         python:
-          - 3.8
+          - 3.9
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
