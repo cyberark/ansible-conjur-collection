@@ -10,7 +10,7 @@
 #    - devel
 #
 #Python versions:
-#    - Python 3.8
+#    - Python 3.9
 
 name: CI
 on:
@@ -32,13 +32,12 @@ jobs:
         ansible:
           # It's important that Sanity is tested against all stable-X.Y branches
           # Testing against `devel` may fail as new tests are added.
-          - stable-2.9
           - stable-2.10
           - stable-2.11
           - stable-2.12
           - devel
         python:
-          - 3.8
+          - 3.9
     runs-on: ubuntu-latest
     steps:
 
@@ -75,15 +74,12 @@ jobs:
     strategy:
       matrix:
         ansible:
-          # Unit tests fail against Ansible stable-2.9. Given that 2.9 is EoL,
-          # we can disable these tests here.
-          # - stable-2.9
           - stable-2.10
           - stable-2.11
           - stable-2.12
           - devel
         python:
-          - 3.8
+          - 3.9
     runs-on: ubuntu-latest
     steps:
       - name: Check out code

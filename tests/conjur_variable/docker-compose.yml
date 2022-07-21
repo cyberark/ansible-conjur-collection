@@ -1,6 +1,7 @@
 version: '3'
 services:
   ansible:
+    image: ansiblecontainername
     container_name: ${COMPOSE_PROJECT_NAME}-ansible
     build:
       context: .
@@ -8,13 +9,13 @@ services:
     entrypoint: sleep
     command: infinity
     environment:
-      CONJUR_APPLIANCE_URL: https://conjur-https
-      CONJUR_ACCOUNT: cucumber
-      CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
+      CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}
+      CONJUR_ACCOUNT: ${CONJUR_ACCOUNT}
+      CONJUR_AUTHN_LOGIN: ${CONJUR_AUTHN_LOGIN}
       CONJUR_AUTHN_API_KEY: ${ANSIBLE_MASTER_AUTHN_API_KEY}
       COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
-    links:
-      - "conjur_https:conjur-https"
+    networks:
+      - "${DOCKER_NETWORK}"
     volumes:
       - ../../plugins:/root/.ansible/plugins
       - ../..:/cyberark
@@ -57,3 +58,8 @@ services:
       CONJUR_AUTHN_API_KEY: ${CONJUR_ADMIN_AUTHN_API_KEY}
     volumes:
       - ./policy:/policy
+
+networks:
+  dap_net:
+    name: dap_net
+    external: true
