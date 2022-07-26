@@ -22,6 +22,9 @@ pipeline {
       parallel {
 
         stage("Test conjur_variable lookup plugin") {
+          when{
+            branch 'main'
+          }
           steps {
             sh 'echo TCS Noida'
           }
