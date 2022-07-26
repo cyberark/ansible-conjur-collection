@@ -27,8 +27,8 @@ pipeline {
             }
           steps {
             sh 'echo TCS Noida'
-            sh 'pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check'
-            sh 'ansible-test sanity --docker -v --color --python 3.9'
+            // sh 'pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check'
+            // sh 'ansible-test sanity --docker -v --color --python 3.9'
             sh './dev/test_unit.sh -a stable-2.10 -p 3.9'
             sh 'echo TCS Noida testing'
           }
