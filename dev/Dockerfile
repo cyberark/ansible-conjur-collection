@@ -11,7 +11,7 @@ RUN apt-get update && \
     pip3 install --upgrade pip
 
 # install ansible and its test tool
-RUN pip3 install ansible==$ANSIBLE_VERSION pytest-testinfra
+RUN pip3 install ansible-core==$ANSIBLE_VERSION pytest-testinfra
 
 # install docker installation requirements
 RUN apt-get update && \
