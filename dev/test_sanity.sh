@@ -17,14 +17,14 @@ Run unit tests for Conjur Variable Lookup plugin.
 EOF
 }
 
-while getopts 'a:p' flag; do
-  case "${flag}" in
-    a) ansible_version="${OPTARG}" ;;
-    p) python_version="${OPTARG}" ;;
-    *) print_usage
-       exit 1 ;;
-   esac
-done
+# while getopts 'a:p' flag; do
+#   case "${flag}" in
+#     a) ansible_version="${OPTARG}" ;;
+#     p) python_version="${OPTARG}" ;;
+#     *) print_usage
+#        exit 1 ;;
+#    esac
+# done
 
 #  test_cmd="ansible-test units -v --python $python_version"
 # if [[ "$gen_report" == "true" ]]; then
