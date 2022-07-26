@@ -23,7 +23,7 @@ pipeline {
 
         stage("Test conjur_variable lookup plugin") {
           when{
-            branch 'main'
+            branch 'ansible_conditions'
           }
           steps {
             sh 'echo TCS Noida'
