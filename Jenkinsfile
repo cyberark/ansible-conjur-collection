@@ -58,12 +58,12 @@ pipeline {
           }
         }
 
-        stage("Test conjur_host_identity role") {
-          steps {
-            sh './ci/test.sh -e -d conjur_host_identity'
-            junit 'roles/conjur_host_identity/tests/junit/*'
-          }
-        }
+        // stage("Test conjur_host_identity role") {
+        //   steps {
+        //     sh './ci/test.sh -e -d conjur_host_identity'
+        //     junit 'roles/conjur_host_identity/tests/junit/*'
+        //   }
+        // }
       }
     }
 
