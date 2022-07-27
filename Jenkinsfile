@@ -9,7 +9,7 @@ pipeline {
   }
 
   environment {
-    ansibleversion = "2.13.1"
+    ansible_version = "2.13.1"
   }
 
   stages {
@@ -40,7 +40,7 @@ pipeline {
 
         stage("Test conjur_variable lookup plugin") {
           steps {
-            sh './ci/test.sh -a ${env.ansibleversion} -d conjur_variable'
+            sh './ci/test.sh -a $ansible_version -d conjur_variable'
             junit 'tests/conjur_variable/junit/*'
           }
         }
@@ -64,7 +64,7 @@ pipeline {
       stages {
         stage("Test conjur_variable lookup plugin") {
           steps {
-            sh './ci/test.sh -a ${env.ansibleversion} -e -d conjur_variable'
+            sh './ci/test.sh -a $ansible_version -e -d conjur_variable'
             junit 'tests/conjur_variable/junit/*'
           }
         }
