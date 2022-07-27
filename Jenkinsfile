@@ -20,17 +20,17 @@ pipeline {
 
     stage('Run Open Source tests') {
       parallel {
-        stage("Test conjur_variable lookup plugin") {
-          steps {
-            sh './ci/test.sh -d conjur_variable'
-            junit 'tests/conjur_variable/junit/*'
-          }
-        }
-
         stage("Test conjur_host_identity role") {
           steps {
             sh './ci/test.sh -d conjur_host_identity'
             junit 'roles/conjur_host_identity/tests/junit/*'
+          }
+        }
+
+        stage("Test conjur_variable lookup plugin") {
+          steps {
+            sh './ci/test.sh -d conjur_variable'
+            junit 'tests/conjur_variable/junit/*'
           }
         }
 
