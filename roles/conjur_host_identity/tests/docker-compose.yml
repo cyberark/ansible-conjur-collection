@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-       ANSIBLE_VERSION: 2.13.1
+       ansibleversion: ${ansibleversion}
     command: /bin/sleep 1d
     environment:
       CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}

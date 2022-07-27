@@ -10,6 +10,7 @@ declare -x ANSIBLE_PROJECT=''
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
 declare -x DOCKER_NETWORK="default"
+ansibleversion="2.13.2"
 
 declare cli_cid=''
 declare ansible_cid=''
@@ -46,8 +47,9 @@ function finish {
 }
 trap finish EXIT
 
-while getopts 'e' flag; do
+while getopts 'a:e' flag; do
   case "${flag}" in
+    a) ansibleversion="${OPTARG}" ;;
     e) enterprise="true" ;;
     *) exit 1 ;;
    esac
@@ -214,6 +216,8 @@ function setup_conjur_enterprise() {
 }
 
 function main() {
+    export ansibleversion
+
   if [[ "${enterprise}" == "true" ]]; then
     echo "Deploying Conjur Enterprise"
 

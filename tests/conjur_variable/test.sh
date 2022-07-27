@@ -11,6 +11,8 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x DOCKER_NETWORK="default"
 
+ansibleversion="2.13.2"
+
 ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
 enterprise="false"
@@ -39,14 +41,26 @@ function cleanup {
 }
 trap cleanup EXIT
 
-while getopts 'e' flag; do
+while getopts 'a:e' flag; do
   case "${flag}" in
+    a) ansibleversion="${OPTARG}" ;;
     e) enterprise="true" ;;
     *) exit 1 ;;
    esac
 done
 
 cleanup
+
+# docker build \
+#   --build-arg ansibleversion="${ansibleversion}" \
+#   . \
+#   # -f Dockerfile .
+#   # docker run --rm \
+#   # -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
+#   # -w /ansible_collections/cyberark/conjur/tests/conjur_variable/ \
+#   # /bin/bash
+
+#   # /bin/bash -c "pwd"
 
 function wait_for_conjur {
   echo "Waiting for Conjur server to come up"
@@ -192,6 +206,7 @@ function run_test_case {
 }
 
 function main() {
+  export ansibleversion
   if [[ "$enterprise" == "true" ]]; then
     echo "Deploying Conjur Enterprise"
 

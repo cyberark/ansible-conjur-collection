@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-ansible_version1="stable-2.10"
+ansible_version="stable-2.10"
 python_version="3.9"
 
 cd "$(dirname "$0")"/..
@@ -36,7 +36,7 @@ EOF
 
 docker build \
   --build-arg PYTHON_VERSION="${python_version}" \
-  --build-arg ANSIBLE_VERSION="${ansible_version1}" \
+  --build-arg ANSIBLE_VERSION="${ansible_version}" \
   -t pytest-tools:latest \
   -f dev/Dockerfile .
 docker run --rm \
