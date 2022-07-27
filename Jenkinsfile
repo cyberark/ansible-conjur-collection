@@ -21,26 +21,21 @@ pipeline {
     stage('Run Open Source tests') {
       parallel {
 
-        // stage("Test conjur_variable lookup plugin") {
-        //   when{
-        //     branch 'ansible_conditions'
-        //     }
-        //   steps {
-        //     sh 'echo TCS Noida'
-        //     // sh 'pip install https://github.com/ansible/ansible/archive/stable-2.10.tar.gz --disable-pip-version-check'
-        //     // sh 'ansible-test sanity --docker -v --color --python 3.9'
-        //     // sh './dev/test_unit.sh -a stable-2.10 -p 3.9'
-        //     sh './dev/test_sanity.sh'
-        //     sh 'echo TCS Noida testing'
-        //   }
-        // }
-
-        stage("Test conjur_host_identity") {
+        stage("Test conjur_variable lookup plugin") {
+          when{
+            branch 'ansible_conditions'
+            }
           steps {
-            sh './ci/test.sh -a 2.12.0 -e -d conjur_host_identity'
-            // junit 'tests/conjur_variable/junit/*'
+            sh './ci/test.sh -a 2.12.0 -d conjur_host_identity'
           }
         }
+
+        // stage("Test conjur_host_identity") {
+        //   steps {
+        //     sh './ci/test.sh -a 2.12.0 -e -d conjur_host_identity'
+        //     // junit 'tests/conjur_variable/junit/*'
+        //   }
+        // }
 
         // stage("Test conjur_host_identity role") {
         //   steps {
