@@ -38,13 +38,6 @@ pipeline {
           }
         }
 
-        stage("Test conjur_variable lookup plugin") {
-          steps {
-            sh './ci/test.sh -a $ansible_version -d conjur_variable'
-            junit 'tests/conjur_variable/junit/*'
-          }
-        }
-
         stage("Run conjur_variable unit tests") {
           steps {
             sh './dev/test_unit.sh -r'
@@ -64,7 +57,7 @@ pipeline {
       stages {
         stage("Test conjur_variable lookup plugin") {
           steps {
-            sh './ci/test.sh -a $ansible_version -e -d conjur_variable'
+            sh './ci/test.sh -e -d conjur_variable'
             junit 'tests/conjur_variable/junit/*'
           }
         }
