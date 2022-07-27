@@ -31,7 +31,7 @@ pipeline {
             ansible_version = "2.13.1"
           }
           steps {
-            sh './ci/test.sh -a ${env.ansible_version} -d conjur_variable'
+            sh './ci/test.sh -a $env.ansible_version -d conjur_variable'
             junit 'tests/conjur_variable/junit/*'
           }
         }
