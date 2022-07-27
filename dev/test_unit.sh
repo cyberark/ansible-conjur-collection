@@ -8,7 +8,7 @@ cd "$(dirname "$0")"/..
 
 function print_usage() {
    cat << EOF
-Run unit tests for Conjur Variable Lookup plugin.
+Run unit tests for Conjur Variable Lookup plugin .
 
 ./ansibletest.sh [options]
 
