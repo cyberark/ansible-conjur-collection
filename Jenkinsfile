@@ -20,71 +20,52 @@ pipeline {
 
     stage('Run Open Source tests') {
       parallel {
-
         stage("Test conjur_variable lookup plugin") {
-          when{
-            branch 'ansible_conditions'
-            }
           steps {
-            sh './ci/test.sh -a 2.12.0 -d conjur_host_identity'
+            sh './ci/test.sh -d conjur_variable'
+            junit 'tests/conjur_variable/junit/*'
           }
         }
 
-        // stage("Test conjur_host_identity") {
-        //   steps {
-        //     sh './ci/test.sh -a 2.12.0 -e -d conjur_host_identity'
-        //     // junit 'tests/conjur_variable/junit/*'
-        //   }
-        // }
+        stage("Test conjur_host_identity role") {
+          steps {
+            sh './ci/test.sh -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
+          }
+        }
 
-        // stage("Test conjur_host_identity role") {
-        //   steps {
-        //     sh './ci/test.sh -d conjur_host_identity'
-        //     junit 'roles/conjur_host_identity/tests/junit/*'
-        //   }
-        // }
-
-        // stage("Run conjur_variable unit tests") {
-        //   steps {
-        //     sh './dev/test_unit.sh -r'
-        //     publishHTML (target : [allowMissing: false,
-        //       alwaysLinkToLastBuild: false,
-        //       keepAll: true,
-        //       reportDir: 'tests/output/reports/coverage=units/',
-        //       reportFiles: 'index.html',
-        //       reportName: 'Ansible Coverage Report',
-        //       reportTitles: 'Conjur Ansible Collection report'])
-        //   }
-        // }
+        stage("Run conjur_variable unit tests") {
+          steps {
+            sh './dev/test_unit.sh -r'
+            publishHTML (target : [allowMissing: false,
+              alwaysLinkToLastBuild: false,
+              keepAll: true,
+              reportDir: 'tests/output/reports/coverage=units/',
+              reportFiles: 'index.html',
+              reportName: 'Ansible Coverage Report',
+              reportTitles: 'Conjur Ansible Collection report'])
+          }
+        }
       }
     }
 
+    stage('Run Enterprise tests') {
+      stages {
+        stage("Test conjur_variable lookup plugin") {
+          steps {
+            sh './ci/test.sh -e -d conjur_variable'
+            junit 'tests/conjur_variable/junit/*'
+          }
+        }
 
-
-    // stage('Run Enterprise tests') {
-    //   stages {
-    //     stage("Test conjur_variable lookup plugin") {
-    //       steps {
-    //         sh './ci/test.sh -e -d conjur_variable'
-    //         junit 'tests/conjur_variable/junit/*'
-    //       }
-    //     }
-
-    //     stage("Test conjur_host_identity role") {
-    //       steps {
-    //         sh './ci/test.sh -e -d conjur_host_identity'
-    //         junit 'roles/conjur_host_identity/tests/junit/*'
-    //       }
-    //     }
-    //   }
-    // }
-
-
-    // ./ci/test.sh -a 2.13.1  -d conjur_host_identity
-    // ./ci/test.sh -a 2.12.0  -d conjur_host_identity
-    // ./ci/test.sh -a 2.11.0  -d conjur_host_identity
-    // ./ci/test.sh -a 2.10.0  -d conjur_host_identity
-
+        stage("Test conjur_host_identity role") {
+          steps {
+            sh './ci/test.sh -e -d conjur_host_identity'
+            junit 'roles/conjur_host_identity/tests/junit/*'
+          }
+        }
+      }
+    }
 
     stage('Build Release Artifacts') {
       when {
