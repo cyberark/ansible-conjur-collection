@@ -35,9 +35,9 @@ pipeline {
         //   }
         // }
 
-        stage("Test conjur_variable lookup plugin") {
+        stage("Test conjur_host_identity") {
           steps {
-            sh './ci/test.sh -a 2.13.1 -e -d conjur_variable'
+            sh './ci/test.sh -a 2.13.1 -e -d conjur_host_identity'
             junit 'tests/conjur_variable/junit/*'
           }
         }
