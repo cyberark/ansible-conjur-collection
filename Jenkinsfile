@@ -8,12 +8,7 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '30'))
   }
 
-  environment {
-    ansible_version = "2.13.1"
-  }
-
   stages {
-
     stage('Validate') {
       parallel {
         stage('Changelog') {
@@ -32,8 +27,11 @@ pipeline {
         // }
 
         stage("Test conjur_variable lookup plugin") {
+          environment {
+            ansible_version = "2.13.1"
+          }
           steps {
-            sh './ci/test.sh -d conjur_variable'
+            sh './ci/test.sh -a $ansible_version -d conjur_variable'
             junit 'tests/conjur_variable/junit/*'
           }
         }
