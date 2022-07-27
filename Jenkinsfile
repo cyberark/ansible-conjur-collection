@@ -37,8 +37,8 @@ pipeline {
 
         stage("Test conjur_host_identity") {
           steps {
-            sh './ci/test.sh -a 2.13.1 -e -d conjur_host_identity'
-            junit 'tests/conjur_variable/junit/*'
+            sh './ci/test.sh -a 2.12.0 -e -d conjur_host_identity'
+            // junit 'tests/conjur_variable/junit/*'
           }
         }
 
