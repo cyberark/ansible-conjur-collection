@@ -24,9 +24,9 @@ pipeline {
 
 
     stage('Run Enterprise tests') {
-            when {
-            branch ‘ansible_conditions’
-            }
+            // when {
+            // branch ‘ansible_conditions’
+            // }
       stages {
         stage("Test conjur_variable lookup plugin") {
           steps {
