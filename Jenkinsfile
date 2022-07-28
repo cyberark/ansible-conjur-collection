@@ -39,7 +39,7 @@ pipeline {
                                     {
                                       echo "testing ${ansible_versions[i]}"
 
-                                    ci/test.sh -a 2.11.0 -d conjur_variable
+                                    // ./ci/test.sh -a 2.11.0 -d conjur_variable
 
                                     // sh './ci/test.sh -a ${ansible_versions[i]} -d conjur_variable'
 
