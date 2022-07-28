@@ -29,7 +29,7 @@ pipeline {
           steps {
                     script {
                     def browsers = ['2.13.1', '2.12.0']
-                    for (int i = 0; i < 3; ++i)
+                    for (int i = 0; i < 2; ++i)
                              {
                      sh './ci/test.sh -a ${browsers[i]} -d conjur_variable'
                              }
