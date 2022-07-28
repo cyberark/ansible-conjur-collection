@@ -26,14 +26,17 @@ pipeline {
     stage('Run Enterprise tests') {
       stages {
         stage("Test conjur_variable lookup plugin") {
+          when {
+                branch ‘ansible_versions’
+                }
           steps {
                     script {
-                    def browsers = ['2.13.1', '2.12.0']
+                    def ansibleversions = ['2.13.1', '2.12.0']
                     for (int i = 0; i < 2; ++i)
                              {
-                     sh './ci/test.sh -a ${browsers[i]} -d conjur_variable'
+                     sh './ci/test.sh -a ${ansibleversions[i]} -d conjur_variable'
                              }
-                    }
+                           }
                 }
               }
            }
