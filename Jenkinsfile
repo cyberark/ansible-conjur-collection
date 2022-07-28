@@ -38,7 +38,7 @@ pipeline {
                                   for (int i = 0; i < ansible_versions.size(); ++i)
                                     {
                                       // echo "testing ${ansible_versions[i]}"
-                                    ./ci/test.sh -a ${ansible_versions[i]} -d conjur_variable
+                                    echo "$(./ci/test.sh -a ${ansible_versions[i]} -d conjur_variable)"
                                     }
                                 }
                           }
