@@ -25,7 +25,7 @@ pipeline {
 
     stage('Run Enterprise tests') {
             when {
-            branch ‘ansible_versions’
+            branch ‘ansible_conditions’
             }
       stages {
         stage("Test conjur_variable lookup plugin") {
