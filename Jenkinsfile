@@ -38,16 +38,13 @@ pipeline {
                                   for (int i = 0; i < ansible_versions.size(); ++i)
                                     {
                                       // echo "testing ${ansible_versions[i]}"
-                                    echo " $(./ci/test.sh -a $ansible_versions[i] -d conjur_variable)|bash "
+                                    echo " $(./ci/test.sh -a ${ansible_versions[i]} -d conjur_variable)"
                                     }
                                 }
                           }
                 }
               }
          }
-
-
-
 
 
             // stage('Run Open Source tests') {
