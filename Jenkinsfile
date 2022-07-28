@@ -34,8 +34,8 @@ pipeline {
                         steps
                         {
                           script {
-                                  def ansible_versions = ["2.13.1", "2.12.0","2.11.0"]
-                                  for (int i = 0; i < 3; i++)
+                                  def ansible_versions = ['2.13.1', '2.12.0','2.11.0']
+                                  for (int i = 0; i < ansible_versions.size(); ++i)
                                     {
                                       // sh ' echo testing ${ansible_versions[i]}'
                                      sh './ci/test.sh -a ${ansible_versions[i]} -d conjur_variable'
