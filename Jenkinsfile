@@ -21,32 +21,54 @@ pipeline {
       }
     }
 
-    stage('Run Open Source tests') {
-      parallel {
-        stage("Test conjur_variable lookup plugin") {
-          environment {
-            ansible_version = "2.13.1"
-          }
-          steps {
-            sh './ci/test.sh -a 2.13.1 -d conjur_variable'
-            // junit 'tests/conjur_variable/junit/*'
-          }
-        }
 
-      }
-    }
 
     stage('Run Enterprise tests') {
       stages {
         stage("Test conjur_variable lookup plugin") {
           steps {
-            sh './ci/test.sh -e -d conjur_variable'
-            junit 'tests/conjur_variable/junit/*'
-          }
-        }
+                    script {
+                    def browsers = ['2.13.1', '2.12.0']
+                    for (int i = 0; i < 3; ++i)
+                             {
+                     sh './ci/test.sh -a ${browsers[i]} -d conjur_variable'
+                             }
+                    }
+                }
+              }
+           }
+         }
 
-      }
-    }
+
+
+
+
+            // stage('Run Open Source tests') {
+            //   parallel {
+            //     stage("Test conjur_variable lookup plugin") {
+            //       environment {
+            //         ansible_version = "2.13.1"
+            //       }
+            //       steps {
+            //         sh './ci/test.sh -a 2.13.1 -d conjur_variable'
+            //         // junit 'tests/conjur_variable/junit/*'
+            //       }
+            //     }
+
+            //   }
+            // }
+
+    // stage('Run Enterprise tests') {
+    //   stages {
+    //     stage("Test conjur_variable lookup plugin") {
+    //       steps {
+    //         sh './ci/test.sh -e -d conjur_variable'
+    //         junit 'tests/conjur_variable/junit/*'
+    //       }
+    //     }
+
+    //   }
+    // }
 
     stage('Build Release Artifacts') {
       when {
