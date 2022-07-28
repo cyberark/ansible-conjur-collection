@@ -38,7 +38,7 @@ pipeline {
                                   for (int i = 0; i < 3; i++)
                                     {
                                       // sh ' echo testing ${ansible_versions[i]}'
-                                     sh './ci/test.sh -a ${ansibleversions[i]} -d conjur_variable'
+                                     sh './ci/test.sh -a ${ansible_versions[i]} -d conjur_variable'
                                     }
                                 }
                           }
