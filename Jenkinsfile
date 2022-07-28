@@ -24,11 +24,11 @@ pipeline {
 
 
     stage('Run Enterprise tests') {
-            // when {
-            // branch ‘ansible_conditions’
-            // }
       stages {
         stage("Test conjur_variable lookup plugin") {
+        when {
+        branch 'ansible_conditions'
+            }
           steps {
                     script {
                     def ansibleversions = ['2.13.1', '2.12.0','2.11.0']
