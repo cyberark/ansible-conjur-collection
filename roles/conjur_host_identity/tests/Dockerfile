@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-ARG ansibleversion
+ARG ANSIBLE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /cyberark
@@ -11,7 +11,9 @@ RUN apt-get update && \
     pip3 install --upgrade pip
 
 # install ansible and its test tool
-RUN pip3 install ansible-core==$ansibleversion pytest-testinfra
+RUN pip3 install https://github.com/ansible/ansible/archive/${ANSIBLE_VERSION}.tar.gz \
+                 pytest-testinfra \
+                 --disable-pip-version-check
 
 
 # install docker installation requirements

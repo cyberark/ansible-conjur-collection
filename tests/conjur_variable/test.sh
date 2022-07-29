@@ -11,13 +11,14 @@ declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x DOCKER_NETWORK="default"
 
-ansibleversion="2.13.2"
+declare -x ANSIBLE_VERSION=""
 
 ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
 enterprise="false"
 cli_cid=""
 test_dir="$(pwd)"
+ansible_versions=("stable-2.13")
 
 function cleanup {
   echo 'Removing test environment'
@@ -41,26 +42,22 @@ function cleanup {
 }
 trap cleanup EXIT
 
+function split_on_comma_delimiter {
+  # given a comma-delimited string, return a bash array of the string's parts
+  # "2.13,2.12" -> (2.13 2.12)
+  IFS=',' read -r -a array <<< "$1"; unset IFS
+  echo "${array[@]}"
+}
+
 while getopts 'a:e' flag; do
   case "${flag}" in
-    a) ansibleversion="${OPTARG}" ;;
+    a) ansible_versions=($(split_on_comma_delimiter $OPTARG)) ;;
     e) enterprise="true" ;;
     *) exit 1 ;;
    esac
 done
 
 cleanup
-
-# docker build \
-#   --build-arg ansibleversion="${ansibleversion}" \
-#   . \
-#   # -f Dockerfile .
-#   # docker run --rm \
-#   # -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
-#   # -w /ansible_collections/cyberark/conjur/tests/conjur_variable/ \
-#   # /bin/bash
-
-#   # /bin/bash -c "pwd"
 
 function wait_for_conjur {
   echo "Waiting for Conjur server to come up"
@@ -206,7 +203,6 @@ function run_test_case {
 }
 
 function main() {
-  export ansibleversion
   if [[ "$enterprise" == "true" ]]; then
     echo "Deploying Conjur Enterprise"
 
@@ -229,11 +225,15 @@ function main() {
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
   export CONJUR_AUTHN_LOGIN="host/ansible/ansible-master"
 
-  echo "Preparing Ansible for test run"
-  docker-compose up -d --build ansible
+  for version in "${ansible_versions[@]}"; do
+    echo "Preparing Ansible $version for test run"
+    export ANSIBLE_VERSION="$version"
+    docker-compose build -q ansible
+    docker-compose up -d ansible
 
-  echo "Running tests"
-  run_test_cases
+    echo "Running tests"
+    run_test_cases
+  done
 }
 
 main

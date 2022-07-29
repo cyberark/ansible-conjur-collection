@@ -10,12 +10,14 @@ declare -x ANSIBLE_PROJECT=''
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
 declare -x DOCKER_NETWORK="default"
-ansibleversion="2.13.2"
+
+declare -x ANSIBLE_VERSION=""
 
 declare cli_cid=''
 declare ansible_cid=''
 declare enterprise='false'
 declare test_dir=''
+declare ansible_versions=("stable-2.13")
 
   ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
   test_dir="$(pwd)"
@@ -47,9 +49,16 @@ function finish {
 }
 trap finish EXIT
 
+function split_on_comma_delimiter {
+  # given a comma-delimited string, return a bash array of the string's parts
+  # "2.13,2.12" -> (2.13 2.12)
+  IFS=',' read -r -a array <<< "$1"; unset IFS
+  echo "${array[@]}"
+}
+
 while getopts 'a:e' flag; do
   case "${flag}" in
-    a) ansibleversion="${OPTARG}" ;;
+    a) ansible_versions=($(split_on_comma_delimiter $OPTARG)) ;;
     e) enterprise="true" ;;
     *) exit 1 ;;
    esac
@@ -216,8 +225,6 @@ function setup_conjur_enterprise() {
 }
 
 function main() {
-    export ansibleversion
-
   if [[ "${enterprise}" == "true" ]]; then
     echo "Deploying Conjur Enterprise"
 
@@ -238,15 +245,20 @@ function main() {
     setup_conjur_open_source
   fi
 
-  echo "Preparing Ansible for test run"
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
   ANSIBLE_CONJUR_AUTHN_API_KEY=$(setup_ansible_api_key)
-  docker-compose up -d ansible
-  ansible_cid=$(docker-compose ps -q ansible)
-  generate_inventory
 
-  echo "Running tests"
-  run_test_cases
+  for version in "${ansible_versions[@]}"; do
+    echo "Preparing Ansible $version for test run"
+    export ANSIBLE_VERSION="$version"
+    docker-compose build -q ansible
+    docker-compose up -d ansible
+    ansible_cid=$(docker-compose ps -q ansible)
+    generate_inventory
+
+    echo "Running tests"
+    run_test_cases
+  done
 }
 
 main

@@ -14,11 +14,24 @@ target=""
 # Flags to be applied to testing scripts
 flags=""
 
+# All Ansible versions
+branch=""
+ansible_latest=("stable-2.13")
+ansible_devel=("devel")
+ansible_supported=("${ansible_latest[@]}" "stable-2.12" "stable-2.11" "stable-2.10")
+ansible_all=("${ansible_supported[@]}" "${ansible_devel}")
+ansible_to_test=""
+
 # Print usage instructions
 function help {
     echo "Test runner for Ansible Conjur Collection"
 
     echo "-a        Run all test files in default test directories"
+    echo "-b <name> Given a build's branch, run tests against a set of Ansible versions. Used in CI"
+    echo "            Branch Name | Ansible Versions"
+    echo "            vX.Y.Z      | ${ansible_supported[@]}"
+    echo "            main        | ${ansible_all[@]}"
+    echo "            <other>     | ${ansible_latest[@]}"
     echo "-d <arg>  Run test file in given directory. Valid options are: ${test_directories[*]} all"
     echo "-e        Run tests against Conjur Enterprise. Default: Conjur Open Source"
     echo "          This option is currently only available when testing against the conjur_variable plugin"
@@ -74,6 +87,19 @@ function handle_input {
     fi
 }
 
+function get_ansible_versions {
+    if [[ "${branch}" == "main" ]]; then
+        ansible_to_test=("${ansible_all[@]}")
+    elif [[ "${branch}" =~ v[0-9]+.[0-9]+.[0-9]+ ]]; then
+        ansible_to_test=("${ansible_supported[@]}")
+    else
+        ansible_to_test=("${ansible_latest[@]}")
+    fi
+    # Convert the array to a comma-delimited string to use as script argument
+    ansible_to_test=$(IFS=','; echo "${ansible_to_test[*]}")
+    flags="-a ${ansible_to_test} ${flags}"
+}
+
 # Exit if no input given
 if [[ $# -eq 0 ]] ; then
     echo "Error: No test directory or flag given"
@@ -81,16 +107,17 @@ if [[ $# -eq 0 ]] ; then
     help
 fi
 
-while getopts aehd: option; do
+while getopts ab:ehd: option; do
   case "$option" in
         a) handle_input
+            ;;
+        b) branch="${OPTARG}"
             ;;
         e) flags="-e"
             ;;
         h) help
             ;;
         d) target=${OPTARG}
-            handle_input
             ;;
         * )
           echo "$1 is not a valid option"
@@ -100,3 +127,5 @@ while getopts aehd: option; do
     esac
 done
 
+get_ansible_versions
+handle_input
