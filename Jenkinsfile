@@ -9,7 +9,6 @@ pipeline {
   }
 
   stages {
-
     stage('Validate') {
       parallel {
         stage('Changelog') {
@@ -41,7 +40,7 @@ pipeline {
 
                                   script {
                                     if ((env.BRANCH_NAME != "main") || (env.BRANCH_NAME != 'publish*')){
-                                          def ansible_versions = ['4','5']
+                                          // def ansible_versions = ['4','5']
                                           for (int j = 0; j < 2; j++)
                                             {
                                               sh 'echo testing only ansible version'
