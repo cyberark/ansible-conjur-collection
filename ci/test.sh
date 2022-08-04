@@ -14,11 +14,14 @@ target=""
 # Flags to be applied to testing scripts
 flags=""
 
+ansibleversion=""
+
 # Print usage instructions
 function help {
     echo "Test runner for Ansible Conjur Collection"
 
     echo "-a        Run all test files in default test directories"
+    echo "-v        Run tests against Ansible versions"
     echo "-d <arg>  Run test file in given directory. Valid options are: ${test_directories[*]} all"
     echo "-e        Run tests against Conjur Enterprise. Default: Conjur Open Source"
     echo "          This option is currently only available when testing against the conjur_variable plugin"
@@ -46,6 +49,7 @@ function run_role_test {
 
 # Handles input to dictate wether all tests should be ran, or just one set
 function handle_input {
+    export ansibleversion
     if [[ -n ${target} ]]; then
         for test_dir in "${test_directories[@]}"; do
             if [[ ${target} == "${test_dir}" ]]; then
@@ -81,16 +85,18 @@ if [[ $# -eq 0 ]] ; then
     help
 fi
 
-while getopts aehd: option; do
+while getopts ad:ehv: option; do
   case "$option" in
         a) handle_input
+            ;;
+        d) target=${OPTARG}
+           handle_input
             ;;
         e) flags="-e"
             ;;
         h) help
             ;;
-        d) target=${OPTARG}
-            handle_input
+        v) ansibleversion="${OPTARG}"
             ;;
         * )
           echo "$1 is not a valid option"

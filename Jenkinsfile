@@ -17,24 +17,63 @@ pipeline {
         }
       }
     }
+    def ansible_versions = ['4','5']
 
     stage('Run Open Source tests') {
       parallel {
         stage("Test conjur_variable lookup plugin") {
+                  steps {
+                                  script {
+                                    if ((env.BRANCH_NAME != 'main') || (env.BRANCH_NAME != 'publish*') ) {
+
+                                          for (int i = 0; i < 2; i++)
+                                            {
+                                              sh 'echo testing only ansible version'
+                                              sh """./ci/test.sh -v "${ansible_versions[i]}" -d conjur_variable"""
+                                              junit "tests/conjur_variable/junit/*"
+                                            }
+                                         }
+                                        }
+                  }
+                }
+        stage("Test conjur_host_identity role") {
+                  steps {
+
+                                  script {
+                                    if ((env.BRANCH_NAME != "main") || (env.BRANCH_NAME != 'publish*')){
+                                          def ansible_versions = ['4','5']
+                                          for (int j = 0; j < 2; j++)
+                                            {
+                                              sh 'echo testing only ansible version'
+                                               sh """./ci/test.sh -v "${ansible_versions[j]}" -d conjur_host_identity"""
+                                               junit "roles/conjur_host_identity/tests/junit/*"
+                                            }
+                                         }
+                                        }
+
+                  }
+                }
+      }
+    }
+
+
+    stage('Run Open Source tests with latest version') {
+      parallel {
+        stage("Testing conjur_variable lookup plugin") {
           steps {
-            sh './ci/test.sh -d conjur_variable'
+            sh './ci/test.sh -v 6 -d conjur_variable'
             junit 'tests/conjur_variable/junit/*'
           }
         }
 
-        stage("Test conjur_host_identity role") {
+        stage("Testing conjur_host_identity role") {
           steps {
-            sh './ci/test.sh -d conjur_host_identity'
+            sh './ci/test.sh -v 6 -d conjur_host_identity'
             junit 'roles/conjur_host_identity/tests/junit/*'
           }
         }
 
-        stage("Run conjur_variable unit tests") {
+        stage("Running conjur_variable unit tests") {
           steps {
             sh './dev/test_unit.sh -r'
             publishHTML (target : [allowMissing: false,
