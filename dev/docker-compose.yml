@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        ANSIBLE_VERSION: 2.13.1
     command: /bin/sleep 1d
     environment:
       CONJUR_APPLIANCE_URL: http://conjur:3000

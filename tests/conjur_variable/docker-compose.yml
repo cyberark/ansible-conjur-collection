@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-       ansibleversion: ${ansibleversion}
+       ANSIBLE_VERSION: ${ANSIBLE_VERSION}
     entrypoint: sleep
     command: infinity
     environment:

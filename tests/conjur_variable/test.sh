@@ -10,6 +10,7 @@ declare -x ANSIBLE_PROJECT=''
 declare -x ANSIBLE_MASTER_AUTHN_API_KEY=''
 declare -x CONJUR_ADMIN_AUTHN_API_KEY=''
 declare -x DOCKER_NETWORK="default"
+declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-6}"
 
 ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-variable" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
 
