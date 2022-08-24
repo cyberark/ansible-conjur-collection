@@ -278,6 +278,9 @@ class LookupModule(LookupBase):
         conf_file = self.get_option('config_file')
         as_file = self.get_option('as_file')
 
+        if validate_certs is False:
+            display.warning('Our recommendation is to dont turn off the certificate')
+
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
             {

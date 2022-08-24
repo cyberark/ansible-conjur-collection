@@ -41,6 +41,13 @@
   when: not ssl_configuration
 
 - block:
+  - name: conjur_validate_certs is turned off warning
+    debug: msg="Our recommendation is to use https using ssl"
+    when: item == false
+    with_items:
+        - "{{ conjur_validate_certs }}"
+
+- block:
   - name: Ensure "conjur_host_factory_token" is set (if node is not already conjurized)
     fail: msg="Variable '{{ item }}' is not set!"
     when: item is undefined
