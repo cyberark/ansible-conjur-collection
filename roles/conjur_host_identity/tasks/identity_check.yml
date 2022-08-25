@@ -38,14 +38,11 @@
     set_fact:
       conjur_ssl_certificate_path: ""
       conjur_validate_certs: no
-  when: not ssl_configuration
 
-- block:
-  - name: conjur_validate_certs is turned off warning
-    debug: msg="Our recommendation is to use https using ssl"
-    when: item == false
-    with_items:
-        - "{{ conjur_validate_certs }}"
+  - name: Warn against using insecure connection schemes
+    debug:
+      msg: "[WARNING]: Provided Conjur URL uses insecure connection scheme. Please consider using HTTPS."
+  when: not ssl_configuration
 
 - block:
   - name: Ensure "conjur_host_factory_token" is set (if node is not already conjurized)

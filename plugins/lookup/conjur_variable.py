@@ -279,7 +279,7 @@ class LookupModule(LookupBase):
         as_file = self.get_option('as_file')
 
         if validate_certs is False:
-            display.warning('Our recommendation is to dont turn off the certificate')
+            display.warning('Certificate validation has been disabled. Please enable with validate_certs option.')
 
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
