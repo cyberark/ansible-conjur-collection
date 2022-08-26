@@ -1,0 +1,10 @@
+---
+- name: Clean conjur.identity
+  file:
+    state: absent
+    path: /etc/conjur.identity
+
+- name: Clean conjur.pem
+  file:
+    state: absent
+    path: /etc/conjur.pem
