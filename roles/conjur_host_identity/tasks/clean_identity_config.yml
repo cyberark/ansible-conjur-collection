@@ -1,10 +1,30 @@
 ---
-- name: Clean conjur.identity
+- name: Clean Conjur identity
   file:
     state: absent
     path: /etc/conjur.identity
 
-- name: Clean conjur.pem
+- name: Clean Conjur pem file
   file:
     state: absent
     path: /etc/conjur.pem
+
+- name: Clean summon binary files
+  file:
+    state: absent
+    path: /usr/local/bin/summon
+
+- name: Clean summon config library
+  file:
+    state: absent
+    path: /usr/local/lib/summon/
+
+- name: Clean Conjur configuration
+  file:
+    state: absent
+    path: /etc/conjur.conf
+
+- name: Clean Conjur SSL cert Symlink
+  file:
+    state: absent
+    path: /etc/ssl/certs/conjur.crt
