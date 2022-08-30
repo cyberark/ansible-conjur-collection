@@ -6,12 +6,14 @@ import testinfra.utils.ansible_runner
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
     '/cyberark/tests/inventory.tmp').get_hosts('testapp')
 
+
 def test_hosts_file(host):
     f = host.file('/etc/hosts')
 
     assert f.exists
     assert f.user == 'root'
     assert f.group == 'root'
+
 
 def test_is_not_conjurized(host):
     identity_file = host.file('/etc/conjur.identity')
