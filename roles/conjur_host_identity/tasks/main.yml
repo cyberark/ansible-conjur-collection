@@ -1,6 +1,6 @@
 ---
-- include: clean_identity_config.yml
-- include: identity_check.yml  # registers variable 'conjurized'
-- include: identity.yml
-- include: summon.yml
-- include: summon-conjur.yml
+- import_tasks: install.yml
+  when: state|default('present') == "present"
+
+- import_tasks: uninstall.yml
+  when: state|default('present') == "absent"

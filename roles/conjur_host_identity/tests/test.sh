@@ -107,11 +107,11 @@ function run_test_case {
         cd tests
         ansible-playbook test_cases/${test_case}/playbook.yml
       "
-    if [ "${test_case}" == "configure-conjur-identity" ]; then
-          docker exec "${ansible_cid}" bash -ec "
-            cd tests
-            py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
-          "
+    if [ -d "${test_dir}/test_cases/${test_case}/tests/" ]; then
+      docker exec "${ansible_cid}" bash -ec "
+        cd tests
+        py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
+      "
     fi
   else
     echo ERROR: run_test called with no argument 1>&2
