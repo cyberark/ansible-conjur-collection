@@ -281,8 +281,8 @@ class LookupModule(LookupBase):
         if validate_certs is False:
             display.warning('Certificate validation has been disabled. Please enable with validate_certs option.')
 
-        if 'http://' in environ.get("CONJUR_APPLIANCE_URL"):
-            raise AnsibleError("[WARNING]: Conjur URL uses insecure connection. Please consider using HTTPS.")
+        if 'http://' in str(environ.get("CONJUR_APPLIANCE_URL")):
+            raise AnsibleError(('[WARNING]: Conjur URL uses insecure connection. Please consider using HTTPS.'))
 
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
