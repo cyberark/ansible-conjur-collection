@@ -28,10 +28,13 @@ http://ecotrust-canada.github.io/markdown-toc/ -->
 
 ## Certification Level
 
-![](https://img.shields.io/badge/Certification%20Level-Community-28A745?link=https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md)
+![](https://img.shields.io/badge/Certification%20Level-Certified-6C757D?link=https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md)
 
-This repo is a **Community** level project. It's a community contributed project that **is not reviewed or supported
-by CyberArk**. For more detailed information on our certification levels, see [our community guidelines](https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md#community).
+This repo is a **Certified** level project. It's been reviewed by CyberArk to
+verify that it will securely work with CyberArk Enterprise as documented. In
+addition, CyberArk offers Enterprise-level support for these features. For more
+detailed information on our certification levels, see
+[our community guidelines](https://github.com/cyberark/community/blob/main/Conjur/conventions/certification-levels.md#community).
 
 ## Requirements
 
@@ -73,20 +76,20 @@ manner.
 
 ### Role Variables
 
-* `conjur_appliance_url` _(Optional)_: URL of the running Conjur service
-* `conjur_account` _(Optional)_: Conjur account name
-* `conjur_host_factory_token` _(Optional)_: [Host
+* `conjur_appliance_url` _(Required)_: URL of the running Conjur service
+* `conjur_account` _(Required)_: Conjur account name
+* `conjur_host_factory_token` _(Required)_: [Host
   Factory](https://developer.conjur.net/reference/services/host_factory/) token for layer
   enrollment. This should be specified in the environment on the Ansible controlling host.
-* `conjur_host_name` _(Optional)_: Name of the host to be created.
+* `conjur_host_name` _(Required)_: Name of the host to be created.
 * `conjur_ssl_certificate`: Public SSL certificate of the Conjur endpoint
 * `conjur_validate_certs`: Boolean value to indicate if the Conjur endpoint should validate
   certificates
+* `state`: Specifies whether to install of uninstall the Role on the specified nodes
 * `summon.version`: version of Summon to install. Default is `0.8.2`.
 * `summon_conjur.version`: version of Summon-Conjur provider to install. Default is `0.5.3`.
 
-The variables marked with _`(Optional)`_ are not required fields. All other variables are required
-for running with an HTTPS Conjur endpoint.
+The variables not marked _`(Required)`_ are required for running with an HTTPS Conjur endpoint.
 
 ### Example Playbook
 
@@ -107,6 +110,18 @@ This example:
 - Registers the host `{{ inventory_hostname }}` with Conjur, adding it into the Conjur policy layer
   defined for the provided host factory token.
 - Installs Summon with the Summon Conjur provider for secret retrieval from Conjur.
+
+### Role Cleanup
+
+Executing the following playbook will clean up configuration and identity files
+written to the specified remote nodes, as well as uninstalling Summon and the
+Summon Conjur provider:
+```yml
+- hosts: servers
+  roles:
+    - role: cyberark.conjur.conjur_host_identity
+      state: absent
+```
 
 ### Summon & Service Managers
 

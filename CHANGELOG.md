@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.2.0] - 2020-09-01
+
+### Added
+- Add `state` variable to Conjur Ansible role, which can be used to cleanup
+  configuration and identity artifacts created on managed nodes.
+  [cyberark/ansible-conjur-collection#176](https://github.com/cyberark/ansible-conjur-collection/pull/176)
+
+### Changed
+- Lookup plugin now retries variable retrieval 5 times before accepting a
+  failure response.
+  [cyberark/ansible-conjur-collection#60](https://github.com/cyberark/ansible-conjur-collection/pull/60)
+
+### Removed
+- End support for Python 2.
+  [cyberark/ansible-conjur-collection#69](https://github.com/cyberark/ansible-conjur-collection/pull/69)
+
 ## [1.1.0] - 2020-12-29
 
 ### Added
@@ -59,7 +75,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.7...v1.1.0
 [1.0.7]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.5...v1.0.6
