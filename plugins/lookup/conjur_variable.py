@@ -17,7 +17,7 @@ DOCUMENTATION = """
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity
       or environment variables.
-      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_TOKEN_FILE
+      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, JWT_TOKEN_PATH, CONJUR_AUTHN_TOKEN_FILE
       Conjur info - U(https://www.conjur.org/).
     requirements:
       - 'The controlling host running Ansible has a Conjur identity.
@@ -163,15 +163,13 @@ def _encode_str(input_str):
     return quote(input_str, safe='')
 
 
-# Use credentials to retrieve temporary authorization token
-def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
-    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
+def _fetch_conjur_token(conjur_url, username, data, validate_certs, cert_file):
     display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
         conjur_url,
         _encode_str(username)))
 
     response = open_url(conjur_url,
-                        data=api_key,
+                        data=data,
                         method='POST',
                         validate_certs=validate_certs,
                         ca_path=cert_file)
@@ -181,6 +179,26 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
                            .format(username, code))
 
     return response.read()
+
+# Use credentials to retrieve temporary authorization token
+def _fetch_conjur_token_using_api_key(conjur_url, account, username, api_key, validate_certs, cert_file):
+    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
+    return _fetch_conjur_token(conjur_url, username, api_key, validate_certs, cert_file)
+
+
+# Use JWT to retrieve temporary authorization token
+def _fetch_conjur_token_using_jwt(conjur_url, account, username, jwt_token_path, validate_certs, cert_file):
+    conjur_url = None
+    if username is not None:
+        conjur_url = '{0}/authn-jwt/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
+    else:
+        conjur_url = '{0}/authn-jwt/{1}/authenticate'.format(conjur_url, account)
+
+    jwt_token = None
+    with open(jwt_token_path, 'r') as jwt_token_file:
+        jwt_token = jwt_token_file.read()
+
+    return _fetch_conjur_token(conjur_url, username, 'jwt={0}'.format(jwt_token), validate_certs, cert_file)
 
 
 def retry(retries, retry_interval):
@@ -313,6 +331,14 @@ class LookupModule(LookupBase):
                     "api_key": environ.get('CONJUR_AUTHN_API_KEY')
                 } if (environ.get('CONJUR_AUTHN_LOGIN') is not None
                       and environ.get('CONJUR_AUTHN_API_KEY') is not None)
+                else {},
+                # Allow CONJUR_AUTHN_LOGIN to be unset when using JWT authentication
+                # In this case Conjur will use the configured token-app-property to
+                # retrieve the host identity from the JWT token
+                {
+                    "id": environ.get('CONJUR_AUTHN_LOGIN'),
+                    "jwt_token_path": environ.get('JWT_TOKEN_PATH')
+                } if (environ.get('JWT_TOKEN_PATH') is not None)
                 else {}
             )
 
@@ -323,11 +349,22 @@ class LookupModule(LookupBase):
                      "entries or they should be environment variables")
                 )
 
-            if 'id' not in identity or 'api_key' not in identity:
+            if 'api_key' not in identity:
+                if 'jwt_token_path' not in identity:
+                    raise AnsibleError(
+                        ("Identity file on the controlling host must contain a "
+                        "`password` entry for Conjur appliance or it should be set "
+                        "via the `CONJUR_AUTHN_API_KEY` environment variable when "
+                        "using the API_KEY authentication method. Alternatively, "
+                        "the `JWT_TOKEN_PATH` environment variable should be set "
+                        "when using the JWT authentication method")
+                    )
+            elif 'id' not in identity:
                 raise AnsibleError(
-                    ("Identity file on the controlling host must contain "
-                     "`login` and `password` entries for Conjur appliance"
-                     " URL or they should be environment variables")
+                    ("Identity file on the controlling host must contain a "
+                    "`login` entry for Conjur appliance URL or it should be "
+                    "set via the `CONJUR_AUTHN_LOGIN` environment variable "
+                    "when using the API_KEY authentication method")
                 )
 
         cert_file = None
@@ -337,14 +374,24 @@ class LookupModule(LookupBase):
 
         token = None
         if 'authn_token_file' not in conf:
-            token = _fetch_conjur_token(
-                conf['appliance_url'],
-                conf['account'],
-                identity['id'],
-                identity['api_key'],
-                validate_certs,
-                cert_file
-            )
+            if 'api_key' in identity:
+                token = _fetch_conjur_token_using_api_key(
+                    conf['appliance_url'],
+                    conf['account'],
+                    identity['id'],
+                    identity['api_key'],
+                    validate_certs,
+                    cert_file
+                )
+            elif 'jwt_token_path' in identity:
+                token = _fetch_conjur_token_using_jwt(
+                    conf['appliance_url'],
+                    conf['account'],
+                    identity['id'],
+                    identity['jwt_token_path'],
+                    validate_certs,
+                    cert_file
+                )
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
