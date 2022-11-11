@@ -51,6 +51,36 @@ class TestConjurLookup(TestCase):
                                          ca_path="cert_file")
         self.assertEquals("response body", result)
 
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_fetch_conjur_token_401(self, mock_open_url):
+        mock_response = MagicMock()
+        mock_response.getcode.return_value == 401
+        mock_response.read.return_value = "Conjur request has invalid authorization credentials"
+        mock_open_url.return_value = mock_response
+        result = _fetch_conjur_token("url", "account", "username1", "api_key", True, "cert_file")
+        mock_open_url.assert_called_with("url/authn/account/username1/authenticate",
+                                         data="api_key",
+                                         method="POST",
+                                         validate_certs=True,
+                                         ca_path="cert_file")
+        self.assertEquals("Conjur request has invalid authorization credentials", result)
+
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_fetch_conjur_token_500(self, mock_open_url):
+        mock_response = MagicMock()
+        mock_response.getcode.return_value == 500
+        mock_response.read.return_value = "Internal Server Error"
+        mock_open_url.return_value = mock_response
+        result = _fetch_conjur_token("url", "account", "username1", "api_key", True, "cert_file")
+        mock_open_url.assert_called_with("url/authn/account/username1/authenticate",
+                                         data="api_key",
+                                         method="POST",
+                                         validate_certs=True,
+                                         ca_path="cert_file")
+        self.assertEquals("Internal Server Error", result)
+
+
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
     def test_fetch_conjur_variable(self, mock_repeat_open_url):
         mock_response = MagicMock()
