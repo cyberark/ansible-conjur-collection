@@ -385,15 +385,14 @@ class LookupModule(LookupBase):
                 cert_file
             )
             with open("plugin_token.txt", "wb") as binary_file:
-              binary_file.write(token).to_bytes()
+              binary_file.write(token)
+            token = Path("plugin_token.txt").read_bytes()
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
                                    .format(conf['authn_token_file']))
             with open(conf['authn_token_file'], 'rb') as f:
                 token = f.read()
-
-        token = Path("plugin_token.txt").read_bytes()
         conjur_variable = _fetch_conjur_variable(
             terms[0],
             token,
