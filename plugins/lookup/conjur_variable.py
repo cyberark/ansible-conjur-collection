@@ -245,10 +245,10 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
 @retry(retries=5, retry_interval=10)
 def _open_url(conjur_url, api_key=None, method=None, validate_certs=True, cert_file=None):
     return open_url(conjur_url,
-                        data=api_key,
-                        method=method,
-                        validate_certs=validate_certs,
-                        ca_path=cert_file)
+                    data=api_key,
+                    method=method,
+                    validate_certs=validate_certs,
+                    ca_path=cert_file)
 
 
 @retry(retries=5, retry_interval=10)
@@ -385,8 +385,8 @@ class LookupModule(LookupBase):
                 cert_file
             )
             with open("plugin_token.txt", "wb") as binary_file:
-              binary_file.write(token)
-            token = Path("plugin_token.txt").read_bytes()
+             binary_file.write(token)
+             token = Path("plugin_token.txt").read_bytes()
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'

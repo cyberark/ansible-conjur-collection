@@ -65,7 +65,6 @@ class TestConjurLookup(TestCase):
                                          ca_path="cert_file")
         self.assertEquals("Conjur request has invalid authorization credentials", result)
 
-
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     def test_fetch_conjur_token_500(self, mock_open_url):
         mock_response = MagicMock()
@@ -79,7 +78,6 @@ class TestConjurLookup(TestCase):
                                          validate_certs=True,
                                          ca_path="cert_file")
         self.assertEquals("Internal Server Error", result)
-
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
     def test_fetch_conjur_variable(self, mock_repeat_open_url):
