@@ -163,27 +163,6 @@ def _merge_dictionaries(*arg):
 def _encode_str(input_str):
     return quote(input_str, safe='')
 
-
-# # Use credentials to retrieve temporary authorization token
-# def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
-#     conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
-#     display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
-#         conjur_url,
-#         _encode_str(username)))
-
-#     response = open_url(conjur_url,
-#                         data=api_key,
-#                         method='POST',
-#                         validate_certs=validate_certs,
-#                         ca_path=cert_file)
-#     code = response.getcode()
-#     if code != 200:
-#         raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
-#                            .format(username, code))
-
-#     return response.read()
-
-
 def retry(retries, retry_interval):
     """
     Custom retry decorator
