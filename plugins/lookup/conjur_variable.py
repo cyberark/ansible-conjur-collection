@@ -102,6 +102,7 @@ import yaml
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
 import ssl
+from pathlib import Path
 
 display = Display()
 
@@ -163,26 +164,6 @@ def _encode_str(input_str):
     return quote(input_str, safe='')
 
 
-# Use credentials to retrieve temporary authorization token
-def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
-    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
-    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
-        conjur_url,
-        _encode_str(username)))
-
-    response = open_url(conjur_url,
-                        data=api_key,
-                        method='POST',
-                        validate_certs=validate_certs,
-                        ca_path=cert_file)
-    code = response.getcode()
-    if code != 200:
-        raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
-                           .format(username, code))
-
-    return response.read()
-
-
 def retry(retries, retry_interval):
     """
     Custom retry decorator
@@ -210,6 +191,44 @@ def retry(retries, retry_interval):
                 sleep(retry_interval)
         return decorator
     return parameters_wrapper
+
+
+# Use credentials to retrieve temporary authorization token
+def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
+    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
+    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
+        conjur_url,
+        _encode_str(username)))
+
+    response = open_url(conjur_url,
+                        data=api_key,
+                        method='POST',
+                        validate_certs=validate_certs,
+                        ca_path=cert_file)
+    code = response.getcode()
+    if response.getcode() == 200:
+        display.vvvv('Conjur token was successfully retrieved and authorized with {0} code and {1} username '.format(code, username))
+        return response.read()
+    if response.getcode() == 401:
+        raise AnsibleError('Conjur request has invalid authorization credentials as {0} and {1} response'.format(code, username))
+    if response.getcode() == 403:
+        raise AnsibleError('The controlling host\'s Conjur identity does not have authorization as \'{0}\' (got {1} response)'
+                           .format(username, code))
+    if response.getcode() == 404:
+        raise AnsibleError('The token does not exist with {0} response '.format(code))
+    if response.getcode() == 500:
+        raise AnsibleError('Internal Server Error with {0} response'.format(code))
+
+    return response.read()
+
+
+@retry(retries=5, retry_interval=10)
+def _open_url(conjur_url, api_key=None, method=None, validate_certs=True, cert_file=None):
+    return open_url(conjur_url,
+                    data=api_key,
+                    method=method,
+                    validate_certs=validate_certs,
+                    ca_path=cert_file)
 
 
 @retry(retries=5, retry_interval=10)
@@ -351,7 +370,6 @@ class LookupModule(LookupBase):
                                    .format(conf['authn_token_file']))
             with open(conf['authn_token_file'], 'rb') as f:
                 token = f.read()
-
         conjur_variable = _fetch_conjur_variable(
             terms[0],
             token,
