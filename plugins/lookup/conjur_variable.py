@@ -384,9 +384,6 @@ class LookupModule(LookupBase):
                 validate_certs,
                 cert_file
             )
-            with open("plugin_token.txt", "wb") as binary_file:
-             binary_file.write(token)
-             token = Path("plugin_token.txt").read_bytes()
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
