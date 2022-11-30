@@ -3,7 +3,7 @@
 This collection contains components to be used with CyberArk Conjur & Conjur Enterprise
 hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
-## Table of Contents
+##  Table of Contents
 
 * [Certification Level](#certification-level)
 * [Requirements](#requirements)
