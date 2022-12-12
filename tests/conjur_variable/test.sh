@@ -123,7 +123,7 @@ function setup_conjur_open_source()  {
 }
 
 function setup_conjur_enterprise() {
-  git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
+  git clone --single-branch --branch compose-fix https://github.com/conjurdemos/conjur-intro.git
   pushd ./conjur-intro
 
     echo "Provisioning Enterprise leader and follower"
