@@ -113,7 +113,7 @@ This example:
 
 ### Role Cleanup
 
-Executing the following playbook will clean up configuration and identity files
+Executing the following  playbook will clean up configuration and identity files
 written to the specified remote nodes, as well as uninstalling Summon and the
 Summon Conjur provider:
 ```yml
