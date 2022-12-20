@@ -129,7 +129,7 @@ def _load_identity_from_file(identity_path, appliance_url):
     if not os.path.exists(identity_path):
         return {}
         # raise AnsibleError('Conjur identity file `{0}` was not found on the controlling host'
-        #                    .format(identity_path))
+        #                   .format(identity_path))
 
     display.vvvv('Loading identity from: {0} for {1}'.format(identity_path, appliance_url))
 
