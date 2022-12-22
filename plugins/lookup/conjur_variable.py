@@ -377,14 +377,6 @@ class LookupModule(LookupBase):
             else:
                 with open("plugin_token.txt", "rb") as f:
                     token = f.read()
-              #   token = _fetch_conjur_token(
-              #       conf['appliance_url'],
-              #       conf['account'],
-              #       identity['id'],
-              #       identity['api_key'],
-              #       validate_certs,
-              #       cert_file
-              #   )
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
