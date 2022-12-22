@@ -358,12 +358,12 @@ class LookupModule(LookupBase):
         isExist = os.path.exists(path)
 
         isEmpty = 0
-        if ((isExist == True)):
+        if ((isExist is True)):
             isEmpty = os.path.getsize(path)
 
         token = None
         if 'authn_token_file' not in conf:
-            if ((isExist == False) or (isEmpty == 0)):
+            if ((isExist is False) or (isEmpty is 0)):
                 token = _fetch_conjur_token(
                     conf['appliance_url'],
                     conf['account'],
@@ -373,10 +373,10 @@ class LookupModule(LookupBase):
                     cert_file
                 )
                 with open("plugin_token.txt", "wb") as binary_file:
-                  binary_file.write(token)
+                     binary_file.write(token)
             else:
                 with open("plugin_token.txt", "rb") as f:
-                  token = f.read()
+                     token = f.read()
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
