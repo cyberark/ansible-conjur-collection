@@ -357,13 +357,13 @@ class LookupModule(LookupBase):
         path = '../../tests/conjur_variable/plugin_token.txt'
         isExist = os.path.exists(path)
 
-        isEmpty = False
+        isEmpty = True
         if ((isExist is True)):
             isEmpty = os.path.getsize(path)
 
         token = None
         if 'authn_token_file' not in conf:
-            if ((isExist is False) or (isEmpty is False)):
+            if ((isExist is False) or (isEmpty is True)):
                 token = _fetch_conjur_token(
                     conf['appliance_url'],
                     conf['account'],
