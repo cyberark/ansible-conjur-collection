@@ -38,7 +38,7 @@ function cleanup {
   rm -f conjur.pem \
         access_token
 }
-trap cleanup EXIT
+# trap cleanup EXIT
 
 while getopts 'e' flag; do
   case "${flag}" in
@@ -47,7 +47,7 @@ while getopts 'e' flag; do
    esac
 done
 
-cleanup
+# cleanup
 
 function wait_for_conjur {
   echo "Waiting for Conjur server to come up"
@@ -106,20 +106,21 @@ function setup_access_token {
 }
 
 function setup_conjur_open_source()  {
-  docker-compose up -d --build conjur \
-                               conjur_https
 
-  wait_for_conjur
-  fetch_ssl_certs
-  setup_admin_api_key
+    docker-compose up -d --build conjur \
+                                conjur_https
+    wait_for_conjur
+    fetch_ssl_certs
+    setup_admin_api_key
 
-  echo "Creating Conjur CLI with admin credentials"
-  docker-compose up -d conjur_cli
-  cli_cid="$(docker-compose ps -q conjur_cli)"
+    echo "Creating Conjur CLI with admin credentials"
+    docker-compose up -d conjur_cli
+    cli_cid="$(docker-compose ps -q conjur_cli)"
 
-  setup_conjur_resources
-  setup_ansible_api_key
-  setup_access_token
+    setup_conjur_resources
+    setup_ansible_api_key
+    setup_access_token
+
 }
 
 function setup_conjur_enterprise() {
@@ -209,7 +210,11 @@ function main() {
     export CONJUR_ACCOUNT="cucumber"
     COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
 
-    setup_conjur_open_source
+    file=plugin_token.txt
+    if [ ! -f "$file" ];
+    then
+      setup_conjur_open_source
+    fi
   fi
 
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
