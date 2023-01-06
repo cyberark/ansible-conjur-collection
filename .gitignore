@@ -11,6 +11,7 @@ tests/*/reports/
 tests/*/conjur.pem
 tests/*/conjur-enterprise.pem
 tests/*/access_token
+tests/*/plugin_token.txt
 **/test-files/output
 **/conjur-intro/
 bot

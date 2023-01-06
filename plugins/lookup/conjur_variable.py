@@ -102,6 +102,7 @@ import yaml
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
 import ssl
+from pathlib import Path
 
 display = Display()
 
@@ -176,9 +177,18 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
                         validate_certs=validate_certs,
                         ca_path=cert_file)
     code = response.getcode()
-    if code != 200:
-        raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
+    if response.getcode() == 200:
+        display.vvvv('Conjur token was successfully retrieved and authorized with {0} code and {1} username '.format(code, username))
+        return response.read()
+    if response.getcode() == 401:
+        raise AnsibleError('Conjur request has invalid authorization credentials as {0} and {1} response'.format(code, username))
+    if response.getcode() == 403:
+        raise AnsibleError('The controlling host\'s Conjur identity does not have authorization as \'{0}\' (got {1} response)'
                            .format(username, code))
+    if response.getcode() == 404:
+        raise AnsibleError('The token does not exist with {0} response '.format(code))
+    if response.getcode() == 500:
+        raise AnsibleError('Internal Server Error with {0} response'.format(code))
 
     return response.read()
 
@@ -335,16 +345,29 @@ class LookupModule(LookupBase):
             display.vvv("Using cert file path {0}".format(conf['cert_file']))
             cert_file = conf['cert_file']
 
+        path = '../../tests/conjur_variable/plugin_token.txt'
+        isExist = os.path.exists(path)
+
+        isEmpty = 0
+        if ((isExist is True)):
+            isEmpty = os.path.getsize(path)
+
         token = None
         if 'authn_token_file' not in conf:
-            token = _fetch_conjur_token(
-                conf['appliance_url'],
-                conf['account'],
-                identity['id'],
-                identity['api_key'],
-                validate_certs,
-                cert_file
-            )
+            if ((isExist is False) or (isEmpty == 0)):
+                token = _fetch_conjur_token(
+                    conf['appliance_url'],
+                    conf['account'],
+                    identity['id'],
+                    identity['api_key'],
+                    validate_certs,
+                    cert_file
+                )
+                with open("plugin_token.txt", "wb") as binary_file:
+                    binary_file.write(token)
+            else:
+                with open("plugin_token.txt", "rb") as f:
+                    token = f.read()
         else:
             if not os.path.exists(conf['authn_token_file']):
                 raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
