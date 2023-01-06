@@ -363,7 +363,7 @@ class LookupModule(LookupBase):
 
         token = None
         if 'authn_token_file' not in conf:
-            if ((isExist is False) or (isEmpty==0)):
+            if ((isExist is False) or (isEmpty == 0)):
                 token = _fetch_conjur_token(
                     conf['appliance_url'],
                     conf['account'],
