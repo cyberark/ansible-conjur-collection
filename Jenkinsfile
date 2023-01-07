@@ -60,14 +60,14 @@ pipeline {
           parallel {
             stage('Testing conjur_variable lookup plugin') {
               steps {
-                sh './ci/test.sh -v 5 -d conjur_variable'
+                sh './ci/test.sh -v 6 -d conjur_variable'
                 junit 'tests/conjur_variable/junit/*'
               }
             }
 
             stage('Testing conjur_host_identity role') {
               steps {
-                sh './ci/test.sh -v 5 -d conjur_host_identity'
+                sh './ci/test.sh -v 6 -d conjur_host_identity'
                 junit 'roles/conjur_host_identity/tests/junit/*'
               }
             }

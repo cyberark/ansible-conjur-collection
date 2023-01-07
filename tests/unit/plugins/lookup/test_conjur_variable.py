@@ -97,7 +97,7 @@ class TestConjurLookup(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._merge_dictionaries')
     def test_run(self, mock_merge_dictionaries, mock_fetch_conjur_token, mock_fetch_conjur_variable):
-        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_token.return_value = b'token'
         mock_fetch_conjur_variable.return_value = ["conjur_variable"]
         mock_merge_dictionaries.side_effect = [
             {'account': 'fakeaccount', 'appliance_url': 'https://conjur-fake', 'cert_file': './conjurfake.pem'},
