@@ -37,9 +37,8 @@ function cleanup {
   docker-compose down -v
   rm -f conjur.pem \
         access_token
-
 }
-# trap cleanup EXIT
+trap cleanup EXIT
 
 while getopts 'e' flag; do
   case "${flag}" in
@@ -47,6 +46,8 @@ while getopts 'e' flag; do
     *) exit 1 ;;
    esac
 done
+
+cleanup
 
 function wait_for_conjur {
   echo "Waiting for Conjur server to come up"
@@ -208,13 +209,7 @@ function main() {
     export CONJUR_ACCOUNT="cucumber"
     COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
 
-    file=plugin_token.txt
-    if [ ! -f "$file" ];
-    then
-      cleanup
-      setup_conjur_open_source
-    fi
-
+    setup_conjur_open_source
   fi
 
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"

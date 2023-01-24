@@ -102,7 +102,6 @@ import yaml
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
 import ssl
-from pathlib import Path
 
 display = Display()
 
@@ -345,7 +344,7 @@ class LookupModule(LookupBase):
             display.vvv("Using cert file path {0}".format(conf['cert_file']))
             cert_file = conf['cert_file']
 
-        path = '../../tests/conjur_variable/plugin_token.txt'
+        path = './access_token'
         isExist = os.path.exists(path)
 
         isEmpty = 0
@@ -354,7 +353,7 @@ class LookupModule(LookupBase):
 
         token = None
         if 'authn_token_file' not in conf:
-            if ((isExist is False) or (isEmpty == 0)):
+            if (isExist is False):
                 token = _fetch_conjur_token(
                     conf['appliance_url'],
                     conf['account'],
@@ -363,10 +362,10 @@ class LookupModule(LookupBase):
                     validate_certs,
                     cert_file
                 )
-                with open("plugin_token.txt", "wb") as binary_file:
+                with open("access_token", "wb") as binary_file:
                     binary_file.write(token)
             else:
-                with open("plugin_token.txt", "rb") as f:
+                with open("access_token", "rb") as f:
                     token = f.read()
         else:
             if not os.path.exists(conf['authn_token_file']):
