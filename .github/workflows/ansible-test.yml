@@ -44,12 +44,12 @@ jobs:
       # .../ansible_collections/cyberark/conjur/
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ansible_collections/cyberark/conjur
 
       - name: Set up Python ${{ matrix.ansible }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
 
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ansible_collections/cyberark/conjur
 
