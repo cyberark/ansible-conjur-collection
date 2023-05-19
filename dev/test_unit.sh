@@ -44,4 +44,5 @@ docker build \
 docker run --rm \
   -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
   -w /ansible_collections/cyberark/conjur/tests/unit/ \
-  pytest-tools:latest /bin/bash -c "$test_cmd"
+  pytest-tools:latest /bin/bash -c \
+  "git config --global --add safe.directory /ansible_collections/cyberark/conjur && $test_cmd"
