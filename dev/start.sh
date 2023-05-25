@@ -99,7 +99,7 @@ function main() {
   wait_for_server
 
   CLI_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:user:admin')
-  docker-compose up -d conjur_cli
+  docker-compose up --no-deps -d conjur_cli
 
   cli_cid=$(docker-compose ps -q conjur_cli)
   setup_conjur

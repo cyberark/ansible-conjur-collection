@@ -174,7 +174,7 @@ function setup_conjur_open_source() {
 
   echo "Recreating Conjur CLI with admin credentials"
   CLI_CONJUR_AUTHN_API_KEY=$(setup_admin_api_key)
-  docker-compose up -d conjur_cli
+  docker-compose up --no-deps -d conjur_cli
   cli_cid=$(docker-compose ps -q conjur_cli)
 
   setup_conjur_resources
@@ -192,7 +192,7 @@ function setup_conjur_enterprise() {
 
     # Run 'sleep infinity' in the CLI container, so the scripts
     # have access to an alive and authenticated CLI until the script terminates
-    cli_cid="$(docker-compose run -d \
+    cli_cid="$(docker-compose run --no-deps -d \
       -w /src/cli \
       --entrypoint sleep client infinity)"
 
