@@ -68,11 +68,11 @@ function setup_admin_api_key {
 
 function setup_ansible_api_key {
   docker exec "${cli_cid}" \
-    conjur host rotate_api_key --host ansible/ansible-master
+    conjur host rotate-api-key -i ansible/ansible-master
 }
 
 function hf_token {
-  docker exec "${cli_cid}" bash -c "conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r '.[0].token'"
+  docker exec "${cli_cid}" /bin/sh -c "conjur hostfactory tokens create --duration=24h -i ansible/ansible-factory" | jq -r ".[0].token"
 }
 
 function setup_conjur_resources {
@@ -82,9 +82,9 @@ function setup_conjur_resources {
     policy_path="/policy/${policy_path}"
   fi
 
-  docker exec "${cli_cid}" bash -ec "
-    conjur policy load root ${policy_path}
-    conjur variable values add ansible/target-password target_secret_password
+  docker exec "${cli_cid}" /bin/sh -ec "
+    conjur policy load -b root -f ${policy_path}
+    conjur variable set -i ansible/target-password -v target_secret_password
   "
 }
 
@@ -126,9 +126,9 @@ function teardown_and_setup {
 
 function wait_for_server {
   # shellcheck disable=SC2016
-  docker exec "${cli_cid}" bash -ec '
+  docker exec "${cli_cid}" /bin/sh -ec '
     for i in $( seq 20 ); do
-      curl -o /dev/null -fs -X OPTIONS ${CONJUR_APPLIANCE_URL} > /dev/null && echo "server is up" && break
+      wget --spider -q --tries=1 ${CONJUR_APPLIANCE_URL} && echo "server is up" && break
       echo "."
       sleep 2
     done
@@ -198,12 +198,12 @@ function setup_conjur_enterprise() {
 
     echo "Authenticate Conjur CLI container"
     docker exec "${cli_cid}" \
-      /bin/bash -c "
+      /bin/sh -c "
         if [ ! -e /root/conjur-demo.pem ]; then
-          yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
+          echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed 
         fi
-        conjur authn login -u admin -p MySecretP@ss1
-        hostname -I
+        conjur login -i admin -p MySecretP@ss1
+        hostname -i
       "
 
     fetch_ssl_cert

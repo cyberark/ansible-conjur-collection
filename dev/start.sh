@@ -26,15 +26,15 @@ function api_key_for {
 }
 
 function hf_token {
-  docker exec "${cli_cid}" bash -c 'conjur hostfactory tokens create --duration-days=5 ansible/ansible-factory | jq -r ".[0].token"'
+  docker exec "${cli_cid}" /bin/sh -c "conjur hostfactory tokens create --duration=24h -i ansible/ansible-factory" | jq -r ".[0].token"
 }
 
 function setup_conjur {
   echo "---- setting up conjur ----"
   # run policy
-  docker exec "${cli_cid}" conjur policy load root /policy/root.yml
+  docker exec "${cli_cid}" conjur policy load -b root -f /policy/root.yml
   # set secret values
-  docker exec "${cli_cid}" bash -ec 'conjur variable values add ansible/target-password target_secret_password'
+  docker exec "${cli_cid}" bash -ec 'conjur variable set -i ansible/target-password -v target_secret_password'
 }
 
 function setup_conjur_identities {
@@ -53,9 +53,9 @@ function teardown_and_setup {
 
 function wait_for_server {
   # shellcheck disable=SC2016
-  docker exec "${cli_cid}" bash -ec '
+  docker exec "${cli_cid}" /bin/sh -ec '
     for i in $( seq 20 ); do
-      curl -o /dev/null -fs -X OPTIONS ${CONJUR_APPLIANCE_URL} > /dev/null && echo "server is up" && break
+      wget --spider -q --tries=1 ${CONJUR_APPLIANCE_URL} && echo "server is up" && break
       echo "."
       sleep 2
     done
