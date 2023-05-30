@@ -74,11 +74,11 @@ function setup_conjur_resources {
     policy_path="/policy/${policy_path}"
   fi
 
-  docker exec "${cli_cid}" bash -c "
-    conjur policy load root ${policy_path}
-    conjur variable values add ansible/test-secret test_secret_password
-    conjur variable values add ansible/test-secret-in-file test_secret_in_file_password
-    conjur variable values add 'ansible/var with spaces' var_with_spaces_secret_password
+  docker exec "${cli_cid}" /bin/sh -c "
+    conjur policy load -b root -f ${policy_path}
+    conjur variable set -i ansible/test-secret -v test_secret_password
+    conjur variable set -i ansible/test-secret-in-file -v test_secret_in_file_password
+    conjur variable set -i 'ansible/var with spaces' -v var_with_spaces_secret_password
   "
 }
 
@@ -93,15 +93,15 @@ function setup_admin_api_key {
 
 function setup_ansible_api_key {
   echo "Fetching Ansible master host credentials"
-  ANSIBLE_MASTER_AUTHN_API_KEY="$(docker exec "${cli_cid}" conjur host rotate_api_key --host ansible/ansible-master)"
+  ANSIBLE_MASTER_AUTHN_API_KEY="$(docker exec "${cli_cid}" conjur host rotate-api-key -i ansible/ansible-master)"
 }
 
 function setup_access_token {
   echo "Get Access Token"
-  docker exec "${cli_cid}" bash -c "
+  docker exec "${cli_cid}" /bin/sh -c "
     export CONJUR_AUTHN_LOGIN=host/ansible/ansible-master
     export CONJUR_AUTHN_API_KEY=\"$ANSIBLE_MASTER_AUTHN_API_KEY\"
-    conjur authn authenticate
+    conjur authenticate
   " > access_token
 }
 
@@ -114,7 +114,7 @@ function setup_conjur_open_source()  {
   setup_admin_api_key
 
   echo "Creating Conjur CLI with admin credentials"
-  docker-compose up -d conjur_cli
+  docker-compose up --no-deps -d conjur_cli
   cli_cid="$(docker-compose ps -q conjur_cli)"
 
   setup_conjur_resources
@@ -134,18 +134,18 @@ function setup_conjur_enterprise() {
 
     # Run 'sleep infinity' in the CLI container, so the scripts
     # have access to an alive and authenticated CLI until the script terminates
-    cli_cid="$(docker-compose run -d \
+    cli_cid="$(docker-compose run --no-deps -d \
       -w /src/cli \
       --entrypoint sleep client infinity)"
 
     echo "Authenticate Conjur CLI container"
     docker exec "${cli_cid}" \
-      /bin/bash -c "
+      /bin/sh -c "
         if [ ! -e /root/conjur-demo.pem ]; then
-          yes 'yes' | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT}
+          echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed 
         fi
-        conjur authn login -u admin -p MySecretP@ss1
-        hostname -I
+        conjur login -i admin -p MySecretP@ss1
+        hostname -i
       "
 
     fetch_ssl_certs

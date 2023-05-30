@@ -37,7 +37,7 @@ services:
       - pg
 
   conjur_cli:
-    image: cyberark/conjur-cli:5-latest
+    image: cyberark/conjur-cli:8
     entrypoint: []
     command: sleep infinity
     environment:
