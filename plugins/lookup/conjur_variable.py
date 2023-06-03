@@ -102,6 +102,7 @@ import yaml
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
 import ssl
+from pathlib import Path
 
 display = Display()
 
@@ -176,9 +177,18 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
                         validate_certs=validate_certs,
                         ca_path=cert_file)
     code = response.getcode()
-    if code != 200:
-        raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
+    if response.getcode() == 200:
+        display.vvvv('Conjur token was successfully retrieved and authorized with {0} code and {1} username '.format(code, username))
+        return response.read()
+    if response.getcode() == 401:
+        raise AnsibleError('Conjur request has invalid authorization credentials as {0} and {1} response'.format(code, username))
+    if response.getcode() == 403:
+        raise AnsibleError('The controlling host\'s Conjur identity does not have authorization as \'{0}\' (got {1} response)'
                            .format(username, code))
+    if response.getcode() == 404:
+        raise AnsibleError('The token does not exist with {0} response '.format(code))
+    if response.getcode() == 500:
+        raise AnsibleError('Internal Server Error with {0} response'.format(code))
 
     return response.read()
 
@@ -212,15 +222,6 @@ def retry(retries, retry_interval):
     return parameters_wrapper
 
 
-@retry(retries=5, retry_interval=10)
-def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None):
-    return open_url(url,
-                    headers=headers,
-                    method=method,
-                    validate_certs=validate_certs,
-                    ca_path=ca_path)
-
-
 # Retrieve Conjur variable using the temporary token
 def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):
     token = b64encode(token)
@@ -248,6 +249,24 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
         raise AnsibleError('The variable {0} does not exist'.format(conjur_variable))
 
     return {}
+
+
+@retry(retries=5, retry_interval=10)
+def _open_url(conjur_url, api_key=None, method=None, validate_certs=True, cert_file=None):
+    return open_url(conjur_url,
+                    data=api_key,
+                    method=method,
+                    validate_certs=validate_certs,
+                    ca_path=cert_file)
+
+
+@retry(retries=5, retry_interval=10)
+def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None):
+    return open_url(url,
+                    headers=headers,
+                    method=method,
+                    validate_certs=validate_certs,
+                    ca_path=ca_path)
 
 
 def _default_tmp_path():
