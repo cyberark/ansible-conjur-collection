@@ -142,9 +142,9 @@ function setup_conjur_enterprise() {
     docker exec "${cli_cid}" \
       /bin/sh -c "
         if [ ! -e /root/conjur-demo.pem ]; then
-          echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed 
+          echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed
         fi
-        conjur login -i admin -p MySecretP@ss1
+        conjur login -i admin -p MySecretP@ss
         hostname -i
       "
 
