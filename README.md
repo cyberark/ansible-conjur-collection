@@ -54,7 +54,7 @@ compatibility. When possible, upgrade your Conjur version to match the
 when using integrations, choose the latest suite release that matches your Conjur version. For any
 questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/c/conjur/5).
 
-## Installation 
+## Installation
 
 From terminal, run the following command:
 ```sh
@@ -110,6 +110,7 @@ This example:
 - Registers the host `{{ inventory_hostname }}` with Conjur, adding it into the Conjur policy layer
   defined for the provided host factory token.
 - Installs Summon with the Summon Conjur provider for secret retrieval from Conjur.
+
 
 ### Role Cleanup
 
@@ -182,7 +183,7 @@ None.
 ### Examples
 
 #### Retrieve a secret in a Playbook
- 
+
 ```yaml
 ---
 - hosts: localhost
@@ -200,7 +201,7 @@ ansible_host: <host>
 ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'path/to/secret-id', as_file=True) }}"
 ```
 
-**Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written 
+**Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written
 in `ansible_ssh_private_key_file`.
 
 ## Contributing
