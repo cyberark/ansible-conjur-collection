@@ -17,7 +17,9 @@ declare ansible_cid=''
 declare enterprise='false'
 declare test_dir=''
 
-  ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+  # ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
+  ANSIBLE_PROJECT=tcs
+
   test_dir="$(pwd)"
 
 function clean {
@@ -90,13 +92,14 @@ function setup_conjur_resources {
 
 function run_test_cases {
   for test_case in test_cases/*; do
-    teardown_and_setup
+    # teardown_and_setup
     run_test_case "$(basename -- "$test_case")"
   done
 }
 
 function run_test_case {
   echo "---- testing ${test_case} ----"
+  echo "---- testing $(hf_token) ----"
   local test_case=$1
   if [ -n "$test_case" ]; then
     docker exec "${ansible_cid}" \
@@ -105,7 +108,7 @@ function run_test_case {
       env CONJUR_APPLIANCE_URL="${CONJUR_APPLIANCE_URL}" \
       bash -ec "
         cd tests
-        ansible-playbook test_cases/${test_case}/playbook.yml
+        ansible-playbook -vvvv test_cases/${test_case}/playbook.yml
       "
     if [ -d "${test_dir}/test_cases/${test_case}/tests/" ]; then
       docker exec "${ansible_cid}" bash -ec "
@@ -160,8 +163,8 @@ function generate_inventory {
     cd tests
     ansible-playbook $playbook_file
   "
-
-  cat inventory.tmp
+   echo "Pooja TCS Generate Inventory"
+   cat inventory.tmp
 }
 
 function setup_conjur_open_source() {
@@ -176,7 +179,7 @@ function setup_conjur_open_source() {
   CLI_CONJUR_AUTHN_API_KEY=$(setup_admin_api_key)
   docker-compose up --no-deps -d conjur_cli
   cli_cid=$(docker-compose ps -q conjur_cli)
-
+  echo " Pooja TCS cli_cid - ${cli_cid}"
   setup_conjur_resources
 }
 
@@ -232,17 +235,29 @@ function main() {
     export CONJUR_ACCOUNT="cucumber"
     COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
 
+    #  Delete it later
+    # export CONJUR_AUTHN_LOGIN="host/ansible/ansible-master"
+    # export CONJUR_AUTHN_LOGIN="admin"
+
     setup_conjur_open_source
   fi
 
   echo "Preparing Ansible for test run"
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
+  echo "Pooja TCS COMPOSE_PROJECT_NAME - ${COMPOSE_PROJECT_NAME}"
   ANSIBLE_CONJUR_AUTHN_API_KEY=$(setup_ansible_api_key)
   docker-compose up -d ansible
   ansible_cid=$(docker-compose ps -q ansible)
+  echo "Pooja TCS ansible_cid - ${ansible_cid}"
   generate_inventory
 
   echo "Running tests"
+  echo "---- HFTOKEN = $(hf_token) ----"
+
+  echo "---- CONJUR_ACCOUNT = ${CONJUR_ACCOUNT} ----"
+  echo "---- CONJUR_APPLIANCE_URL = ${CONJUR_APPLIANCE_URL} ----"
+
+  teardown_and_setup
   run_test_cases
 }
 
