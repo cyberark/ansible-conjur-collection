@@ -139,7 +139,7 @@ function wait_for_server {
 }
 
 function fetch_ssl_cert {
-  echo "Fetching SSL certs"
+  echo "Fetching SSL certs Pooja Gangwar "
   service_id="conjur-proxy-nginx"
   cert_path="cert.crt"
   if [[ "${enterprise}" == "true" ]]; then
@@ -172,6 +172,7 @@ function setup_conjur_open_source() {
 
   cli_cid="$(docker-compose ps -q conjur_cli)"
 
+  echo " Testing first phase "
   fetch_ssl_cert
   wait_for_server
 
