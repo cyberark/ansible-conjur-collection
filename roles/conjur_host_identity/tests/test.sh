@@ -206,7 +206,7 @@ function setup_conjur_enterprise() {
         if [ ! -e /root/conjur-demo.pem ]; then
           echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed
         fi
-        conjur login -i admin -p MySecretP@ss
+        conjur login -i admin -p MySecretP@ss1
         hostname -i
       "
     echo " Testing by Pooja Gangwar"
