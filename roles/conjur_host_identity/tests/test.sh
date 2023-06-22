@@ -209,8 +209,9 @@ function setup_conjur_enterprise() {
         conjur login -i admin -p MySecretP@ss
         hostname -i
       "
-
+    echo " Testing by Pooja Gangwar"
     fetch_ssl_cert
+    echo " Testing done by Pooja gangwar"
     setup_conjur_resources
 
     echo "Relocate credential files"
