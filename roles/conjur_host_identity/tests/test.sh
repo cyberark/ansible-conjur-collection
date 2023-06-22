@@ -90,7 +90,6 @@ function setup_conjur_resources {
 
 function run_test_cases {
   for test_case in test_cases/*; do
-    teardown_and_setup
     run_test_case "$(basename -- "$test_case")"
   done
 }
@@ -243,6 +242,7 @@ function main() {
   generate_inventory
 
   echo "Running tests"
+  teardown_and_setup
   run_test_cases
 }
 
