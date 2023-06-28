@@ -14,7 +14,7 @@ declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-6}"
 
 declare cli_cid=''
 declare ansible_cid=''
-declare enterprise='false'
+declare enterprise='true'
 declare test_dir=''
 
   ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
@@ -22,7 +22,6 @@ declare test_dir=''
 
 function clean {
   echo 'Removing test environment'
-  echo '---'
 
   # Escape conjur-intro dir if Enterprise setup fails
   cd "${test_dir}"
@@ -77,11 +76,7 @@ function hf_token {
 
 function setup_conjur_resources {
   echo "---- setting up conjur ----"
-  policy_path="root.yml"
-  if [[ "${enterprise}" == "false" ]]; then
-    policy_path="/policy/${policy_path}"
-  fi
-
+    policy_path="/policy/root.yml"
   docker exec "${cli_cid}" /bin/sh -ec "
     conjur policy load -b root -f ${policy_path}
     conjur variable set -i ansible/target-password -v target_secret_password
@@ -90,7 +85,7 @@ function setup_conjur_resources {
 
 function run_test_cases {
   for test_case in test_cases/*; do
-    teardown_and_setup
+    # teardown_and_setup
     run_test_case "$(basename -- "$test_case")"
   done
 }
@@ -165,7 +160,8 @@ function generate_inventory {
 }
 
 function setup_conjur_open_source() {
-  docker-compose up -d --build
+
+  docker-compose up -d ansible conjur conjur_cli test_app_ubuntu test_app_centos conjur-proxy-nginx
 
   cli_cid="$(docker-compose ps -q conjur_cli)"
 
@@ -181,14 +177,15 @@ function setup_conjur_open_source() {
 }
 
 function setup_conjur_enterprise() {
-  git clone --single-branch --branch main https://github.com/conjurdemos/conjur-intro.git
-  pushd ./conjur-intro
 
     echo "Provisioning Enterprise leader and follower"
-    ./bin/dap --provision-master
-    ./bin/dap --provision-follower
-
-    cp ../policy/root.yml .
+    docker-compose up -d conjur_appliance
+    docker exec conjur_appliance evoke configure master \
+    --accept-eula \
+    --hostname conjur-server \
+    --master-altnames $(hostname -s),$(hostname -f) \
+    --admin-password="MySecretP@ss1" \
+    demo
 
     # Run 'sleep infinity' in the CLI container, so the scripts
     # have access to an alive and authenticated CLI until the script terminates
@@ -199,19 +196,20 @@ function setup_conjur_enterprise() {
     echo "Authenticate Conjur CLI container"
     docker exec "${cli_cid}" \
       /bin/sh -c "
-        if [ ! -e /root/conjur-demo.pem ]; then
-          echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed 
-        fi
-        conjur login -i admin -p MySecretP@ss1
-        hostname -i
+      echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed
+      conjur login -i admin -p MySecretP@ss1
+      hostname -i
       "
 
-    fetch_ssl_cert
+    CLI_CONJUR_AUTHN_API_KEY=$(setup_admin_api_key)
+
+    docker cp "${cli_cid}":/root/conjur-server.pem .
+    mv conjur-server.pem conjur.pem
+    # fetch_ssl_cert
+    echo "---- before setup_conjur_resources ----"
     setup_conjur_resources
 
     echo "Relocate credential files"
-    mv conjur.pem ../.
-  popd
 }
 
 function main() {
@@ -219,7 +217,7 @@ function main() {
     echo "Deploying Conjur Enterprise"
 
     export DOCKER_NETWORK="dap_net"
-    export CONJUR_APPLIANCE_URL="https://conjur-master.mycompany.local"
+    export CONJUR_APPLIANCE_URL=https://conjur-server:443
     export CONJUR_ACCOUNT="demo"
     COMPOSE_PROJECT_NAME="${ENTERPRISE_PROJECT}"
     DOCKER_NETWORK="dap_net"
@@ -231,6 +229,7 @@ function main() {
     export CONJUR_APPLIANCE_URL="https://conjur-proxy-nginx"
     export CONJUR_ACCOUNT="cucumber"
     COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
+    export DOCKER_NETWORK="default"
 
     setup_conjur_open_source
   fi
@@ -243,7 +242,9 @@ function main() {
   generate_inventory
 
   echo "Running tests"
+  teardown_and_setup
   run_test_cases
+
 }
 
 main
