@@ -45,12 +45,12 @@ services:
     security_opt:
     - seccomp:unconfined   # --security-opt seccomp=unconfined
     volumes:
-    - /opt/cyberark/conjur/config:/etc/conjur/config:Z
-    - /opt/cyberark/conjur/security:/opt/cyberark/conjur/security:Z
-    - /opt/cyberark/conjur/certificates:/opt/cyberark/conjur/certificates:Z
-    - /opt/cyberark/conjur/backup:/opt/conjur/backup:Z
-    - /opt/cyberark/conjur/seeds:/opt/cyberark/conjur/seeds:Z
-    - /opt/cyberark/conjur/logs:/var/log/conjur:Z
+    - ./data/config:/etc/conjur/config:Z
+    - ./data/security:/opt/cyberark/conjur/security:Z
+    - ./data/certificates:/opt/cyberark/conjur/certificates:Z
+    - ./data/backup:/opt/conjur/backup:Z
+    - ./data/seeds:/opt/cyberark/conjur/seeds:Z
+    - ./data/logs:/var/log/conjur:Z
     ports:
     - "443:443"
     - "444:444"
