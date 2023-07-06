@@ -14,7 +14,7 @@ declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-6}"
 
 declare cli_cid=''
 declare ansible_cid=''
-declare enterprise='true'
+declare enterprise='false'
 declare test_dir=''
 
   ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
@@ -25,10 +25,18 @@ function clean {
 
   # Escape conjur-intro dir if Enterprise setup fails
   cd "${test_dir}"
+
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
   docker-compose down -v
   rm -rf inventory.tmp \
-         conjur.pem
+         conjur.pem \
+         data
+
+  if [[ "${enterprise}" == "true" ]]; then
+  COMPOSE_PROJECT_NAME="${ENTERPRISE_PROJECT}"
+  docker-compose down -v
+  fi
+
 }
 function finish {
   rv=$?
@@ -187,7 +195,9 @@ function setup_conjur_enterprise() {
     echo "Authenticate Conjur CLI container"
     docker exec "${cli_cid}" \
       /bin/sh -c "
+      if [ ! -e /root/conjur*.pem ]; then
       echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed
+      fi
       conjur login -i admin -p MySecretP@ss1
       hostname -i
       "
@@ -208,7 +218,7 @@ function main() {
     echo "Deploying Conjur Enterprise"
 
     export DOCKER_NETWORK="dap_net"
-    export CONJUR_APPLIANCE_URL=https://conjur-server:443
+    export CONJUR_APPLIANCE_URL="https://conjur-server:443"
     export CONJUR_ACCOUNT="demo"
     COMPOSE_PROJECT_NAME="${ENTERPRISE_PROJECT}"
     DOCKER_NETWORK="dap_net"
@@ -235,7 +245,6 @@ function main() {
   echo "Running tests"
   teardown_and_setup
   run_test_cases
-
 }
 
 main

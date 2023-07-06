@@ -23,7 +23,6 @@ data
 *.html
 output/
 
-
 # Pycache directories and files
 **/__pycache__/
 .pytest_cache
