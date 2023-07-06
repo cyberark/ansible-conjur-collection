@@ -25,15 +25,6 @@ function clean {
 
   # Escape conjur-intro dir if Enterprise setup fails
   cd "${test_dir}"
-
-  if [[ -d conjur-intro ]]; then
-    pushd conjur-intro
-      COMPOSE_PROJECT_NAME="${ENTERPRISE_PROJECT}"
-      ./bin/dap --stop
-    popd
-    rm -rf conjur-intro
-  fi
-
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
   docker-compose down -v
   rm -rf inventory.tmp \
