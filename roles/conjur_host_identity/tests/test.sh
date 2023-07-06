@@ -2,7 +2,7 @@
 
 set -o pipefail
 
-# normalises project name by filtering non alphanumeric characters and transforming to lowercase
+#  normalises project name by filtering non alphanumeric characters and transforming to lowercase
 declare -x COMPOSE_PROJECT_NAME=''
 declare -x ENTERPRISE_PROJECT='conjur-intro-host'
 declare -x ANSIBLE_PROJECT=''
