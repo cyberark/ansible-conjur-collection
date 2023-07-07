@@ -42,7 +42,7 @@ function run_test {
 # Expected directory structure is "roles/<role>/tests/test.sh"
 function run_role_test {
     pushd "${PWD}/roles/${1}/tests"
-        echo "Running ${1} tests..."
+        echo "Running this ${1} tests..."
         ./test.sh "$flags"
     popd
 }
