@@ -222,6 +222,7 @@ function setup_conjur_enterprise() {
 }
 
 function main() {
+  echo "Pooja this is the first step "
   if [[ "${enterprise}" == "true" ]]; then
     echo "Deploying Conjur Enterprise"
 
