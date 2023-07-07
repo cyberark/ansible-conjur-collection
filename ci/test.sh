@@ -45,6 +45,7 @@ function run_role_test {
         echo "Running this ${1} tests..."
         echo "Running flags $flags tests..."
         ./test.sh "$flags"
+        echo "Running end of the flags $flags tests..."
     popd
 }
 
