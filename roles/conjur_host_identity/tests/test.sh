@@ -45,7 +45,7 @@ function finish {
 }
 trap finish EXIT
 
-while getopts '-e' flag; do
+while getopts 'e' flag; do
   case "${flag}" in
     e) enterprise="true" ;;
     *) exit 1 ;;

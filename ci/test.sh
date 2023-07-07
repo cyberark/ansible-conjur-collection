@@ -44,6 +44,10 @@ function run_role_test {
     pushd "${PWD}/roles/${1}/tests"
         echo "Running this ${1} tests..."
         echo "Running flags $flags tests..."
+        #  if [[ "${enterprise}" == "true" ]]; then
+            if [[ "$flags" == "-e" ]]; then
+                flags="e"
+            fi
         ./test.sh "$flags"
         # ./testing.sh
         echo "Running end of the flags $flags tests..."
