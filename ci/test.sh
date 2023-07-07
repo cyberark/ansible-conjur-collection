@@ -47,6 +47,7 @@ function run_role_test {
         #  if [[ "${enterprise}" == "true" ]]; then
             if [[ "$flags" == "-e" ]]; then
                 flags="e"
+                echo "Pooja Gangwar Running flags $flags tests..."
             fi
         ./test.sh "$flags"
         # ./testing.sh
