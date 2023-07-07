@@ -55,7 +55,7 @@ while getopts 'e' flag; do
     *) exit 1 ;;
    esac
 done
-echo "testing tcs 14 $enterprise" here "
+echo "testing tcs 14 $enterprise here "
 clean
 
 function setup_admin_api_key {
