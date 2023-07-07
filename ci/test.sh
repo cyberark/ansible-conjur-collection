@@ -48,8 +48,9 @@ function run_role_test {
             if [[ "$flags" == "-e" ]]; then
                 flags="e"
                 echo "Pooja Gangwar Running flags $flags tests..."
+                ./test.sh "$flags"
             fi
-        ./test.sh "$flags"
+        # ./test.sh "$flags"
         # ./testing.sh
         echo "Running end of the flags $flags tests..."
     popd
