@@ -39,6 +39,40 @@ services:
     links:
       - pg
 
+  conjur_appliance:
+    image: docker-conjur-remote.artifactory.cyberng.com/conjur-appliance:12.9.0
+    container_name: conjur_appliance
+    security_opt:
+    - seccomp:unconfined   # --security-opt seccomp=unconfined
+    volumes:
+    - ./data/config:/etc/conjur/config:Z
+    - ./data/security:/opt/cyberark/conjur/security:Z
+    - ./data/certificates:/opt/cyberark/conjur/certificates:Z
+    - ./data/backup:/opt/conjur/backup:Z
+    - ./data/seeds:/opt/cyberark/conjur/seeds:Z
+    - ./data/logs:/var/log/conjur:Z
+    ports:
+    - "443:443"
+    - "444:444"
+    - "5432:5432"
+    - "1999:1999"
+    restart: unless-stopped
+
+  client:
+    image: cyberark/conjur-cli:8
+    entrypoint: []
+    command: sleep infinity
+    environment:
+      CONJUR_APPLIANCE_URL: https://conjur-server:443
+      CONJUR_ACCOUNT: demo
+      CONJUR_AUTHN_LOGIN: admin
+      CONJUR_AUTHN_API_KEY: ${CLI_CONJUR_AUTHN_API_KEY}
+    volumes:
+      - .:/src/cli
+      - ./policy:/policy
+    links:
+      - conjur_appliance
+
   conjur_cli:
     image: cyberark/conjur-cli:8
     entrypoint: []
