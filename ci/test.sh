@@ -43,6 +43,7 @@ function run_test {
 function run_role_test {
     pushd "${PWD}/roles/${1}/tests"
         echo "Running this ${1} tests..."
+        echo "Running flags $flags tests..."
         ./test.sh "$flags"
     popd
 }
