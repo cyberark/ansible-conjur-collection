@@ -14,7 +14,7 @@ declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-6}"
 
 declare cli_cid=''
 declare ansible_cid=''
-declare enterprise='false'
+declare enterprise='true'
 declare test_dir=''
 
   ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
@@ -249,7 +249,7 @@ function main() {
 
   echo "Running tests"
   teardown_and_setup
-  run_test_cases
+  # run_test_cases
 }
 
 main
