@@ -20,6 +20,7 @@ declare test_dir=''
   ANSIBLE_PROJECT=$(echo "${BUILD_TAG:-ansible-plugin-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
   test_dir="$(pwd)"
 
+  echo 'testing tcs 11'
 function clean {
   echo 'Removing test environment'
 
@@ -45,13 +46,16 @@ function finish {
 }
 trap finish EXIT
 
+echo 'testing tcs 12'
+
 while getopts 'e' flag; do
+  echo 'testing tcs 13'
   case "${flag}" in
     e) enterprise="true" ;;
     *) exit 1 ;;
    esac
 done
-
+echo "testing tcs 14 $enterprise" here "
 clean
 
 function setup_admin_api_key {
