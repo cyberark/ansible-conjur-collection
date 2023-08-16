@@ -35,6 +35,10 @@ function clean {
     rm -rf conjur-intro
   fi
 
+  if [[ -n "$cli_cid" ]]; then
+    docker rm -f "$cli_cid"
+  fi
+
   COMPOSE_PROJECT_NAME="${ANSIBLE_PROJECT}"
   docker-compose down -v
   rm -rf inventory.tmp \
