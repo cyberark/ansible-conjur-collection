@@ -30,6 +30,10 @@ jobs:
   sanity:
     name: Sanity (${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
+      # fail-fast means one failing matrix case will cancel all other
+      # still-incomplete cases. As tests against Ansible's devel branch are
+      # unstable, this is disabled.
+      fail-fast: false
       matrix:
         ansible:
           - stable-2.13
@@ -83,6 +87,10 @@ jobs:
   units:
     name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
+      # fail-fast means one failing matrix case will cancel all other
+      # still-incomplete cases. As tests against Ansible's devel branch are
+      # unstable, this is disabled.
+      fail-fast: false
       matrix:
         ansible:
           - stable-2.13
