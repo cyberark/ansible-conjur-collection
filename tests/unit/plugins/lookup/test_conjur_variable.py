@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from unittest import TestCase
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from ansible.errors import AnsibleError
 from ansible.plugins.loader import lookup_loader
 

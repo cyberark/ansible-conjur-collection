@@ -92,7 +92,7 @@ from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
 from os import environ
-from time import time, sleep
+from time import sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
 from ansible.module_utils.urls import urllib_error
 from stat import S_IRUSR, S_IWUSR
@@ -101,7 +101,6 @@ import yaml
 
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
-import ssl
 
 display = Display()
 
