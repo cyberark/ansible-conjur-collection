@@ -1,0 +1,10 @@
+ci/build_release shebang
+ci/publish_to_galaxy shebang
+ci/test.sh shebang
+dev/policy/root.yml yamllint:unparsable-with-libyaml
+dev/start.sh shebang
+Jenkinsfile shebang
+plugins/lookup/conjur_variable.py validate-modules:version-added-must-be-major-or-minor # Lookup plugin added in v1.0.2
+roles/conjur_host_identity/tests/policy/root.yml yamllint:unparsable-with-libyaml # File loaded by Conjur server, not via Python
+secrets.yml yamllint:unparsable-with-libyaml # File loaded by Summon utility (in Jenkinsfile), not via Python
+tests/conjur_variable/policy/root.yml yamllint:unparsable-with-libyaml # File loaded by Conjur server, not via Python
