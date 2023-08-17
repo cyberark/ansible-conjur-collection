@@ -2,14 +2,17 @@
 # on the Conjur Ansible Collection. The Ansible collection sanity tests are
 # run across the following matrices:
 #
-#Ansible versions:
-#    - stable-2.10
-#    - stable-2.11
-#    - stable-2.12
-#    - devel
+# Ansible versions:
+# - stable-2.13
+# - stable-2.14
+# - stable-2.15
+# - devel
 #
-#Python versions:
-#    - Python 3.9
+# Python versions:
+# - 3.8 (2.13)
+# - 3.9 (2.13, 2.14, 2.15)
+# - 3.10
+# - 3.11 (2.14, 2.15)
 
 name: CI
 on:
@@ -27,16 +30,28 @@ jobs:
   sanity:
     name: Sanity (${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
+      # fail-fast means one failing matrix case will cancel all other
+      # still-incomplete cases. As tests against Ansible's devel branch are
+      # unstable, this is disabled.
+      fail-fast: false
       matrix:
         ansible:
-          # It's important that Sanity is tested against all stable-X.Y branches
-          # Testing against `devel` may fail as new tests are added.
-          - stable-2.10
-          - stable-2.11
-          - stable-2.12
-          - devel
+          - stable-2.13
+          - stable-2.14
+          - stable-2.15
         python:
-          - 3.9
+          - '3.9'
+          - '3.10'
+        include:
+          - ansible: stable-2.13
+            python: '3.8'
+          - ansible: stable-2.14
+            python: '3.11'
+          - ansible: stable-2.15
+            python: '3.11'
+          - ansible: devel
+            python: '3.10'
+
     runs-on: ubuntu-latest
     steps:
 
@@ -59,26 +74,40 @@ jobs:
 
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required.
-      # Explicity specify the version of Python we want to test
+      # Explicitly specify the version of Python we want to test
       - name: Run sanity tests
         run: ansible-test sanity --docker -v --color --python ${{ matrix.python }}
         working-directory: ./ansible_collections/cyberark/conjur
 
+###
 # Unit tests (OPTIONAL)
-
+#
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
 
   units:
     name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
+      # fail-fast means one failing matrix case will cancel all other
+      # still-incomplete cases. As tests against Ansible's devel branch are
+      # unstable, this is disabled.
+      fail-fast: false
       matrix:
         ansible:
-          - stable-2.10
-          - stable-2.11
-          - stable-2.12
-          - devel
+          - stable-2.13
+          - stable-2.14
+          - stable-2.15
         python:
-          - 3.9
+          - '3.9'
+          - '3.10'
+        include:
+          - ansible: stable-2.13
+            python: '3.8'
+          - ansible: stable-2.14
+            python: '3.11'
+          - ansible: stable-2.15
+            python: '3.11'
+          - ansible: devel
+            python: '3.10'
     runs-on: ubuntu-latest
     steps:
       - name: Check out code

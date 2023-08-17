@@ -7,3 +7,4 @@ ci/publish_to_galaxy shebang
 ci/test.sh shebang
 secrets.yml yamllint:unparsable-with-libyaml # File loaded by Summon utility (in Jenkinsfile), not via Python
 dev/policy/root.yml yamllint:unparsable-with-libyaml
+plugins/lookup/conjur_variable.py validate-modules:version-added-must-be-major-or-minor
