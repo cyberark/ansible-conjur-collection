@@ -36,7 +36,7 @@ pipeline {
 
     stage('Run integration tests with Conjur Open Source') {
       stages {
-        stage('Ansible v6 - latest') {
+        stage('Ansible v8 - latest') {
           parallel {
             stage('Testing conjur_variable lookup plugin') {
               steps {
@@ -54,7 +54,7 @@ pipeline {
           }
         }
 
-        stage('Ansible v5') {
+        stage('Ansible v7') {
           when {
             anyOf {
               branch 'main'
@@ -64,14 +64,38 @@ pipeline {
           parallel {
             stage('Testing conjur_variable lookup plugin') {
               steps {
-                sh './ci/test.sh -v 5 -d conjur_variable'
+                sh './ci/test.sh -v 7 -d conjur_variable'
                 junit 'tests/conjur_variable/junit/*'
               }
             }
 
             stage('Testing conjur_host_identity role') {
               steps {
-                sh './ci/test.sh -v 5 -d conjur_host_identity'
+                sh './ci/test.sh -v 7 -d conjur_host_identity'
+                junit 'roles/conjur_host_identity/tests/junit/*'
+              }
+            }
+          }
+        }
+
+        stage('Ansible v6 - latest') {
+          when {
+            anyOf {
+              branch 'main'
+              buildingTag()
+            }
+          }
+          parallel {
+            stage('Testing conjur_variable lookup plugin') {
+              steps {
+                sh './ci/test.sh -v 6 -d conjur_variable'
+                junit 'tests/conjur_variable/junit/*'
+              }
+            }
+
+            stage('Testing conjur_host_identity role') {
+              steps {
+                sh './ci/test.sh -v 6 -d conjur_host_identity'
                 junit 'roles/conjur_host_identity/tests/junit/*'
               }
             }

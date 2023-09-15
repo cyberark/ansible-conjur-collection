@@ -14,7 +14,8 @@ target=""
 # Flags to be applied to testing scripts
 flags=""
 
-declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-6}"
+declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-8}"
+declare -x PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
 
 # Print usage instructions
 function help {
@@ -22,6 +23,7 @@ function help {
 
     echo "-a        Run all test files in default test directories"
     echo "-v <ver>  Run tests against the given Ansible major version"
+    echo "-p <ver>  Run tests against an Ansible node using the given Python version"
     echo "-d <arg>  Run test file in given directory. Valid options are: ${test_directories[*]} all"
     echo "-e        Run tests against Conjur Enterprise. Default: Conjur Open Source"
     echo "          This option is currently only available when testing against the conjur_variable plugin"
@@ -84,7 +86,7 @@ if [[ $# -eq 0 ]] ; then
     help
 fi
 
-while getopts ad:ehv: option; do
+while getopts ad:ehv:p: option; do
     case "$option" in
         a) handle_input
             ;;
@@ -96,6 +98,8 @@ while getopts ad:ehv: option; do
         h) help
             ;;
         v) ANSIBLE_VERSION="${OPTARG}"
+            ;;
+        p) PYTHON_VERSION="${OPTARG}"
             ;;
         * )
           echo "$1 is not a valid option"

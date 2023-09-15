@@ -10,7 +10,8 @@ declare -x ANSIBLE_PROJECT=''
 declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
 declare -x CLI_CONJUR_AUTHN_API_KEY=''
 declare -x DOCKER_NETWORK="default"
-declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-6}"
+declare -x ANSIBLE_VERSION="${ANSIBLE_VERSION:-8}"
+declare -x PYTHON_VERSION="${PYTHON_VERSION:-8}"
 
 declare cli_cid=''
 declare ansible_cid=''

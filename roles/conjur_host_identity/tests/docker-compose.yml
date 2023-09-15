@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
       args:
         ANSIBLE_VERSION: ${ANSIBLE_VERSION}
+        PYTHON_VERSION: ${PYTHON_VERSION}
     command: /bin/sleep 1d
     environment:
       CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}

@@ -1,18 +1,16 @@
 # This file implements a Github action to run Ansible collection sanity tests
-# on the Conjur Ansible Collection. The Ansible collection sanity tests are
-# run across the following matrices:
+# and unit tests on the Conjur Ansible Collection. The Ansible collection tests
+# are run across the following matrices:
 #
-# Ansible versions:
-# - stable-2.13
-# - stable-2.14
-# - stable-2.15
-# - devel
+# Ansible versions (Python versions):
+# - stable-2.13 (3.8, 3.9, 3.10)
+# - stable-2.14 (3.9, 3.10, 3.11)
+# - stable-2.15 (3.9, 3.10, 3.11)
+# - devel       (3.10)
 #
-# Python versions:
-# - 3.8 (2.13)
-# - 3.9 (2.13, 2.14, 2.15)
-# - 3.10
-# - 3.11 (2.14, 2.15)
+# As Ansible's devel version is unstable, it should be considered a smoke signal
+# for the next released version. Failures against the devel version should not
+# be considered blocking.
 
 name: CI
 on:
@@ -23,12 +21,12 @@ on:
 jobs:
 
 ###
-# Sanity tests (REQUIRED)
+# Sanity tests
 #
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
 
   sanity:
-    name: Sanity (${{ matrix.ansible }}+py${{ matrix.python }})
+    name: Sanity (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
       # fail-fast means one failing matrix case will cancel all other
       # still-incomplete cases. As tests against Ansible's devel branch are
@@ -68,7 +66,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      # Install the head of the given branch (devel, stable-2.10)
+      # Install the head of the given branch
       - name: Install ansible-base (${{ matrix.ansible }})
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
@@ -80,7 +78,7 @@ jobs:
         working-directory: ./ansible_collections/cyberark/conjur
 
 ###
-# Unit tests (OPTIONAL)
+# Unit tests
 #
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
 

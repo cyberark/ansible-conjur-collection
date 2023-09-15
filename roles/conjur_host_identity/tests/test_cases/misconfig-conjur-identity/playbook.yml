@@ -19,4 +19,4 @@
             that: ansible_failed_result.failed == true
         - name: Confirm error message
           assert:
-            that: ansible_failed_result.msg == "'conjur_appliance_url' is undefined"
+            that: ansible_failed_result.msg == "'conjur_appliance_url' is undefined. 'conjur_appliance_url' is undefined"
