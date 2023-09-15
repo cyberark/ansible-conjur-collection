@@ -8,11 +8,11 @@ tests/*/coverage/
 tests/*/junit/
 tests/*/reports/
 
-tests/*/conjur.pem
-tests/*/conjur-enterprise.pem
-tests/*/access_token
+dev/conjur.pem
+dev/access_token
+dev/tmp
+
 **/test-files/output
-**/conjur-intro/
 bot
 coverage
 junit

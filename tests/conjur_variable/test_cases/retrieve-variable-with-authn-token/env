@@ -1,4 +1,4 @@
-export CONJUR_CERT_FILE=./conjur.pem
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
 unset CONJUR_AUTHN_API_KEY
 unset CONJUR_AUTHN_LOGIN
-export CONJUR_AUTHN_TOKEN_FILE=./access_token
+export CONJUR_AUTHN_TOKEN_FILE=/cyberark/dev/access_token

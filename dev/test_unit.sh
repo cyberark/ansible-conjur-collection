@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
-ansible_version="stable-2.10"
-python_version="3.9"
+ansible_version="stable-2.15"
+python_version="3.10"
 gen_report="false"
 
 cd "$(dirname "$0")"/..
@@ -12,8 +12,8 @@ Run unit tests for Conjur Variable Lookup plugin.
 
 ./ansibletest.sh [options]
 
--a <version>     Run tests against specified Ansible version (Default: stable-2.10)
--p <version>     Run tests against specified Python version  (Default: 3.9)
+-a <version>     Run tests against specified Ansible version (Default: stable-2.15)
+-p <version>     Run tests against specified Python version  (Default: 3.10)
 -r               Generate test coverage report
 EOF
 }
@@ -44,5 +44,8 @@ docker build \
 docker run --rm \
   -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
   -w /ansible_collections/cyberark/conjur/tests/unit/ \
-  pytest-tools:latest /bin/bash -c \
-  "git config --global --add safe.directory /ansible_collections/cyberark/conjur && $test_cmd"
+  pytest-tools:latest /bin/bash -c "
+    git config --global --add safe.directory /ansible_collections/cyberark/conjur
+    git config --global --add safe.directory /ansible_collections/cyberark/conjur/dev/conjur-intro
+    $test_cmd
+  "
