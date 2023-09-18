@@ -1,38 +1,27 @@
-FROM ubuntu:22.04
+ARG PYTHON_VERSION
+FROM python:${PYTHON_VERSION}-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /cyberark
 
-# install python 3
-RUN apt-get update && \
-    apt-get install -y python3-pip && \
-    pip3 install --upgrade pip
-
 # install ansible and its test tool
-RUN pip3 install ansible pytest-testinfra
+ARG ANSIBLE_VERSION
+RUN pip3 install ansible==${ANSIBLE_VERSION}.* pytest-testinfra
 
 # install docker installation requirements
 RUN apt-get update && \
-    apt-get install -y apt-transport-https \
-                       ca-certificates \
+    apt-get install -y ca-certificates \
                        curl \
-                       software-properties-common
+                       gnupg
 
 # install docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-RUN add-apt-repository \
-       "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-       $(lsb_release -cs) \
-       stable"
-
+RUN install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    chmod a+r /etc/apt/keyrings/docker.gpg
+RUN echo \
+    "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN apt-get update && \
     apt-get -y install docker-ce
-
-# NOTE: Everything above is copied from REPO_ROOT/tests/conjur_variable/Dockerfile. It defines a
-# standard container image for running ansible tests
-
-# install ruby
-RUN apt-get update && apt-get install -y gcc build-essential
-RUN apt-add-repository -y ppa:brightbox/ruby-ng && apt-get update && apt-get install -y ruby2.7 ruby2.7-dev
-RUN gem install conjur-cli

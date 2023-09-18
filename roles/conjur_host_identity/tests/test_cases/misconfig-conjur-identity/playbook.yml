@@ -11,7 +11,7 @@
             # conjur_appliance_url: "https://conjur-proxy-nginx"
             conjur_host_factory_token: "{{lookup('env', 'HFTOKEN')}}"
             conjur_host_name: "conjur_{{ ansible_hostname }}"
-            conjur_ssl_certificate: "{{lookup('file', '../../conjur.pem')}}"
+            conjur_ssl_certificate: "{{lookup('file', '/cyberark/dev/conjur.pem')}}"
             conjur_validate_certs: yes
       rescue:
         - name: Confirm Role setup fails
@@ -19,4 +19,4 @@
             that: ansible_failed_result.failed == true
         - name: Confirm error message
           assert:
-            that: ansible_failed_result.msg == "'conjur_appliance_url' is undefined"
+            that: ansible_failed_result.msg == "'conjur_appliance_url' is undefined. 'conjur_appliance_url' is undefined"

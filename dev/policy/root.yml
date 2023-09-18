@@ -21,12 +21,18 @@
       description: Factory to create new hosts for ansible
     layer: [ *remote_hosts_layer ]
 
-  - !variable
-    id: target-password
-    annotations:
-      description: Password needed by the Ansible remote machine
+  - &variables
+    - !variable target-password
+    - !variable test-secret
+    - !variable test-secret-in-file
+    - !variable var with spaces
+
+  - !permit
+    role: !host ansible-master
+    privileges: [ read, execute ]
+    resource: *variables
 
   - !permit
     role: *remote_hosts_layer
     privileges: [ execute ]
-    resources: [ !variable target-password ]
+    resource: *variables

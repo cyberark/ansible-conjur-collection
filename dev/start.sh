@@ -1,113 +1,151 @@
 #!/bin/bash
 set -ex
+source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
+declare -x DOCKER_NETWORK=''
 
-declare -x ANSIBLE_CONJUR_AUTHN_API_KEY=''
-declare -x CLI_CONJUR_AUTHN_API_KEY=''
-declare cli_cid=''
-declare conjur_cid=''
-declare ansible_cid=''
-# normalises project name by filtering non alphanumeric characters and transforming to lowercase
-declare -x COMPOSE_PROJECT_NAME
+declare -x ENTERPRISE='false'
+declare -x ANSIBLE_API_KEY=''
+declare -x ADMIN_API_KEY=''
 
-COMPOSE_PROJECT_NAME=$(echo "${BUILD_TAG:-ansible-pluging-testing}-conjur-host-identity" | sed -e 's/[^[:alnum:]]//g' | tr '[:upper:]' '[:lower:]')
-export COMPOSE_PROJECT_NAME
+declare -x ANSIBLE_VERSION='8'
+declare -x PYTHON_VERSION='3.11'
 
-# get conjur client auth api key
-function api_key_for {
-  local role_id=$1
-  if [ -n "$role_id" ]
-  then
-    docker exec "${conjur_cid}" rails r "print Credentials['${role_id}'].api_key"
-  else
-    echo ERROR: api_key_for called with no argument 1>&2
-    exit 1
-  fi
+function help {
+  cat <<EOF
+Conjur Ansible Collection :: Dev Environment
+
+$0 [options]
+
+-e            Deploy Conjur Enterprise. (Default: Conjur Open Source)
+-h            Print usage information.
+-p <version>  Run the Ansible service with the desired Python version. (Default: 3.11)
+-v <version>  Run the Ansible service with the desired Ansible Community Package
+              version. (Default: 8)
+EOF
 }
 
-function hf_token {
-  docker exec "${cli_cid}" /bin/sh -c "conjur hostfactory tokens create --duration=24h -i ansible/ansible-factory" | jq -r ".[0].token"
-}
+while getopts ehp:v: option; do
+  case "$option" in
+    e) ENTERPRISE="true" ;;
+    h) help && exit 0 ;;
+    p) PYTHON_VERSION="${OPTARG}" ;;
+    v) ANSIBLE_VERSION="${OPTARG}" ;;
+    *)
+        echo "$1 is not a valid option"
+        help
+        exit 1
+        ;;
+  esac
+done
 
-function setup_conjur {
-  echo "---- setting up conjur ----"
-  # run policy
-  docker exec "${cli_cid}" conjur policy load -b root -f /policy/root.yml
-  # set secret values
-  docker exec "${cli_cid}" bash -ec 'conjur variable set -i ansible/target-password -v target_secret_password'
+function clean {
+  cd "$(dev_dir)"
+  ./stop.sh
 }
+trap clean ERR
 
-function setup_conjur_identities {
-  echo "---scale up inventory nodes and setup the conjur identity there---"
-  teardown_and_setup
-  docker exec "${ansible_cid}" env HFTOKEN="$(hf_token)" bash -ec "
-    cd dev
-    ansible-playbook playbooks/conjur-identity-setup/conjur_role_playbook.yml"
-}
+function setup_conjur_resources {
+  echo "---- setting up Conjur resources ----"
 
- # Scale up inventory nodes
-function teardown_and_setup {
-  docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
-  docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
-}
-
-function wait_for_server {
-  # shellcheck disable=SC2016
-  docker exec "${cli_cid}" /bin/sh -ec '
-    for i in $( seq 20 ); do
-      wget --spider -q --tries=1 ${CONJUR_APPLIANCE_URL} && echo "server is up" && break
-      echo "."
-      sleep 2
-    done
-  '
-}
-
-function fetch_ssl_cert {
-  (docker-compose exec -T conjur-proxy-nginx cat cert.crt) > conjur.pem
-}
-
-function generate_inventory {
-  # Use a different inventory file for docker-compose v1 and v2 or later
-  playbook_file="inventory-playbook-v2.yml"
-  compose_ver=$(docker-compose version --short)
-  if [[ $compose_ver == "1"* ]]; then
-    playbook_file="inventory-playbook.yml"
+  policy_path="root.yml"
+  if [[ "$ENTERPRISE" == "false" ]]; then
+    policy_path="/policy/$policy_path"
   fi
 
-  # uses .j2 template to generate inventory prepended with COMPOSE_PROJECT_NAME
-  docker-compose exec -T ansible bash -ec "
-    cd dev
-    ansible-playbook playbooks/inventory-setup/$playbook_file
+  docker exec "$(cli_cid)" /bin/sh -c "
+    conjur policy load -b root -f $policy_path
+    conjur variable set -i ansible/target-password -v target_secret_password
+    conjur variable set -i ansible/test-secret -v test_secret_password
+    conjur variable set -i ansible/test-secret-in-file -v test_secret_in_file_password
+    conjur variable set -i 'ansible/var with spaces' -v var_with_spaces_secret_password
   "
 }
 
-function clean {
-   echo 'Removing dev environment'
-   echo '---'
-   docker-compose down -v
-   rm -rf inventory.tmp
+function deploy_conjur_open_source() {
+  echo "---- deploying Conur Open Source ----"
+
+  # start conjur server
+  docker-compose up -d --build conjur conjur-proxy-nginx
+  set_conjur_cid "$(docker-compose ps -q conjur)"
+  wait_for_conjur
+
+  # get admin credentials
+  fetch_conjur_cert "$(docker-compose ps -q conjur-proxy-nginx)" "cert.crt"
+  ADMIN_API_KEY="$(user_api_key "$CONJUR_ACCOUNT" admin)"
+
+  # start conjur cli and configure conjur
+  docker-compose up --no-deps -d conjur_cli
+  set_cli_cid "$(docker-compose ps -q conjur_cli)"
+  setup_conjur_resources
+}
+
+function deploy_conjur_enterprise {
+  echo "---- deploying Conjur Enterprise ----"
+
+  ensure_submodules
+
+  pushd ./conjur-intro
+    # start conjur leader and follower
+    ./bin/dap --provision-master
+    ./bin/dap --provision-follower
+    set_conjur_cid "$(docker-compose ps -q conjur-master.mycompany.local)"
+
+    fetch_conjur_cert "$(conjur_cid)" "/etc/ssl/certs/ca.pem"
+
+    # Run 'sleep infinity' in the CLI container so it stays alive
+    set_cli_cid "$(docker-compose run --no-deps -d -w /src/cli --entrypoint sleep client infinity)"
+    # Authenticate the CLI container
+    docker exec "$(cli_cid)" /bin/sh -c "
+      if [ ! -e /root/conjur-demo.pem ]; then
+        echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed
+      fi
+      conjur login -i admin -p MySecretP@ss1
+      hostname -i
+    "
+
+    # get admin credentials
+    ADMIN_API_KEY="$(rotate_api_key)"
+
+    # configure conjur
+    cp ../policy/root.yml . && setup_conjur_resources
+  popd
 }
 
 function main() {
+  # remove previous environment
   clean
-  docker-compose up -d --build
+  mkdir -p tmp
+
+  if [[ "$ENTERPRISE" == "true" ]]; then
+    export CONJUR_APPLIANCE_URL='https://conjur-master.mycompany.local'
+    export CONJUR_ACCOUNT='demo'
+    DOCKER_NETWORK='dap_net'
+
+    # start conjur enterprise leader and follower
+    deploy_conjur_enterprise
+  else
+    export CONJUR_APPLIANCE_URL='https://conjur-proxy-nginx'
+    export CONJUR_ACCOUNT='cucumber'
+    DOCKER_NETWORK='default'
+
+    # start conjur server and proxy
+    deploy_conjur_open_source
+  fi
+  set_network "$DOCKER_NETWORK"
+
+  # get conjur credentials for ansible
+  ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
+  refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
+
+  # start ansible control node
+  docker-compose up -d --build ansible
+  set_ansible_cid "$(docker-compose ps -q ansible)"
+
+  # scale ansible managed nodes
   generate_inventory
-
-  conjur_cid=$(docker-compose ps -q conjur)
-  cli_cid=$(docker-compose ps -q conjur_cli)
-  fetch_ssl_cert
-  wait_for_server
-
-  CLI_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:user:admin')
-  docker-compose up --no-deps -d conjur_cli
-
-  cli_cid=$(docker-compose ps -q conjur_cli)
-  setup_conjur
-
-  ANSIBLE_CONJUR_AUTHN_API_KEY=$(api_key_for 'cucumber:host:ansible/ansible-master')
-  docker-compose up -d ansible
-
-  ansible_cid=$(docker-compose ps -q ansible)
+  teardown_and_setup_inventory
   setup_conjur_identities
 }
-  main
+
+main

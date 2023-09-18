@@ -4,7 +4,7 @@ __metaclass__ = type
 import testinfra.utils.ansible_runner
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
-    '/cyberark/tests/inventory.tmp').get_hosts('testapp')
+    '/cyberark/dev/inventory.tmp').get_hosts('testapp')
 
 
 def test_hosts_file(host):
