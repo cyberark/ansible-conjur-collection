@@ -42,7 +42,7 @@ EOF
 function run_test {
   pushd "${PWD}/tests/${1}"
     echo "Running ${1} tests..."
-    ./test.sh "$flags"
+    ./test.sh
   popd
 }
 
@@ -51,7 +51,7 @@ function run_test {
 function run_role_test {
   pushd "${PWD}/roles/${1}/tests"
     echo "Running ${1} tests..."
-    ./test.sh "$flags"
+    ./test.sh
   popd
 }
 
@@ -112,7 +112,8 @@ done
 function main {
   if [[ "$start_dev_env" == "true" ]]; then
     pushd "$(dev_dir)"
-      ./start.sh "$flags"
+      # shellcheck disable=SC2046
+      ./start.sh $(echo "$flags" | cut -c 1-)
     popd
   fi
 
