@@ -18,24 +18,27 @@ Conjur Ansible Collection :: Dev Environment
 $0 [options]
 
 -e            Deploy Conjur Enterprise. (Default: Conjur Open Source)
--h            Print usage information.
+-h, --help    Print usage information.
 -p <version>  Run the Ansible service with the desired Python version. (Default: 3.11)
 -v <version>  Run the Ansible service with the desired Ansible Community Package
               version. (Default: 8)
 EOF
 }
 
-while getopts ehp:v: option; do
-  case "$option" in
-    e) ENTERPRISE="true" ;;
-    h) help && exit 0 ;;
-    p) PYTHON_VERSION="${OPTARG}" ;;
-    v) ANSIBLE_VERSION="${OPTARG}" ;;
-    *)
+while true ; do
+  case "$1" in
+    -e ) ENTERPRISE="true" ; shift ;;
+    -h | --help ) help && exit 0 ;;
+    -p ) PYTHON_VERSION="$2" ; shift ; shift ;;
+    -v ) ANSIBLE_VERSION="$2" ; shift ; shift ;;
+    * )
+      if [[ -z "$1" ]]; then
+        break
+      else
         echo "$1 is not a valid option"
         help
         exit 1
-        ;;
+      fi ;;
   esac
 done
 
