@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.2.1] - 2023-09-20
+
+### Fixed
+- Restore custom error messages for missing required variables.
+  [cyberark/ansible-conjur-collection#197](https://github.com/cyberark/ansible-conjur-collection/pull/197)
+
+### Added
+- Tests against Ansible versions 6, 7 and 8.
+  [cyberark/ansible-conjur-collection#195](https://github.com/cyberark/ansible-conjur-collection/pull/195)
+
+### Security
+- Upgrade dev/test nginx base images to 1.24.0, ubuntu base image to 22.04.
+  [cyberark/ansible-conjur-collection#189](https://github.com/cyberark/ansible-conjur-collection/pull/189)
+- Clean up unused Python imports.
+  [cyberark/ansible-conjur-collection#194](https://github.com/cyberark/ansible-conjur-collection/pull/194)
+
 ## [1.2.0] - 2020-09-01
 
 ### Added
@@ -75,7 +91,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.7...v1.1.0
 [1.0.7]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.6...v1.0.7
