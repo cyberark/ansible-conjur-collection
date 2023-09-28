@@ -41,7 +41,7 @@ detailed information on our certification levels, see
 - An instance of [CyberArk Conjur Open Source](https://www.conjur.org) v1.x+ or [CyberArk
   Conjur Enterprise](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
   (formerly DAP) v10.x+ accessible from the target node
-- Ansible >= 2.9
+- Ansible >= 2.13
 
 ## Using ansible-conjur-collection with Conjur Open Source
 
