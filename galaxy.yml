@@ -23,3 +23,5 @@ repository: "https://github.com/cyberark/ansible-conjur-collection"
 issues: "https://github.com/cyberark/ansible-conjur-collection/issues"
 build_ignore:
   - "dev"
+  - "ci"
+  - "secrets.yml"
