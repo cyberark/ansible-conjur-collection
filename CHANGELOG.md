@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.2.2] - 2023-09-28
+
+### Changed
+- Bump required Ansible version to >= 2.13
+  [cyberark/ansible-conjur-collection#198](https://github.com/cyberark/ansible-conjur-collection/pull/198)
+- Ignore dev folder when building the collection
+  [cyberark/ansible-conjur-collection#198](https://github.com/cyberark/ansible-conjur-collection/pull/198)
+
 ## [1.2.1] - 2023-09-20
 
 ### Fixed
@@ -91,7 +99,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.0.7...v1.1.0
