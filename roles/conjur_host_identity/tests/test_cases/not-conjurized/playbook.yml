@@ -13,7 +13,7 @@
     - name: Attempt to configure Conjur identity
       block:
         - import_role:
-            name: "cyberark.conjur.conjur-host-identity"
+            name: "cyberark.conjur.conjur_host_identity"
           vars:
             conjur_account: "{{lookup('env', 'CONJUR_ACCOUNT')}}"
             conjur_appliance_url: "{{lookup('env', 'CONJUR_APPLIANCE_URL')}}"

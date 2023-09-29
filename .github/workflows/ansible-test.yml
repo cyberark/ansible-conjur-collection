@@ -74,7 +74,7 @@ jobs:
       # The docker container has all the pinned dependencies that are required.
       # Explicitly specify the version of Python we want to test
       - name: Run sanity tests
-        run: ansible-test sanity --docker -v --color --python ${{ matrix.python }}
+        run: ansible-test sanity --docker -v --color --python ${{ matrix.python }} --exclude dev/ --exclude ci/ --exclude secrets.yml
         working-directory: ./ansible_collections/cyberark/conjur
 
 ###

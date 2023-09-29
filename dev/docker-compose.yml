@@ -25,8 +25,8 @@ services:
     volumes:
       - .:/cyberark/dev
       - /cyberark/dev/conjur-intro/
-      - ../roles/conjur_host_identity:/roles/cyberark.conjur.conjur-host-identity/
-      - ../roles/conjur_host_identity/tests:/cyberark/tests/conjur-host-identity/
+      - ../roles/conjur_host_identity:/roles/cyberark.conjur.conjur_host_identity/
+      - ../roles/conjur_host_identity/tests:/cyberark/tests/conjur_host_identity/
       - ../plugins:/root/.ansible/plugins
       - ../tests/conjur_variable:/cyberark/tests/conjur_variable
       - /var/run/docker.sock:/var/run/docker.sock

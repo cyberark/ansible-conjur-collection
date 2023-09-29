@@ -21,6 +21,7 @@ reports
 *.js
 *.html
 output/
+importer_result.json
 
 # Pycache directories and files
 **/__pycache__/

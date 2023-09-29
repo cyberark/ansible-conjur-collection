@@ -1,7 +1,3 @@
 Jenkinsfile shebang
-dev/start.sh shebang
 tests/conjur_variable/test.sh shebang
 roles/conjur_host_identity/tests/test.sh shebang
-ci/build_release shebang
-ci/publish_to_galaxy shebang
-ci/test.sh shebang
