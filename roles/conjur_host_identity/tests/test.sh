@@ -20,7 +20,7 @@ function run_test_case {
 
   docker exec -e HFTOKEN="$(hf_token)" \
     "$(ansible_cid)" bash -ec "
-      cd /cyberark/tests/conjur-host-identity
+      cd /cyberark/tests/conjur_host_identity
 
       # You can add -vvvvv here for debugging
       ansible-playbook test_cases/$test_case/playbook.yml
@@ -28,7 +28,7 @@ function run_test_case {
 
   if [ -d "test_cases/${test_case}/tests/" ]; then
     docker exec "$(ansible_cid)" bash -ec "
-      cd /cyberark/tests/conjur-host-identity
+      cd /cyberark/tests/conjur_host_identity
       py.test --junitxml=./junit/${test_case} --connection docker -v test_cases/${test_case}/tests/test_default.py
     "
   fi

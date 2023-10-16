@@ -1,10 +1,2 @@
-ci/build_release shebang
-ci/publish_to_galaxy shebang
-ci/test.sh shebang
-dev/policy/root.yml yamllint:unparsable-with-libyaml
-dev/start.sh shebang
-dev/stop.sh shebang
-dev/util.sh shebang
 Jenkinsfile shebang
 plugins/lookup/conjur_variable.py validate-modules:version-added-must-be-major-or-minor
-secrets.yml yamllint:unparsable-with-libyaml
