@@ -10,7 +10,7 @@ function dev_dir {
 }
 
 function compose_major_version {
-  docker-compose version --short | cut -d "." -f 1
+  docker compose version --short | cut -d "." -f 1
 }
 
 function set_network {
@@ -91,8 +91,8 @@ function teardown_and_setup_inventory {
   pushd "$(dev_dir)"
     # shellcheck disable=SC2155
     export DOCKER_NETWORK="$(network)"
-    docker-compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
-    docker-compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
+    docker compose up -d --force-recreate --scale test_app_ubuntu=2 test_app_ubuntu
+    docker compose up -d --force-recreate --scale test_app_centos=2 test_app_centos
   popd
 }
 

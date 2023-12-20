@@ -69,17 +69,17 @@ function deploy_conjur_open_source() {
   echo "---- deploying Conur Open Source ----"
 
   # start conjur server
-  docker-compose up -d --build conjur conjur-proxy-nginx
-  set_conjur_cid "$(docker-compose ps -q conjur)"
+  docker compose up -d --build conjur conjur-proxy-nginx
+  set_conjur_cid "$(docker compose ps -q conjur)"
   wait_for_conjur
 
   # get admin credentials
-  fetch_conjur_cert "$(docker-compose ps -q conjur-proxy-nginx)" "cert.crt"
+  fetch_conjur_cert "$(docker compose ps -q conjur-proxy-nginx)" "cert.crt"
   ADMIN_API_KEY="$(user_api_key "$CONJUR_ACCOUNT" admin)"
 
   # start conjur cli and configure conjur
-  docker-compose up --no-deps -d conjur_cli
-  set_cli_cid "$(docker-compose ps -q conjur_cli)"
+  docker compose up --no-deps -d conjur_cli
+  set_cli_cid "$(docker compose ps -q conjur_cli)"
   setup_conjur_resources
 }
 
@@ -92,12 +92,12 @@ function deploy_conjur_enterprise {
     # start conjur leader and follower
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
-    set_conjur_cid "$(docker-compose ps -q conjur-master.mycompany.local)"
+    set_conjur_cid "$(docker compose ps -q conjur-master.mycompany.local)"
 
     fetch_conjur_cert "$(conjur_cid)" "/etc/ssl/certs/ca.pem"
 
     # Run 'sleep infinity' in the CLI container so it stays alive
-    set_cli_cid "$(docker-compose run --no-deps -d -w /src/cli --entrypoint sleep client infinity)"
+    set_cli_cid "$(docker compose run --no-deps -d -w /src/cli --entrypoint sleep client infinity)"
     # Authenticate the CLI container
     docker exec "$(cli_cid)" /bin/sh -c "
       if [ ! -e /root/conjur-demo.pem ]; then
@@ -142,8 +142,8 @@ function main() {
   refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
 
   # start ansible control node
-  docker-compose up -d --build ansible
-  set_ansible_cid "$(docker-compose ps -q ansible)"
+  docker compose up -d --build ansible
+  set_ansible_cid "$(docker compose ps -q ansible)"
 
   # scale ansible managed nodes
   generate_inventory
