@@ -38,7 +38,7 @@ Before getting started, the following tools need to be installed:
 
 ## Set up a development environment
 
-The `dev` directory contains a `docker-compose` file which creates a development
+The `dev` directory contains a `docker-compose.yml` file which creates a development
 environment :
 -  A Conjur Open Source instance
 -  An Ansible control node
@@ -142,7 +142,7 @@ Generate the master key, which will be used to encrypt Conjur's database. Store
 this value as an environment variable.
 
 ```sh-session
-docker-compose run --no-deps --rm conjur data-key generate > data_key
+docker compose run --no-deps --rm conjur data-key generate > data_key
 export CONJUR_DATA_KEY="$(< data_key)"
 ```
 
@@ -150,20 +150,20 @@ Start the Conjur OSS environment. An account, named `cucumber`, will be
 automatically created.
 
 ```sh-session
-docker-compose up -d conjur
+docker compose up -d conjur
 ```
 
 Retrieve the admin user's API key, and store the value in an environment variable.
 
 ```sh-session
-export CLI_CONJUR_AUTHN_API_KEY="$(docker-compose exec conjur conjurctl role retrieve-key cucumber:user:admin)"
+export CLI_CONJUR_AUTHN_API_KEY="$(docker compose exec conjur conjurctl role retrieve-key cucumber:user:admin)"
 ```
 
 Start the Conjur CLI container. The CLI will be automatically authenticated as
 the user `cucumber:user:admin`.
 
 ```sh-session
-docker-compose up -d conjur_cli
+docker compose up -d conjur_cli
 ```
 
 ## Load policy to set up Conjur Ansible integration
@@ -174,15 +174,15 @@ be a policy, a host, a user, a layer, a group, or a variable.
 Check out the policy file, and load it into Conjur:
 
 ```sh-session
-docker-compose exec conjur_cli cat /policy/root.yml
-docker-compose exec conjur_cli conjur policy load root /policy/root.yml
+docker compose exec conjur_cli cat /policy/root.yml
+docker compose exec conjur_cli conjur policy load root /policy/root.yml
 ```
 
 Also, load a dummy secret value into the `ansible/target-password` variable.
 This is a variable required by remote nodes in order to complete their workloads.
 
 ```sh-session
-docker-compose exec conjur_cli conjur variable values add ansible/target-password S3cretV@lue
+docker compose exec conjur_cli conjur variable values add ansible/target-password S3cretV@lue
 ```
 
 ## Create Ansible managed nodes
@@ -192,15 +192,15 @@ nodes. First, retrieve the API key for the Conjur host representing the control
 node, then create it:
 
 ```sh-session
-export ANSIBLE_CONJUR_AUTHN_API_KEY="$(docker-compose exec conjur conjurctl role retrieve-key cucumber:host:ansible/ansible-master)"
-docker-compose up -d ansible
+export ANSIBLE_CONJUR_AUTHN_API_KEY="$(docker compose exec conjur conjurctl role retrieve-key cucumber:host:ansible/ansible-master)"
+docker compose up -d ansible
 ```
 
 Next, create two instances of each managed node:
 
 ```sh-session
-docker-compose up -d --scale test_app_ubuntu=2 test_app_ubuntu
-docker-compose up -d --scale test_app_centos=2 test_app_centos
+docker compose up -d --scale test_app_ubuntu=2 test_app_ubuntu
+docker compose up -d --scale test_app_centos=2 test_app_centos
 ```
 
 ## Use Conjur Ansible Role to set up identity on managed nodes
@@ -209,13 +209,13 @@ To grant your Ansible host a Conjur identity, first install the Conjur
 Collection on your Ansible control node:
 
 ```sh-session
-docker-compose exec ansible ansible-galaxy collection install cyberark.conjur
+docker compose exec ansible ansible-galaxy collection install cyberark.conjur
 ```
 
 Set up the host factory token in the HFTOKEN env var
 
 ```sh-session
-export HFTOKEN="$(docker-compose exec conjur_cli conjur hostfactory tokens create ansible/ansible-factory | jq -r '.[0].token')"
+export HFTOKEN="$(docker compose exec conjur_cli conjur hostfactory tokens create ansible/ansible-factory | jq -r '.[0].token')"
 ```
 
 Once you've done this, you can configure each Ansible node with a Conjur
