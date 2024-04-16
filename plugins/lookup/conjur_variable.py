@@ -66,6 +66,18 @@ DOCUMENTATION = """
             key: config_file_path
         env:
           - name: CONJUR_CONFIG_FILE
+      sample_key:
+        description: Sample
+        type: string
+        default: someDefault
+        required: False
+        ini:
+          - section: conjur,
+            key: sample_key
+        vars:
+          - name: sample_key
+        env:
+          - name: SAMPLE_KEY
 """
 
 EXAMPLES = """
@@ -272,7 +284,35 @@ class LookupModule(LookupBase):
         elif not terms[0] or terms[0].isspace():
             raise AnsibleError("Invalid secret path: empty secret path not accepted.")
 
-        self.set_options(direct=kwargs)
+        # Variables belonging to the parent playbook, including those set via
+        # the --extra-vars flag on a `ansible-playbook` call, are available to
+        # LookupModule class as the `variables` parameter passed to the `run`
+        # entrypoint
+        display.display("POC LOGS: variables parameter type: " + str(type(variables)))
+        try:
+            display.display("POC LOGS: variable sample_key value: " + variables["sample_key"])
+        except KeyError:
+            display.display("POC LOGS: sample_key not in variables dictionary")
+
+        # We should register the variables as LookupModule options.
+        #
+        # Doing this has some nice advantages if we're considering supporting
+        # a set of Ansible variables that could sometimes replace environment
+        # variables.
+        #
+        # Registering the variables as options forces them to adhere to the
+        # behavior described in the DOCUMENTATION variable. An option can have
+        # both a Ansible variable and environment variable source, which means
+        # Ansible will do some juggling on our behalf.
+        self.set_options(var_options=variables, direct=kwargs)
+        display.display("POC LOGS: plugin option sample_key present: " + str(self.has_option("sample_key")))
+
+        # The method `self.get_option` will:
+        # 1. return the value of the Ansible variable sample_key, or
+        # 2. return the value of the environment variable SAMPLE_KEY, or
+        # 3. either use a specified default or throw an error if option required
+        display.display("POC LOGS: variable sample_key from options: " + self.get_option("sample_key"))
+
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
         as_file = self.get_option('as_file')
