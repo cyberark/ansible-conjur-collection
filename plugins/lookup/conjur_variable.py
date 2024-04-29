@@ -46,16 +46,6 @@ DOCUMENTATION = """
             key: identity_file_path
         env:
           - name: CONJUR_IDENTITY_FILE
-      authn_token_file:
-        description: Path to the access token file.
-        type: path
-        default: /var/run/conjur/access-token
-        required: False
-        ini:
-          - section: conjur,
-            key: authn_token_file
-        env:
-          - name: CONJUR_AUTHN_TOKEN_FILE
       config_file:
         description: Path to the Conjur configuration file. The configuration file is a YAML file.
         type: path
@@ -66,18 +56,78 @@ DOCUMENTATION = """
             key: config_file_path
         env:
           - name: CONJUR_CONFIG_FILE
-      sample_key:
-        description: Sample
+      conjur_appliance_url:
+        description: Conjur appliance url
         type: string
-        default: someDefault
+        default: 
         required: False
         ini:
           - section: conjur,
-            key: sample_key
+            key: conjur_appliance_url
         vars:
-          - name: sample_key
+          - name: conjur_appliance_url
         env:
-          - name: SAMPLE_KEY
+          - name: CONJUR_APPLIANCE_URL
+      conjur_authn_login:
+        description: Conjur authn login
+        type: string
+        default: 
+        required: False
+        ini:
+          - section: conjur,
+            key: conjur_authn_login
+        vars:
+          - name: conjur_authn_login
+        env:
+          - name: CONJUR_AUTHN_LOGIN
+      conjur_account:
+        description: Conjur account
+        type: string
+        default: 
+        required: False
+        ini:
+          - section: conjur,
+            key: conjur_account
+        vars:
+          - name: conjur_account
+        env:
+          - name: CONJUR_ACCOUNT
+      conjur_authn_api_key:
+        description: Conjur authn api key
+        type: string
+        default: 
+        required: False
+        ini:
+          - section: conjur,
+            key: conjur_authn_api_key
+        vars:
+          - name: conjur_authn_api_key
+        env:
+          - name: CONJUR_AUTHN_API_KEY
+      conjur_cert_file:
+        description: Path to the Conjur cert file
+        type: path
+        default: 
+        required: False
+        ini:
+          - section: conjur,
+            key: conjur_cert_file
+        vars:
+          - name: conjur_cert_file
+        env:
+          - name: CONJUR_CERT_FILE
+      conjur_authn_token_file:
+        description: Path to the access token file
+        type: path
+        default: /var/run/conjur/access-token
+        required: False
+        ini:
+          - section: conjur,
+            key: conjur_authn_token_file
+        vars:
+          - name: conjur_authn_token_file
+        env:
+          - name: CONJUR_AUTHN_TOKEN_FILE
 """
 
 EXAMPLES = """
@@ -275,7 +325,6 @@ def _store_secret_in_file(value):
 
     return [secrets_file.name]
 
-
 class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
@@ -283,17 +332,7 @@ class LookupModule(LookupBase):
             raise AnsibleError("Invalid secret path: no secret path provided.")
         elif not terms[0] or terms[0].isspace():
             raise AnsibleError("Invalid secret path: empty secret path not accepted.")
-
-        # Variables belonging to the parent playbook, including those set via
-        # the --extra-vars flag on a `ansible-playbook` call, are available to
-        # LookupModule class as the `variables` parameter passed to the `run`
-        # entrypoint
-        display.display("POC LOGS: variables parameter type: " + str(type(variables)))
-        try:
-            display.display("POC LOGS: variable sample_key value: " + variables["sample_key"])
-        except KeyError:
-            display.display("POC LOGS: sample_key not in variables dictionary")
-
+        
         # We should register the variables as LookupModule options.
         #
         # Doing this has some nice advantages if we're considering supporting
@@ -305,13 +344,13 @@ class LookupModule(LookupBase):
         # both a Ansible variable and environment variable source, which means
         # Ansible will do some juggling on our behalf.
         self.set_options(var_options=variables, direct=kwargs)
-        display.display("POC LOGS: plugin option sample_key present: " + str(self.has_option("sample_key")))
 
-        # The method `self.get_option` will:
-        # 1. return the value of the Ansible variable sample_key, or
-        # 2. return the value of the environment variable SAMPLE_KEY, or
-        # 3. either use a specified default or throw an error if option required
-        display.display("POC LOGS: variable sample_key from options: " + self.get_option("sample_key"))
+        appliance_url = self.get_var_value("conjur_appliance_url")
+        account = self.get_var_value("conjur_account")
+        authn_login = self.get_var_value("conjur_authn_login")
+        authn_api_key = self.get_var_value("conjur_authn_api_key")
+        cert_file = self.get_var_value("conjur_cert_file")
+        authn_token_file = self.get_var_value("conjur_authn_token_file")
 
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
@@ -320,26 +359,26 @@ class LookupModule(LookupBase):
         if validate_certs is False:
             display.warning('Certificate validation has been disabled. Please enable with validate_certs option.')
 
-        if 'http://' in str(environ.get("CONJUR_APPLIANCE_URL")):
+        if 'http://' in str(appliance_url):
             raise AnsibleError(('[WARNING]: Conjur URL uses insecure connection. Please consider using HTTPS.'))
 
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
             {
-                "account": environ.get('CONJUR_ACCOUNT'),
-                "appliance_url": environ.get("CONJUR_APPLIANCE_URL")
+                "account": account,
+                "appliance_url": appliance_url
             } if (
-                environ.get('CONJUR_ACCOUNT') is not None
-                and environ.get('CONJUR_APPLIANCE_URL') is not None
+                account is not None
+                and appliance_url is not None
             )
             else {},
             {
-                "cert_file": environ.get('CONJUR_CERT_FILE')
-            } if (environ.get('CONJUR_CERT_FILE') is not None)
+                "cert_file": cert_file
+            } if (cert_file is not None)
             else {},
             {
-                "authn_token_file": environ.get('CONJUR_AUTHN_TOKEN_FILE')
-            } if (environ.get('CONJUR_AUTHN_TOKEN_FILE') is not None)
+                "authn_token_file": authn_token_file
+            } if authn_token_file is not None
             else {}
         )
 
@@ -348,10 +387,10 @@ class LookupModule(LookupBase):
             identity = _merge_dictionaries(
                 _load_identity_from_file(identity_file, conf['appliance_url']),
                 {
-                    "id": environ.get('CONJUR_AUTHN_LOGIN'),
-                    "api_key": environ.get('CONJUR_AUTHN_API_KEY')
-                } if (environ.get('CONJUR_AUTHN_LOGIN') is not None
-                      and environ.get('CONJUR_AUTHN_API_KEY') is not None)
+                    "id": authn_login,
+                    "api_key": authn_api_key
+                } if authn_login is not None
+                      and authn_api_key is not None
                 else {}
             )
 
@@ -404,3 +443,14 @@ class LookupModule(LookupBase):
             return _store_secret_in_file(conjur_variable)
 
         return conjur_variable
+    
+    def get_var_value(self, key):
+        try:
+            variable_value = self.get_option(key)
+        except KeyError:
+            raise AnsibleError("{0} was not defined in configuration".format(key))
+
+        if not variable_value:
+            raise AnsibleError("Invalid {0} variable value".format(key))
+        
+        return variable_value
