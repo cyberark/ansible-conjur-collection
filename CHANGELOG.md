@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.2.3] - 2024-04-30
+
+### Changed
+- Enhancement for the lookup plugin to support the extra-vars
+
 ## [1.2.2] - 2023-09-28
 
 ### Changed
