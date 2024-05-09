@@ -59,7 +59,6 @@ DOCUMENTATION = """
       conjur_appliance_url:
         description: Conjur appliance url
         type: string
-        default: 
         required: False
         ini:
           - section: conjur,
@@ -71,7 +70,6 @@ DOCUMENTATION = """
       conjur_authn_login:
         description: Conjur authn login
         type: string
-        default: 
         required: False
         ini:
           - section: conjur,
@@ -83,7 +81,6 @@ DOCUMENTATION = """
       conjur_account:
         description: Conjur account
         type: string
-        default: 
         required: False
         ini:
           - section: conjur,
@@ -95,7 +92,6 @@ DOCUMENTATION = """
       conjur_authn_api_key:
         description: Conjur authn api key
         type: string
-        default: 
         required: False
         ini:
           - section: conjur,
@@ -107,7 +103,6 @@ DOCUMENTATION = """
       conjur_cert_file:
         description: Path to the Conjur cert file
         type: path
-        default: 
         required: False
         ini:
           - section: conjur,
@@ -451,6 +446,6 @@ class LookupModule(LookupBase):
             raise AnsibleError("{0} was not defined in configuration".format(key))
 
         if not variable_value:
-            raise AnsibleError("Invalid {0} variable value".format(key))
+            raise AnsibleError("The value of the {0} variable is not set".format(key))
         
         return variable_value
