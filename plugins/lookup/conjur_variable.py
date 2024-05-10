@@ -15,9 +15,10 @@ DOCUMENTATION = """
     author:
       - CyberArk BizDev (@cyberark-bizdev)
     description:
-      Retrieves credentials from Conjur using the controlling host's Conjur identity
-      or environment variables.
+      Retrieves credentials from Conjur using the controlling host's Conjur identity,
+      environment variables, or extra-vars.
       Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_TOKEN_FILE
+      Extra-vars could be conjur_account, conjur_appliance_url, conjur_cert_file, conjur_authn_login, conjur_authn_api_key, conjur_authn_token_file
       Conjur info - U(https://www.conjur.org/).
     requirements:
       - 'The controlling host running Ansible has a Conjur identity.
@@ -114,7 +115,6 @@ DOCUMENTATION = """
       conjur_authn_token_file:
         description: Path to the access token file
         type: path
-        default: /var/run/conjur/access-token
         required: False
         ini:
           - section: conjur,
@@ -445,7 +445,7 @@ class LookupModule(LookupBase):
         except KeyError:
             raise AnsibleError("{0} was not defined in configuration".format(key))
 
-        if not variable_value:
+        if not variable_value and key != "conjur_authn_token_file":
             raise AnsibleError("The value of the {0} variable is not set".format(key))
         
         return variable_value
