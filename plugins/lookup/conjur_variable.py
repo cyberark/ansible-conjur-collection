@@ -63,7 +63,7 @@ DOCUMENTATION = """
         required: False
         ini:
           - section: conjur,
-            key: conjur_appliance_url
+            key: appliance_url
         vars:
           - name: conjur_appliance_url
         env:
@@ -74,7 +74,7 @@ DOCUMENTATION = """
         required: False
         ini:
           - section: conjur,
-            key: conjur_authn_login
+            key: authn_login
         vars:
           - name: conjur_authn_login
         env:
@@ -85,7 +85,7 @@ DOCUMENTATION = """
         required: False
         ini:
           - section: conjur,
-            key: conjur_account
+            key: account
         vars:
           - name: conjur_account
         env:
@@ -96,7 +96,7 @@ DOCUMENTATION = """
         required: False
         ini:
           - section: conjur,
-            key: conjur_authn_api_key
+            key: authn_api_key
         vars:
           - name: conjur_authn_api_key
         env:
@@ -107,7 +107,7 @@ DOCUMENTATION = """
         required: False
         ini:
           - section: conjur,
-            key: conjur_cert_file
+            key: cert_file
         vars:
           - name: conjur_cert_file
         env:
@@ -118,7 +118,7 @@ DOCUMENTATION = """
         required: False
         ini:
           - section: conjur,
-            key: conjur_authn_token_file
+            key: authn_token_file
         vars:
           - name: conjur_authn_token_file
         env:
@@ -148,7 +148,6 @@ from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
-from os import environ
 from time import sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
 from ansible.module_utils.urls import urllib_error
@@ -445,7 +444,4 @@ class LookupModule(LookupBase):
         except KeyError:
             raise AnsibleError("{0} was not defined in configuration".format(key))
 
-        if not variable_value and key != "conjur_authn_token_file":
-            raise AnsibleError("The value of the {0} variable is not set".format(key))
-        
         return variable_value
