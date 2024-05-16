@@ -321,12 +321,12 @@ def _store_secret_in_file(value):
 
 class LookupModule(LookupBase):
 
+
     def run(self, terms, variables=None, **kwargs):
         if terms == []:
             raise AnsibleError("Invalid secret path: no secret path provided.")
         elif not terms[0] or terms[0].isspace():
             raise AnsibleError("Invalid secret path: empty secret path not accepted.")
-        
         # We should register the variables as LookupModule options.
         #
         # Doing this has some nice advantages if we're considering supporting
