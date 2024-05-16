@@ -319,14 +319,15 @@ def _store_secret_in_file(value):
 
     return [secrets_file.name]
 
-class LookupModule(LookupBase):
 
+class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
         if terms == []:
             raise AnsibleError("Invalid secret path: no secret path provided.")
         elif not terms[0] or terms[0].isspace():
             raise AnsibleError("Invalid secret path: empty secret path not accepted.")
+
         # We should register the variables as LookupModule options.
         #
         # Doing this has some nice advantages if we're considering supporting
@@ -384,7 +385,7 @@ class LookupModule(LookupBase):
                     "id": authn_login,
                     "api_key": authn_api_key
                 } if authn_login is not None
-                      and authn_api_key is not None
+                and authn_api_key is not None
                 else {}
             )
 
@@ -437,7 +438,7 @@ class LookupModule(LookupBase):
             return _store_secret_in_file(conjur_variable)
 
         return conjur_variable
-    
+
     def get_var_value(self, key):
         try:
             variable_value = self.get_option(key)
