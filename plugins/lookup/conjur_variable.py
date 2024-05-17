@@ -10,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
     name: conjur_variable
-    version_added: "1.0.2"
+    version_added: "1.0.3"
     short_description: Fetch credentials from CyberArk Conjur.
     author:
       - CyberArk BizDev (@cyberark-bizdev)
@@ -144,13 +144,13 @@ RETURN = """
 
 import os.path
 import socket
+import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
 from time import sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
-from ansible.module_utils.urls import urllib_error
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
 import yaml
