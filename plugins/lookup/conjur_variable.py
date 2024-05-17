@@ -10,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
     name: conjur_variable
-    version_added: "1.1.0"
+    version_added: "1.0.2"
     short_description: Fetch credentials from CyberArk Conjur.
     author:
       - CyberArk BizDev (@cyberark-bizdev)
