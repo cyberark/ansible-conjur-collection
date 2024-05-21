@@ -104,7 +104,6 @@ function deploy_conjur_enterprise {
         echo y | conjur init -u ${CONJUR_APPLIANCE_URL} -a ${CONJUR_ACCOUNT} --force --self-signed
       fi
       conjur login -i admin -p MySecretP@ss1
-      hostname -i
     "
 
     # get admin credentials
