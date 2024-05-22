@@ -157,3 +157,10 @@ class TestConjurLookup(TestCase):
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run([''], **kwargs)
             self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
+
+    def test_extra_vars(self):
+        variables = {'conjur_account': 'fakeaccount', 'conjur_appliance_url': 'https://conjur-fake', 'conjur_cert_file': './conjurfake.pem', 'conjur_authn_login': 'host/ansible/ansible-fake', 'conjur_authn_api_key': 'fakekey'}
+        terms = ['ansible/fake-secret']
+        kwargs = {'validate_certs': True}
+        output = self.lookup.run(terms, variables, **kwargs)
+        self.assertEqual(output, "conjur_variable")
