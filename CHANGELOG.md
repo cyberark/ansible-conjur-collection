@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [1.3.0] - 2024-04-30
+## [1.3.0] - 2024-05-23
 
-### Changed
-- Enhancement for the lookup plugin to support the extra-vars
+### Added
+- Lookup plugin supports configuration by Ansible variables
+  [cyberark/ansible-conjur-collection#203](https://github.com/cyberark/ansible-conjur-collection/pull/203)
 
 ## [1.2.2] - 2023-09-28
 
