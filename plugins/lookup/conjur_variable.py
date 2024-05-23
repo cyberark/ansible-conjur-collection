@@ -377,6 +377,16 @@ class LookupModule(LookupBase):
             else {}
         )
 
+        if 'account' not in conf or 'appliance_url' not in conf:
+            raise AnsibleError(
+                """Configuration must define options `conjur_account` and `conjur_appliance_url`.
+                This config can be set by any of the following methods, listed in order of priority:
+                - Ansible variables of the same name, set either in the parent playbook or passed to
+                  the ansible-playbook command with the --extra-vars flag
+                - Environment variables `CONJUR_ACCOUNT` and `CONJUR_APPLIANCE_URL`
+                - A configuration file on the controlling host with fields `account` and `appliance_url`"""
+            )
+
         if 'authn_token_file' not in conf:
             identity_file = self.get_option('identity_file')
             identity = _merge_dictionaries(
@@ -389,18 +399,14 @@ class LookupModule(LookupBase):
                 else {}
             )
 
-            if 'account' not in conf or 'appliance_url' not in conf:
-                raise AnsibleError(
-                    ("Configuration file on the controlling host must "
-                     "define `account` and `appliance_url`"
-                     "entries or they should be environment variables")
-                )
-
             if 'id' not in identity or 'api_key' not in identity:
                 raise AnsibleError(
-                    ("Identity file on the controlling host must contain "
-                     "`login` and `password` entries for Conjur appliance"
-                     " URL or they should be environment variables")
+                    """Configuration must define options `conjur_authn_login` and `conjur_authn_api_key`.
+                    This config can be set by any of the following methods, listed in order of priority:
+                    - Ansible variables of the same name, set either in the parent playbook or passed to
+                      the ansible-playbook command with the --extra-vars flag
+                    - Environment variables `CONJUR_AUTHN_LOGIN` and `CONJUR_AUTHN_API_KEY`
+                    - An identity file on the controlling host with the fields `login` and `password`"""
                 )
 
         cert_file = None
