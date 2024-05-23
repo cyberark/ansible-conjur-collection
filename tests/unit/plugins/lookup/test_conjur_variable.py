@@ -132,10 +132,11 @@ class TestConjurLookup(TestCase):
         kwargs = {'as_file': False, 'conf_file': 'conf_file', 'validate_certs': True}
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run(terms, **kwargs)
-            self.assertEqual(
-                context.exception.message,
-                "Configuration file on the controlling host must define `account` and `appliance_url` entries or they should be environment variables"
-            )
+
+        self.assertIn(
+            "Configuration must define options `conjur_account` and `conjur_appliance_url`",
+            context.exception.message,
+        )
 
         # Withhold 'id' and 'api_key' fields
         mock_merge_dictionaries.side_effect = [
@@ -145,11 +146,11 @@ class TestConjurLookup(TestCase):
 
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run(terms, **kwargs)
-            self.assertEqual(
-                context.exception.message,
-                ("Identity file on the controlling host must contain `login` and `password` "
-                 "entries for Conjur appliance URL or they should be environment variables")
-            )
+
+        self.assertIn(
+            "Configuration must define options `conjur_authn_login` and `conjur_authn_api_key`",
+            context.exception.message,
+        )
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._merge_dictionaries')
     def test_run_bad_cert_path(self, mock_merge_dictionaries):
@@ -168,11 +169,13 @@ class TestConjurLookup(TestCase):
 
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run([], **kwargs)
-            self.assertEqual(context.exception.message, "Invalid secret path: no secret path provided.")
+
+        self.assertEqual(context.exception.message, "Invalid secret path: no secret path provided.")
 
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run([''], **kwargs)
-            self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
+
+        self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
