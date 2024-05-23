@@ -84,6 +84,22 @@ class TestConjurLookup(TestCase):
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    def test_run_with_ansible_vars(self, mock_fetch_conjur_token, mock_fetch_conjur_variable):
+        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_variable.return_value = ["conjur_variable"]
+
+        variables = {'conjur_account': 'fakeaccount',
+                     'conjur_appliance_url': 'https://conjur-fake',
+                     'conjur_cert_file': './conjurfake.pem',
+                     'conjur_authn_login': 'host/ansible/ansible-fake',
+                     'conjur_authn_api_key': 'fakekey'}
+        terms = ['ansible/fake-secret']
+
+        output = self.lookup.run(terms, variables)
+        self.assertEqual(output, ["conjur_variable"])
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._merge_dictionaries')
     def test_retrieve_to_file(self, mock_merge_dictionaries, mock_fetch_conjur_token, mock_fetch_conjur_variable):
         mock_fetch_conjur_token.return_value = "token"
@@ -116,10 +132,11 @@ class TestConjurLookup(TestCase):
         kwargs = {'as_file': False, 'conf_file': 'conf_file', 'validate_certs': True}
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run(terms, **kwargs)
-            self.assertEqual(
-                context.exception.message,
-                "Configuration file on the controlling host must define `account` and `appliance_url` entries or they should be environment variables"
-            )
+
+        self.assertIn(
+            "Configuration must define options `conjur_account` and `conjur_appliance_url`",
+            context.exception.message,
+        )
 
         # Withhold 'id' and 'api_key' fields
         mock_merge_dictionaries.side_effect = [
@@ -129,11 +146,11 @@ class TestConjurLookup(TestCase):
 
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run(terms, **kwargs)
-            self.assertEqual(
-                context.exception.message,
-                ("Identity file on the controlling host must contain `login` and `password` "
-                 "entries for Conjur appliance URL or they should be environment variables")
-            )
+
+        self.assertIn(
+            "Configuration must define options `conjur_authn_login` and `conjur_authn_api_key`",
+            context.exception.message,
+        )
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._merge_dictionaries')
     def test_run_bad_cert_path(self, mock_merge_dictionaries):
@@ -152,8 +169,48 @@ class TestConjurLookup(TestCase):
 
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run([], **kwargs)
-            self.assertEqual(context.exception.message, "Invalid secret path: no secret path provided.")
+
+        self.assertEqual(context.exception.message, "Invalid secret path: no secret path provided.")
 
         with self.assertRaises(AnsibleError) as context:
             self.lookup.run([''], **kwargs)
-            self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
+
+        self.assertEqual(context.exception.message, "Invalid secret path: empty secret path not accepted.")
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    def test_run_missing_account(self, mock_fetch_conjur_token, mock_fetch_conjur_variable):
+        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_variable.return_value = ["conjur_variable"]
+
+        variables = {'conjur_cert_file': './conjurfake.pem',
+                     'conjur_authn_login': 'host/ansible/ansible-fake',
+                     'conjur_authn_api_key': 'fakekey'}
+        terms = ['ansible/fake-secret']
+
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run(terms, variables)
+
+        self.assertIn(
+            "Configuration must define options `conjur_account` and `conjur_appliance_url`",
+            context.exception.message
+        )
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    def test_run_missing_login(self, mock_fetch_conjur_token, mock_fetch_conjur_variable):
+        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_variable.return_value = ["conjur_variable"]
+
+        variables = {'conjur_account': 'fakeaccount',
+                     'conjur_appliance_url': 'https://conjur-fake',
+                     'conjur_cert_file': './conjurfake.pem'}
+        terms = ['ansible/fake-secret']
+
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run(terms, variables)
+
+        self.assertIn(
+            "Configuration must define options `conjur_authn_login` and `conjur_authn_api_key`",
+            context.exception.message
+        )

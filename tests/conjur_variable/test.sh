@@ -26,7 +26,8 @@ function run_test_case {
     fi
 
     # You can add -vvvvv here for debugging
-    ansible-playbook 'test_cases/${test_case}/playbook.yml'
+    export SAMPLE_KEY='set_in_env'
+    ansible-playbook --extra-vars 'sample_key=set_in_extravars' 'test_cases/${test_case}/playbook.yml'
 
     py.test --junitxml='./junit/${test_case}' \
       --connection docker \
