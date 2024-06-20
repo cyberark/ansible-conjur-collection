@@ -28,6 +28,7 @@ EOF
 while true ; do
   case "$1" in
     -e ) ENTERPRISE="true" ; shift ;;
+    -c ) CLOUD="true" ; shift ;;
     -h | --help ) help && exit 0 ;;
     -p ) PYTHON_VERSION="$2" ; shift ; shift ;;
     -v ) ANSIBLE_VERSION="$2" ; shift ; shift ;;
@@ -113,11 +114,60 @@ function deploy_conjur_enterprise {
     cp ../policy/root.yml . && setup_conjur_resources
   popd
 }
+function test_ConjurCloud(){
+ 
+  export CONJUR_APPLIANCE_URL='https://conjur-proxy-nginx'
+  export CONJUR_ACCOUNT='cucumber'
+  DOCKER_NETWORK='default'
+  docker compose up -d --build conjur conjur-proxy-nginx
+  set_conjur_cid "$(docker compose ps -q conjur)"
+  wait_for_conjur
+
+  # get admin credentials
+  fetch_conjur_cert "$(docker compose ps -q conjur-proxy-nginx)" "cert.crt"
+  ADMIN_API_KEY="$(user_api_key "$CONJUR_ACCOUNT" admin)"
+
+  # start conjur cli and configure conjur
+  docker compose up --no-deps -d conjur_cli
+  set_cli_cid "$(docker compose ps -q conjur_cli)"
+  setup_conjur_resources
+  set_network "$DOCKER_NETWORK"
+
+  # get conjur credentials for ansible
+  ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
+  refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
+
+  docker compose up -d --build ansible
+  set_ansible_cid "$(docker compose ps -q ansible)"
+
+
+DOCKER_COMMANDS=$(cat <<EOF
+export CONJUR_AUTHN_LOGIN='host/data/ansible/ansible-master'
+export CONJUR_ACCOUNT='conjur'
+export CONJUR_CERT_FILE='/cyberark/dev/ca.pem'
+export CONJUR_APPLIANCE_URL='https://conjurcloudint.secretsmgr.cyberark.cloud/api'
+export CONJUR_AUTHN_API_KEY='1mmwjwwf5xhq22hkhvjd1hxkd741djs6wq108rpnd2y0sk7y1s3p7ch'
+
+echo "---Testing with environment variables-----"
+ansible-playbook -vvv /cyberark/dev/test.yaml
+
+echo "----Testing with env vars-------"
+ansible-playbook -vvv --extra-vars "conjur_appliance_url=https://conjurcloudint.secretsmgr.cyberark.cloud/api conjur_account=conjur conjur_authn_login=host/data/ansible/ansible-master conjur_authn_api_key=1mmwjwwf5xhq22hkhvjd1hxkd741djs6wq108rpnd2y0sk7y1s3p7ch"  /cyberark/dev/test.yaml
+EOF
+)
+
+docker cp ca.pem dev-ansible-1:/cyberark/dev/ca.pem
+
+docker cp test.yaml dev-ansible-1:/cyberark/dev/test.yaml
+docker exec -it dev-ansible-1 bash -c "$DOCKER_COMMANDS"
+
+}
 
 function main() {
   # remove previous environment
   clean
   mkdir -p tmp
+
 
   if [[ "$ENTERPRISE" == "true" ]]; then
     export CONJUR_APPLIANCE_URL='https://conjur-master.mycompany.local'
@@ -126,6 +176,10 @@ function main() {
 
     # start conjur enterprise leader and follower
     deploy_conjur_enterprise
+
+  elif [[ "$CLOUD" == "true" ]]; then
+    test_ConjurCloud
+
   else
     export CONJUR_APPLIANCE_URL='https://conjur-proxy-nginx'
     export CONJUR_ACCOUNT='cucumber'
@@ -148,6 +202,7 @@ function main() {
   generate_inventory
   teardown_and_setup_inventory
   setup_conjur_identities
+  
 }
 
 main

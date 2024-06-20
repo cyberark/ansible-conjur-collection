@@ -1,0 +1,10 @@
+---
+  - hosts: localhost
+    tasks:
+      - name: Lookup variable in Conjur
+        debug:
+          msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/vault/IF_Safe_Pavan/safe/username', validate_certs=false) }}"
+
+      - name: Lookup variable in Conjur
+        debug:
+          msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/vault/IF_Safe_Pavan/safe/address') }}"
