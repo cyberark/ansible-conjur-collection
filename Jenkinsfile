@@ -157,6 +157,39 @@ pipeline {
         }
       }
     }
+    stages {
+    stage('Get InfraPool ExecutorV2 Agent') {
+      steps {
+        script {
+          INFRAPOOL_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "ExecutorV2", quantity: 1, duration: 1)[0]
+        }
+      }
+    }
+    stage('Create a Tenant') {
+      steps {
+        script {
+          TENANT = getConjurCloudTenant()
+        }
+      }
+    }
+    stage('Authenticate') {
+      steps {
+        script {
+          def id_token = getConjurCloudTenant.tokens(
+            infrapool: INFRAPOOL_EXECUTORV2_AGENT_0,
+            identity_url: "${TENANT.identity_information.idaptive_tenant_fqdn}",
+            username: "${TENANT.login_name}",
+          )
+ 
+          def conj_token = getConjurCloudTenant.tokens(
+            infrapool: INFRAPOOL_EXECUTORV2_AGENT_0,
+            conjur_url: "${TENANT.conjur_cloud_url}",
+            identity_token: "${id_token}"
+            )
+        }
+      }
+    }
+  }
 
     stage('Build Release Artifacts') {
       when {
@@ -185,6 +218,9 @@ pipeline {
 
   post {
     always {
+      script {
+        deleteConjurCloudTenant("${TENANT.id}")
+      }
       cleanupAndNotify(currentBuild.currentResult)
     }
   }
