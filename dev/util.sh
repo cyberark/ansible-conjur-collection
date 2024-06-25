@@ -29,6 +29,23 @@ function cli_cid {
   cat "$(dev_dir)/tmp/cli_cid"
 }
 
+function set_token {
+  echo "$1" > "$(dev_dir)/tmp/token"
+}
+
+function token {
+  cat "$(dev_dir)/tmp/token"
+}
+
+function set_appliance_url {
+  echo "$1" > "$(dev_dir)/tmp/appliance_url"
+}
+
+function appliance_url {
+  cat "$(dev_dir)/tmp/appliance_url"
+}
+
+
 function set_conjur_cid {
   echo "$1" > "$(dev_dir)/tmp/conjur_cid"
 }
@@ -77,6 +94,15 @@ function hf_token {
   " | jq -r ".[0].token"
 }
 
+function hf_token_cloud {
+  expiration_datetime=$(date -u -d "+24 hours" +"%Y-%m-%dT%H:%M:%SZ")
+  curl --request POST \
+   --data-urlencode "expiration=$expiration_datetime" \
+   --data-urlencode "host_factory=conjur:host_factory:data/ansible/ansible-factory" \
+   -H "Authorization: Token token=\"$(token)\"" \
+   "$(appliance_url)/host_factory_tokens"| jq -r '.[].token'
+}
+
 function refresh_access_token {
   local id="$1"
   local api_key="$2"
@@ -105,6 +131,15 @@ function setup_conjur_identities {
     "
 }
 
+function setup_conjurcloud_identities {
+  docker exec \
+    -e HFTOKEN="$(hf_token_cloud)" \
+    "$(ansible_cid)" bash -ec "
+      cd dev
+      ansible-playbook playbooks/conjur-identity-setup/conjur_role_playbook.yml
+    "
+}
+
 function generate_inventory {
   docker exec "$(ansible_cid)" bash -ec "
     cd dev
@@ -114,7 +149,7 @@ function generate_inventory {
 }
 
 function ensure_submodules {
-  if [ ! -d "$(dev_dir)/conjur-intro" ]; then
+  if [  -d "$(dev_dir)/conjur-intro" ]; then
     git submodule init -- "$(dev_dir)/conjur-intro"
     git submodule update --remote -- "$(dev_dir)/conjur-intro"
   fi

@@ -1,15 +1,17 @@
 #!/bin/bash
 set -ex
-source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
 declare -x DOCKER_NETWORK=''
 
 declare -x ENTERPRISE='false'
+declare -x CLOUD='false'
 declare -x ANSIBLE_API_KEY=''
 declare -x ADMIN_API_KEY=''
 
 declare -x ANSIBLE_VERSION='8'
 declare -x PYTHON_VERSION='3.11'
+
+source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
 function help {
   cat <<EOF
@@ -18,6 +20,7 @@ Conjur Ansible Collection :: Dev Environment
 $0 [options]
 
 -e            Deploy Conjur Enterprise. (Default: Conjur Open Source)
+-c            Deploy Conjur Cloud. (Default: Conjur Open Source)
 -h, --help    Print usage information.
 -p <version>  Run the Ansible service with the desired Python version. (Default: 3.11)
 -v <version>  Run the Ansible service with the desired Ansible Community Package
@@ -28,6 +31,7 @@ EOF
 while true ; do
   case "$1" in
     -e ) ENTERPRISE="true" ; shift ;;
+    -c ) CLOUD="true" ; shift ;;
     -h | --help ) help && exit 0 ;;
     -p ) PYTHON_VERSION="$2" ; shift ; shift ;;
     -v ) ANSIBLE_VERSION="$2" ; shift ; shift ;;
@@ -114,10 +118,47 @@ function deploy_conjur_enterprise {
   popd
 }
 
+# deploy conjur cloud
+
+function urlencode() {
+  local string="$1"
+  local encoded
+  encoded=$(printf '%s' "$string" | jq -sRr @uri)
+  echo "$encoded"
+}
+
+function setConjurCloudVariable() {
+  local variable_name="$1"
+  local data="$2"
+  
+  local encoded_variable_name
+  encoded_variable_name=$(urlencode "$variable_name")
+  
+  curl -w "%{http_code}" -H "Authorization: Token token=\"$INFRAPOOL_CONJUR_AUTHN_TOKEN\"" \
+       -X POST --data-urlencode "${data}" "${CONJUR_APPLIANCE_URL}/secrets/conjur/variable/${encoded_variable_name}"
+}
+
+function deploy_conjur_cloud() {
+  curl -w "%{http_code}" -H "Authorization: Token token=\"$INFRAPOOL_CONJUR_AUTHN_TOKEN\"" \
+       -X POST -d "$(cat ./cloud/root.yml)" "${CONJUR_APPLIANCE_URL}/policies/conjur/policy/data"
+
+  setConjurCloudVariable "data/ansible/target-password" "target_secret_password"
+  setConjurCloudVariable "data/ansible/test-secret" "test_secret_password"
+  setConjurCloudVariable "data/ansible/test-secret-in-file" "test_secret_in_file_password"
+  setConjurCloudVariable "data/ansible/var with spaces" "var_with_spaces_secret_password"
+}
+
+
 function main() {
   # remove previous environment
   clean
   mkdir -p tmp
+
+  # remove previous environment
+  REPO_DIR=$(git rev-parse --show-toplevel)
+  $REPO_DIR/ci/build_release
+  FILE_NAME=$(find $REPO_DIR -name "cyberark-conjur-*tar.gz")
+  mv "$FILE_NAME" "$(dev_dir)"
 
   if [[ "$ENTERPRISE" == "true" ]]; then
     export CONJUR_APPLIANCE_URL='https://conjur-master.mycompany.local'
@@ -126,6 +167,19 @@ function main() {
 
     # start conjur enterprise leader and follower
     deploy_conjur_enterprise
+  elif [[ "$CLOUD" == "true" ]]; then
+    export CONJUR_APPLIANCE_URL="$INFRAPOOL_CONJUR_APPLIANCE_URL/api"
+    export CONJUR_ACCOUNT=conjur
+    export CONJUR_AUTHN_LOGIN=$INFRAPOOL_CONJUR_AUTHN_LOGIN
+    export CONJUR_AUTHN_TOKEN=$INFRAPOOL_CONJUR_AUTHN_TOKEN
+    echo "$INFRAPOOL_CONJUR_AUTHN_TOKEN" | base64 --decode > "$(dev_dir)/access_token"
+    export CONJUR_AUTHN_TOKEN_FILE="$(dev_dir)/access_token"
+    set_token "$INFRAPOOL_CONJUR_AUTHN_TOKEN"
+    set_appliance_url "$CONJUR_APPLIANCE_URL" 
+    test -f ./cloud_ca.pem && cp ./cloud_ca.pem "$(dev_dir)/conjur.pem"
+    DOCKER_NETWORK='default'
+
+    deploy_conjur_cloud
   else
     export CONJUR_APPLIANCE_URL='https://conjur-proxy-nginx'
     export CONJUR_ACCOUNT='cucumber'
@@ -136,18 +190,28 @@ function main() {
   fi
   set_network "$DOCKER_NETWORK"
 
-  # get conjur credentials for ansible
-  ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
-  refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
+  if [[ "$CLOUD" != "true" ]]; then
+    # get conjur credentials for ansible
+    ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
+    refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
+    # start ansible control node
+    docker compose up -d --build ansible
+  else
+    # start ansible control node
+    docker compose -f docker-compose.cloud.yml up -d --build ansible
+  fi
 
-  # start ansible control node
-  docker compose up -d --build ansible
   set_ansible_cid "$(docker compose ps -q ansible)"
 
   # scale ansible managed nodes
   generate_inventory
   teardown_and_setup_inventory
-  setup_conjur_identities
+
+  if [[ "$CLOUD" != "true" ]]; then
+    setup_conjur_identities
+  else
+    setup_conjurcloud_identities
+  fi
 }
 
 main

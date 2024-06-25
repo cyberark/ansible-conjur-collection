@@ -1,7 +1,26 @@
 #!/usr/bin/env groovy
+@Library("product-pipelines-shared-library") _
+
+// Automated release, promotion and dependencies
+properties([
+  // Include the automated release parameters for the build
+  release.addParams(),
+  // Dependencies of the project that should trigger builds
+  dependencies([])
+])
+
+// Performs release promotion.  No other stages will be run
+if (params.MODE == "PROMOTE") {
+  release.promote(params.VERSION_TO_PROMOTE) { sourceVersion, targetVersion, assetDirectory ->
+
+  }
+  // Copy Github Enterprise release to Github
+  release.copyEnterpriseRelease(params.VERSION_TO_PROMOTE)
+  return
+}
 
 pipeline {
-  agent { label 'executor-v2' }
+  agent { label 'conjur-enterprise-common-agent' }
 
   options {
     timestamps()
@@ -12,180 +31,132 @@ pipeline {
     cron(getDailyCronString())
   }
 
+  environment {
+    MODE = release.canonicalizeMode()
+  }
+
+
   stages {
-    stage('Validate') {
-      parallel {
-        stage('Changelog') {
-          steps { parseChangelog() }
+    stage('Scan for internal URLs') {
+      steps {
+        script {
+          detectInternalUrls()
         }
       }
     }
 
-    stage('Run conjur_variable unit tests') {
+    stage('Get InfraPool ExecutorV2 Agent') {
       steps {
-        sh './dev/test_unit.sh -r'
-        publishHTML (target : [allowMissing: false,
-          alwaysLinkToLastBuild: false,
-          keepAll: true,
-          reportDir: 'tests/output/reports/coverage=units/',
-          reportFiles: 'index.html',
-          reportName: 'Ansible Coverage Report',
-          reportTitles: 'Conjur Ansible Collection report'])
+        script {
+          // Request ExecutorV2 agents for 1 hour(s)
+          INFRAPOOL_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "ExecutorV2", quantity: 1, duration: 1)
+          INFRAPOOL_EXECUTORV2_AGENT_0 = INFRAPOOL_EXECUTORV2_AGENTS[0]
+          infrapool = infraPoolConnect(INFRAPOOL_EXECUTORV2_AGENT_0, {})
+        }
       }
     }
 
-    stage('Run integration tests with Conjur Open Source') {
+    // Generates a VERSION file based on the current build number and latest version in CHANGELOG.md
+    stage('Validate Changelog and set version') {
+      steps {
+        script {
+          updateVersion(infrapool, "CHANGELOG.md", "${BUILD_NUMBER}")
+        }
+      }
+    }
+
+    stage('Run Conjur Cloud tests') {
       stages {
+        stage('Create a Tenant') {
+          steps {
+            script {
+              TENANT = getConjurCloudTenant()
+            }
+          }
+        }
+        stage('Authenticate') {
+          steps {
+            script {
+              def id_token = getConjurCloudTenant.tokens(
+                infrapool: infrapool,
+                identity_url: "${TENANT.identity_information.idaptive_tenant_fqdn}",
+                username: "${TENANT.login_name}"
+              )
+
+              def conj_token = getConjurCloudTenant.tokens(
+                infrapool: infrapool,
+                conjur_url: "${TENANT.conjur_cloud_url}",
+                identity_token: "${id_token}"
+                )
+
+              env.conj_token = conj_token
+            }
+          }
+        }
+        stage('Run tests against Tenant') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              infrapool.agentSh "./dev/start.sh -c -v 8"
+            }
+          }
+        }
         stage('Ansible v8 (core 2.15) - latest') {
           stages {
-            stage('Deploy Conjur') {
-              steps {
-                sh './dev/start.sh -v 8'
-              }
-            }
             stage('Run tests') {
               parallel {
                 stage('Testing conjur_variable lookup plugin') {
                   steps {
-                    sh './ci/test.sh -d -t conjur_variable'
-                    junit 'tests/conjur_variable/junit/*'
+                    script {
+                      infrapool.agentSh './ci/test.sh -d -t conjur_variable'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        infrapool.agentStash name: 'conjur_variable', includes: 'tests/conjur_variable/junit/*'
+                        unstash 'conjur_variable'
+                        junit 'tests/conjur_variable/junit/*'
+                      }
+                    }
                   }
                 }
-
                 stage('Testing conjur_host_identity role') {
                   steps {
-                    sh './ci/test.sh -d -t conjur_host_identity'
-                    junit 'roles/conjur_host_identity/tests/junit/*'
+                    script {
+                      infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        infrapool.agentStash name: 'conjur_host_identity', includes: 'roles/conjur_host_identity/tests/junit/*'
+                        unstash 'conjur_host_identity'
+                        junit 'roles/conjur_host_identity/tests/junit/*'
+                      }
+                    }
                   }
                 }
               }
             }
           }
         }
-
-        stage('Ansible v7 (core 2.14)') {
-          when {
-            anyOf {
-              branch 'main'
-              buildingTag()
-            }
-          }
-          stages {
-            stage('Deploy Conjur') {
-              steps {
-                sh './dev/start.sh -v 7'
-              }
-            }
-            stage('Run tests') {
-              parallel {
-                stage('Testing conjur_variable lookup plugin') {
-                  steps {
-                    sh './ci/test.sh -d -t conjur_variable'
-                    junit 'tests/conjur_variable/junit/*'
-                  }
-                }
-
-                stage('Testing conjur_host_identity role') {
-                  steps {
-                    sh './ci/test.sh -d -t conjur_host_identity'
-                    junit 'roles/conjur_host_identity/tests/junit/*'
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        stage('Ansible v6 (core 2.13)') {
-          when {
-            anyOf {
-              branch 'main'
-              buildingTag()
-            }
-          }
-          stages {
-            stage('Deploy Conjur') {
-              steps {
-                sh './dev/start.sh -v 6'
-              }
-            }
-            stage('Run tests') {
-              parallel {
-                stage('Testing conjur_variable lookup plugin') {
-                  steps {
-                    sh './ci/test.sh -d -t conjur_variable'
-                    junit 'tests/conjur_variable/junit/*'
-                  }
-                }
-
-                stage('Testing conjur_host_identity role') {
-                  steps {
-                    sh './ci/test.sh -d -t conjur_host_identity'
-                    junit 'roles/conjur_host_identity/tests/junit/*'
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    stage('Run integration tests with Conjur Enterprise') {
-      stages {
-        stage('Deploy Conjur Enterprise') {
-          steps {
-            sh './dev/start.sh -e -v 8'
-          }
-        }
-        stage('Run tests') {
-          parallel {
-            stage("Testing conjur_variable lookup plugin") {
-              steps {
-                sh './ci/test.sh -d -t conjur_variable'
-                junit 'tests/conjur_variable/junit/*'
-              }
-            }
-
-            stage("Testing conjur_host_identity role") {
-              steps {
-                sh './ci/test.sh -d -t conjur_host_identity'
-                junit 'roles/conjur_host_identity/tests/junit/*'
-              }
-            }
-          }
-        }
-      }
-    }
-
-    stage('Build Release Artifacts') {
-      when {
-        anyOf {
-            branch 'main'
-            buildingTag()
-        }
-      }
-
-      steps {
-        sh './ci/build_release'
-        archiveArtifacts 'cyberark-conjur-*.tar.gz'
-      }
-    }
-
-    stage('Publish to Ansible Galaxy') {
-      when {
-        buildingTag()
-      }
-
-      steps {
-        sh 'summon ./ci/publish_to_galaxy'
       }
     }
   }
 
+
   post {
     always {
-      cleanupAndNotify(currentBuild.currentResult)
+      script {
+            deleteConjurCloudTenant("${TENANT.id}")
+      }
+      releaseInfraPoolAgent(".infrapool/release_agents")
     }
   }
 }

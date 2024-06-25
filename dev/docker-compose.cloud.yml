@@ -1,0 +1,34 @@
+version: '3'
+services:
+  ansible:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ANSIBLE_VERSION: ${ANSIBLE_VERSION}
+        PYTHON_VERSION: ${PYTHON_VERSION}
+    command: /bin/sleep 1d
+    environment:
+      COMPOSE_PROJECT_NAME: dev
+      CONJUR_ACCOUNT: ${CONJUR_ACCOUNT}
+      CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}
+      CONJUR_AUTHN_LOGIN: ${CONJUR_AUTHN_LOGIN}
+      CONJUR_AUTHN_TOKEN: ${CONJUR_AUTHN_TOKEN}
+      CONJUR_AUTHN_TOKEN_FILE: /cyberark/dev/access_token
+      IS_CLOUD: true 
+      # NOTE: Explicitly setting the ANSIBLE_CONFIG envvar avoids Ansible ignoring
+      # the configuration because it is in a world-writable working directory,
+      # see https://docs.ansible.com/ansible/latest/reference_appendices/config.html#avoiding-security-risks-with-ansible-cfg-in-the-current-directory.
+      ANSIBLE_CONFIG: /cyberark/dev/ansible.cfg
+      ANSIBLE_INVENTORY: /cyberark/dev/inventory.tmp
+      ANSIBLE_ROLES_PATH: /roles
+    networks:
+      - default
+    volumes:
+      - .:/cyberark/dev
+      - /cyberark/dev/conjur-intro/
+      - ../roles/conjur_host_identity:/roles/cyberark.conjur.conjur_host_identity/
+      - ../roles/conjur_host_identity/tests:/cyberark/tests/conjur_host_identity/
+      - ../plugins:/root/.ansible/plugins
+      - ../tests/conjur_variable:/cyberark/tests/conjur_variable
+      - /var/run/docker.sock:/var/run/docker.sock

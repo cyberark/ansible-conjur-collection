@@ -28,6 +28,6 @@ def test_is_conjurized(host):
 
 
 def test_retrieve_secret_with_summon(host):
-    result = host.check_output("summon --yaml 'DB_USERNAME: !var ansible/target-password' bash -c 'printenv DB_USERNAME'", shell=True)
+    result = host.check_output("summon --yaml 'DB_USERNAME: !var data/ansible/target-password' bash -c 'printenv DB_USERNAME'", shell=True)
 
     assert result == "target_secret_password"

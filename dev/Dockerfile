@@ -25,3 +25,10 @@ RUN echo \
     tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN apt-get update && \
     apt-get -y install docker-ce
+
+RUN mkdir -p /cyberark/collections
+
+COPY cyberark-conjur-*tar.gz /cyberark/collections
+
+RUN FILE_NAME=$(find /cyberark/collections -name "cyberark-conjur-*tar.gz") && \
+    ansible-galaxy collection install "$FILE_NAME" --force
