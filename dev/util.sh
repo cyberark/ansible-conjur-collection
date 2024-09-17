@@ -89,14 +89,16 @@ function host_api_key {
 }
 
 function hf_token {
-  is_cloud_env=$(docker exec "$(cli_cid)" printenv IS_CLOUD)
+  is_cloud_env=$(docker exec "$(ansible_cid)" printenv IS_CLOUD)
   if [ "$is_cloud_env" = "true" ]; then
     expiration_datetime=$(date -u -d "+24 hours" +"%Y-%m-%dT%H:%M:%SZ")
+    set +x
     curl --request POST \
      --data-urlencode "expiration=$expiration_datetime" \
      --data-urlencode "host_factory=conjur:host_factory:data/ansible/ansible-factory" \
      -H "Authorization: Token token=\"$(token)\"" \
      "$(appliance_url)/host_factory_tokens"| jq -r '.[].token'
+    set -x
   else
     docker exec "$(cli_cid)" /bin/sh -c "
       conjur hostfactory tokens create --duration=24h -i ansible/ansible-factory

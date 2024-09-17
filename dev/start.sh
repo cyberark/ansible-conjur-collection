@@ -169,6 +169,8 @@ function main() {
     #start ansible control node
     deploy_ansible "$DOCKER_NETWORK"
   elif [[ "$CLOUD" == "true" ]]; then
+    #disable the debugging
+    set +x
     export CONJUR_APPLIANCE_URL="$INFRAPOOL_CONJUR_APPLIANCE_URL/api"
     export CONJUR_ACCOUNT=conjur
     export CONJUR_AUTHN_LOGIN=$INFRAPOOL_CONJUR_AUTHN_LOGIN
@@ -177,9 +179,12 @@ function main() {
     set_token "$INFRAPOOL_CONJUR_AUTHN_TOKEN"
     set_appliance_url "$CONJUR_APPLIANCE_URL" 
     test -f "$(dev_dir)/cloud_ca.pem" && cp "$(dev_dir)/cloud_ca.pem" "$(dev_dir)/conjur.pem"
+    DOCKER_NETWORK='default'
     #upload the policy into cloud tenant pool
     deploy_conjur_cloud
-    set_network 'default'
+    #Enable the debugging
+    set -x
+    set_network "$DOCKER_NETWORK"
     # start ansible control node
     docker compose -f docker-compose.cloud.yml up -d --build ansible
   else

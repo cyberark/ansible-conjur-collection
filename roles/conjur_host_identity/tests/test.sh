@@ -5,7 +5,6 @@ source "$(git rev-parse --show-toplevel)/dev/util.sh"
 function run_test_cases {
   for test_case in test_cases/*; do
     teardown_and_setup_inventory
-    sleep 30
     run_test_case "$(basename -- "$test_case")"
   done
 }

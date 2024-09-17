@@ -27,6 +27,7 @@ def test_is_conjurized(host):
     assert conf_file.exists
     assert conf_file.user == 'root'
 
+
 def test_retrieve_secret_with_summon(host):
     # Get the environment variable
     is_cloud = os.getenv('IS_CLOUD')
