@@ -19,7 +19,7 @@ function run_test_case {
     exit 1
   fi
 
-  docker exec -e HFTOKEN="$(hf_token_cloud)" \
+  docker exec -e HFTOKEN="$(hf_token)" \
     "$(ansible_cid)" bash -ec "
       cd /cyberark/tests/conjur_host_identity
 

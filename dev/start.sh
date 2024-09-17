@@ -70,7 +70,7 @@ function setup_conjur_resources {
 }
 
 function deploy_conjur_open_source() {
-  echo "---- deploying Conur Open Source ----"
+  echo "---- deploying Conjur Open Source ----"
 
   # start conjur server
   docker compose up -d --build conjur conjur-proxy-nginx
@@ -109,31 +109,23 @@ function deploy_conjur_enterprise {
       fi
       conjur login -i admin -p MySecretP@ss1
     "
-
     # get admin credentials
     ADMIN_API_KEY="$(rotate_api_key)"
-
     # configure conjur
     cp ../policy/root.yml . && setup_conjur_resources
   popd
 }
 
 # deploy conjur cloud
-
 function urlencode() {
-  local string="$1"
-  local encoded
-  encoded=$(printf '%s' "$string" | jq -sRr @uri)
-  echo "$encoded"
+  printf '%s' "$1" | jq -sRr @uri
 }
 
 function setConjurCloudVariable() {
   local variable_name="$1"
   local data="$2"
-  
   local encoded_variable_name
   encoded_variable_name=$(urlencode "$variable_name")
-  
   curl -w "%{http_code}" -H "Authorization: Token token=\"$INFRAPOOL_CONJUR_AUTHN_TOKEN\"" \
        -X POST --data-urlencode "${data}" "${CONJUR_APPLIANCE_URL}/secrets/conjur/variable/${encoded_variable_name}"
 }
@@ -148,57 +140,56 @@ function deploy_conjur_cloud() {
   setConjurCloudVariable "data/ansible/var with spaces" "var_with_spaces_secret_password"
 }
 
+function deploy_ansible() {
+  set_network "$1"
+  # get conjur credentials for ansible
+  ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
+  refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
+  docker compose up -d --build ansible
+}
+
 
 function main() {
   # remove previous environment
   clean
   mkdir -p tmp
 
-  # remove previous environment
-  REPO_DIR=$(git rev-parse --show-toplevel)
-  $REPO_DIR/ci/build_release
-  FILE_NAME=$(find $REPO_DIR -name "cyberark-conjur-*tar.gz")
-  mv "$FILE_NAME" "$(dev_dir)"
+  # build the ansible-conjur-collection
+  repo_dir=$(git rev-parse --show-toplevel)
+  $repo_dir/ci/build_release
+  archive_name=$(find $repo_dir -name "cyberark-conjur-*tar.gz")
+  test -f "$archive_name" && mv "$archive_name" "$(dev_dir)"
 
   if [[ "$ENTERPRISE" == "true" ]]; then
     export CONJUR_APPLIANCE_URL='https://conjur-master.mycompany.local'
     export CONJUR_ACCOUNT='demo'
     DOCKER_NETWORK='dap_net'
-
     # start conjur enterprise leader and follower
     deploy_conjur_enterprise
+    #start ansible control node
+    deploy_ansible "$DOCKER_NETWORK"
   elif [[ "$CLOUD" == "true" ]]; then
     export CONJUR_APPLIANCE_URL="$INFRAPOOL_CONJUR_APPLIANCE_URL/api"
     export CONJUR_ACCOUNT=conjur
     export CONJUR_AUTHN_LOGIN=$INFRAPOOL_CONJUR_AUTHN_LOGIN
-    export CONJUR_AUTHN_TOKEN=$INFRAPOOL_CONJUR_AUTHN_TOKEN
     echo "$INFRAPOOL_CONJUR_AUTHN_TOKEN" | base64 --decode > "$(dev_dir)/access_token"
     export CONJUR_AUTHN_TOKEN_FILE="$(dev_dir)/access_token"
     set_token "$INFRAPOOL_CONJUR_AUTHN_TOKEN"
     set_appliance_url "$CONJUR_APPLIANCE_URL" 
-    test -f ./cloud_ca.pem && cp ./cloud_ca.pem "$(dev_dir)/conjur.pem"
-    DOCKER_NETWORK='default'
-
+    test -f "$(dev_dir)/cloud_ca.pem" && cp "$(dev_dir)/cloud_ca.pem" "$(dev_dir)/conjur.pem"
+    #upload the policy into cloud tenant pool
     deploy_conjur_cloud
+    set_network 'default'
+    # start ansible control node
+    docker compose -f docker-compose.cloud.yml up -d --build ansible
   else
     export CONJUR_APPLIANCE_URL='https://conjur-proxy-nginx'
     export CONJUR_ACCOUNT='cucumber'
     DOCKER_NETWORK='default'
-
     # start conjur server and proxy
     deploy_conjur_open_source
-  fi
-  set_network "$DOCKER_NETWORK"
-
-  if [[ "$CLOUD" != "true" ]]; then
-    # get conjur credentials for ansible
-    ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
-    refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
-    # start ansible control node
-    docker compose up -d --build ansible
-  else
-    # start ansible control node
-    docker compose -f docker-compose.cloud.yml up -d --build ansible
+    #start ansible control node
+    deploy_ansible "$DOCKER_NETWORK"
   fi
 
   set_ansible_cid "$(docker compose ps -q ansible)"
@@ -206,12 +197,7 @@ function main() {
   # scale ansible managed nodes
   generate_inventory
   teardown_and_setup_inventory
-
-  if [[ "$CLOUD" != "true" ]]; then
-    setup_conjur_identities
-  else
-    setup_conjurcloud_identities
-  fi
+  setup_conjur_identities
 }
 
 main

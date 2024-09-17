@@ -13,7 +13,7 @@ if [[ -n "$(cli_cid)" ]]; then
   docker rm -f "$(cli_cid)"
 fi
 
-if -zd conjur-intro ; then
+if -d conjur-intro ; then
   pushd conjur-intro
     ./bin/dap --stop
   popd
