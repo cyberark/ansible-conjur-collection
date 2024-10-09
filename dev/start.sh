@@ -20,7 +20,7 @@ Conjur Ansible Collection :: Dev Environment
 $0 [options]
 
 -e            Deploy Conjur Enterprise. (Default: Conjur Open Source)
--c            Deploy Conjur Cloud. (Default: Conjur Open Source)
+-c            Deploy Conjur Cloud. (Developers should not use this option to start a local environment.)
 -h, --help    Print usage information.
 -p <version>  Run the Ansible service with the desired Python version. (Default: 3.11)
 -v <version>  Run the Ansible service with the desired Ansible Community Package
@@ -31,7 +31,13 @@ EOF
 while true ; do
   case "$1" in
     -e ) ENTERPRISE="true" ; shift ;;
-    -c ) CLOUD="true" ; shift ;;
+    -c )  
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "Cannot setup a local environment using Conjur Cloud"
+        exit 1
+      fi
+      CLOUD="true"
+      shift ;;
     -h | --help ) help && exit 0 ;;
     -p ) PYTHON_VERSION="$2" ; shift ; shift ;;
     -v ) ANSIBLE_VERSION="$2" ; shift ; shift ;;
@@ -117,15 +123,15 @@ function deploy_conjur_enterprise {
 }
 
 # deploy conjur cloud
-function urlencode() {
+function url_encode() {
   printf '%s' "$1" | jq -sRr @uri
 }
 
-function setConjurCloudVariable() {
+function set_conjur_cloud_variable() {
   local variable_name="$1"
   local data="$2"
   local encoded_variable_name
-  encoded_variable_name=$(urlencode "$variable_name")
+  encoded_variable_name=$(url_encode "$variable_name")
   curl -w "%{http_code}" -H "Authorization: Token token=\"$INFRAPOOL_CONJUR_AUTHN_TOKEN\"" \
        -X POST --data-urlencode "${data}" "${CONJUR_APPLIANCE_URL}/secrets/conjur/variable/${encoded_variable_name}"
 }
@@ -134,10 +140,10 @@ function deploy_conjur_cloud() {
   curl -w "%{http_code}" -H "Authorization: Token token=\"$INFRAPOOL_CONJUR_AUTHN_TOKEN\"" \
        -X POST -d "$(cat ./cloud/root.yml)" "${CONJUR_APPLIANCE_URL}/policies/conjur/policy/data"
 
-  setConjurCloudVariable "data/ansible/target-password" "target_secret_password"
-  setConjurCloudVariable "data/ansible/test-secret" "test_secret_password"
-  setConjurCloudVariable "data/ansible/test-secret-in-file" "test_secret_in_file_password"
-  setConjurCloudVariable "data/ansible/var with spaces" "var_with_spaces_secret_password"
+  set_conjur_cloud_variable "data/ansible/target-password" "target_secret_password"
+  set_conjur_cloud_variable "data/ansible/test-secret" "test_secret_password"
+  set_conjur_cloud_variable "data/ansible/test-secret-in-file" "test_secret_in_file_password"
+  set_conjur_cloud_variable "data/ansible/var with spaces" "var_with_spaces_secret_password"
 }
 
 function deploy_ansible() {

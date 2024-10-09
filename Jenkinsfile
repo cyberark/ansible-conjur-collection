@@ -11,11 +11,14 @@ properties([
 
 // Performs release promotion.  No other stages will be run
 if (params.MODE == "PROMOTE") {
-  release.promote(params.VERSION_TO_PROMOTE) { sourceVersion, targetVersion, assetDirectory ->
+  release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
 
+    infrapool.agentSh """
+      ./ci/build_release
+      ./ci/publish_to_galaxy
+      cp cyberark-conjur-*.tar.gz "${assetDirectory}"
+    """
   }
-  // Copy Github Enterprise release to Github
-  release.copyEnterpriseRelease(params.VERSION_TO_PROMOTE)
   return
 }
 
