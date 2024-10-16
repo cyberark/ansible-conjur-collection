@@ -53,7 +53,7 @@
     uri:
       url: "{{ conjur_appliance_url }}/host_factories/hosts"
       method: POST
-      body: "id={{ conjur_host_name }}"
+      body: "id={{ conjur_host_name }}&annotations%5Bauthn%2Fapi-key%5D=true"
       headers:
         Authorization: Token token="{{ conjur_host_factory_token }}"
         Content-Type: "application/x-www-form-urlencoded"
@@ -63,6 +63,7 @@
     retries: 3
     delay: 10
     until: host_factory_response.status == 201
+
 
   - name: Place identity file /etc/conjur.identity
     template:

@@ -29,6 +29,23 @@ function cli_cid {
   cat "$(dev_dir)/tmp/cli_cid"
 }
 
+function set_token {
+  echo "$1" > "$(dev_dir)/tmp/token"
+}
+
+function token {
+  cat "$(dev_dir)/tmp/token"
+}
+
+function set_appliance_url {
+  echo "$1" > "$(dev_dir)/tmp/appliance_url"
+}
+
+function appliance_url {
+  cat "$(dev_dir)/tmp/appliance_url"
+}
+
+
 function set_conjur_cid {
   echo "$1" > "$(dev_dir)/tmp/conjur_cid"
 }
@@ -72,9 +89,21 @@ function host_api_key {
 }
 
 function hf_token {
-  docker exec "$(cli_cid)" /bin/sh -c "
-    conjur hostfactory tokens create --duration=24h -i ansible/ansible-factory
-  " | jq -r ".[0].token"
+  is_cloud_env=$(docker exec "$(ansible_cid)" printenv IS_CLOUD)
+  if [ "$is_cloud_env" = "true" ]; then
+    expiration_datetime=$(date -u -d "+24 hours" +"%Y-%m-%dT%H:%M:%SZ")
+    set +x
+    curl --request POST \
+     --data-urlencode "expiration=$expiration_datetime" \
+     --data-urlencode "host_factory=conjur:host_factory:data/ansible/ansible-factory" \
+     -H "Authorization: Token token=\"$(token)\"" \
+     "$(appliance_url)/host_factory_tokens"| jq -r '.[].token'
+    set -x
+  else
+    docker exec "$(cli_cid)" /bin/sh -c "
+      conjur hostfactory tokens create --duration=24h -i ansible/ansible-factory
+    " | jq -r ".[0].token"
+  fi
 }
 
 function refresh_access_token {
@@ -114,7 +143,7 @@ function generate_inventory {
 }
 
 function ensure_submodules {
-  if [ ! -d "$(dev_dir)/conjur-intro" ]; then
+  if [ -d "$(dev_dir)/conjur-intro" ]; then
     git submodule init -- "$(dev_dir)/conjur-intro"
     git submodule update --remote -- "$(dev_dir)/conjur-intro"
   fi

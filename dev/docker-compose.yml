@@ -14,6 +14,7 @@ services:
       CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}
       CONJUR_AUTHN_API_KEY: ${ANSIBLE_API_KEY}
       CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
+      IS_CLOUD: false
       # NOTE: Explicitly setting the ANSIBLE_CONFIG envvar avoids Ansible ignoring
       # the configuration because it is in a world-writable working directory,
       # see https://docs.ansible.com/ansible/latest/reference_appendices/config.html#avoiding-security-risks-with-ansible-cfg-in-the-current-directory.
