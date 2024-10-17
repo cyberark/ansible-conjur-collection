@@ -91,23 +91,41 @@ pipeline {
       }
     }
 
-    stage ('Run conjur_variable sanity tests') {
-      steps {
-        script {
-          infrapool.agentSh './dev/test_sanity.sh -r'
-          infrapool.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
-          unstash 'sanity-test-report'
+    stage('Run conjur_variable sanity tests') {
+      stages {
+        stage('conjur_variable sanity tests for Ansible core 2.17') {
+          steps {
+            script {
+              infrapool.agentSh './dev/test_sanity.sh -a stable-2.17 -p 3.12'
+            }
+          }
         }
-        publishHTML (target : [allowMissing: false,
-        alwaysLinkToLastBuild: false,
-        keepAll: true,
-        reportDir: 'tests/output/reports/coverage=sanity/',
-        reportFiles: 'index.html',
-        reportName: 'Ansible Sanity Coverage Report',
-        reportTitles: 'Conjur Ansible Collection sanity report'])
+        stage('conjur_variable sanity tests for Ansible core 2.16') {
+          steps {
+            script {
+              infrapool.agentSh './dev/test_sanity.sh -a stable-2.16 -p 3.12'
+            }
+          }
+        }
+        stage('conjur_variable sanity tests for Ansible core (2.15) - default') {
+          steps {
+            script {
+              infrapool.agentSh './dev/test_sanity.sh -r'
+              infrapool.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
+              unstash 'sanity-test-report'
+            }
+            publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: false,
+            keepAll: true,
+            reportDir: 'tests/output/reports/coverage=sanity/',
+            reportFiles: 'index.html',
+            reportName: 'Ansible Sanity Coverage Report',
+            reportTitles: 'Conjur Ansible Collection sanity report'])
+          }
+        }
       }
     }
-
+    
     stage('Run integration tests with Conjur Open Source') {
       stages {
         stage('Ansible v8 (core 2.15) - latest') {
