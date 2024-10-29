@@ -41,8 +41,8 @@ pipeline {
 
   environment {
     MODE = release.canonicalizeMode()
-    ANSIBLE_VERSION = 'stable-2.13' 
-    PYTHON_VERSION = '3.9' 
+    ANSIBLE_VERSION = 'stable-2.17' 
+    PYTHON_VERSION = '3.12' 
   }
 
 
@@ -128,12 +128,12 @@ pipeline {
     
     stage('Run integration tests with Conjur Open Source') {
       stages {
-        stage('Ansible v8 (core 2.15) - latest') {
+        stage('Ansible v10 (core 2.17) - latest') {
           stages {
             stage('Deploy Conjur') {
               steps {
                 script {
-                  infrapool.agentSh './dev/start.sh -v 8'
+                  infrapool.agentSh './dev/start.sh -v 10 -p 3.12'
                 }
               }
             }
@@ -177,12 +177,12 @@ pipeline {
           }
         }
 
-        stage('Ansible v7 (core 2.14)') {
+        stage('Ansible v9 (core 2.16)') {
           stages {
             stage('Deploy Conjur') {
               steps {
                 script {
-                  infrapool.agentSh './dev/start.sh -v 7'
+                  infrapool.agentSh './dev/start.sh -v 9 -p 3.12'
                 }
               }
             }
@@ -226,12 +226,12 @@ pipeline {
           }
         }
 
-        stage('Ansible v6 (core 2.13)') {
+        stage('Ansible v8 (core 2.15)') {
           stages {
             stage('Deploy Conjur') {
               steps {
                 script {
-                  infrapool.agentSh './dev/start.sh -v 6' 
+                  infrapool.agentSh './dev/start.sh -v 8 -p 3.11'
                 }
               }
             }
@@ -282,7 +282,7 @@ pipeline {
         stage('Deploy Conjur Enterprise') {
           steps {
             script {
-              infrapool.agentSh './dev/start.sh -e -v 8'
+              infrapool.agentSh './dev/start.sh -e -v 10 -p 3.12'
             }
           }
         }
@@ -362,11 +362,11 @@ pipeline {
           }
           steps {
             script {
-              infrapool.agentSh "./dev/start.sh -c -v 8"
+              infrapool.agentSh "./dev/start.sh -c -v 10 -p 3.12"
             }
           }
         }
-        stage('Ansible v8 (core 2.15) - latest') {
+        stage('Ansible v10 (core 2.17) - latest') {
           stages {
             stage('Run tests') {
               parallel {
