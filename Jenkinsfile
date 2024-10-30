@@ -14,12 +14,11 @@ if (params.MODE == "PROMOTE") {
   release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
 
     infrapool.agentSh """
-      cp "${assetDirectory}/cyberark-conjur-${sourceVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
+      ls "${assetDirectory}"
+      cp "${assetDirectory}/cyberark-conjur-${targetVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
 
       export TAG="v${targetVersion}"
       summon ./ci/publish_to_galaxy
-
-      cp ./cyberark-conjur-${targetVersion}.tar.gz "${assetDirectory}/."
     """
 
   }
