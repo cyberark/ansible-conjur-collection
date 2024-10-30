@@ -2,12 +2,18 @@
 
 set -euo pipefail
 
+REPO="$(git rev-parse --show-toplevel)"
+export COLLECTION_VERSION="$(cat "$REPO/VERSION" | cut -d'-' -f1)"
 TOP_LEVEL_DIR="$(cd "$(dirname "$BASH_SOURCE")"; pwd)/.."
 
 pushd "$TOP_LEVEL_DIR" >/dev/null
   docker run --rm -t \
     -v "$TOP_LEVEL_DIR:/collection" \
     python:3 /bin/bash -c "
+      # Verify and replace the version in the galaxy.yml file
+      if [[ -n \"$COLLECTION_VERSION\" ]] && ! grep -q \"version: '$COLLECTION_VERSION'\" /collection/galaxy.yml; then
+        sed -i 's/version: \".*\"/version: \"$COLLECTION_VERSION\"/' /collection/galaxy.yml
+      fi
       pip install ansible
       ansible-galaxy collection build --force --output /collection/. /collection
     "

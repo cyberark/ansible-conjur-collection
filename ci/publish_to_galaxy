@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Strip the 'v' from the Tag Name
-TAG=${TAG_NAME//"v"}
+TAG=${TAG//"v"}
 
 TOP_LEVEL_DIR="$(cd "$(dirname "$BASH_SOURCE")"; pwd)/.."
 
