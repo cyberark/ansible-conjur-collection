@@ -171,9 +171,44 @@ Conjur host, if they are present on the system running the lookup plugin.
 - `CONJUR_ACCOUNT` : The Conjur account name
 - `CONJUR_APPLIANCE_URL` : URL of the running Conjur service
 - `CONJUR_CERT_FILE` : Path to the Conjur certificate file
+- `CONJUR_CERT_CONTENT` : Content of the Conjur certificate (PEM format).
 - `CONJUR_AUTHN_LOGIN` : A valid Conjur host username
 - `CONJUR_AUTHN_API_KEY` : The api key that corresponds to the Conjur host username
 - `CONJUR_AUTHN_TOKEN_FILE` : Path to a file containing a valid Conjur auth token
+
+### Certificate Content Format
+
+In addition to specifying a certificate file (CONJUR_CERT_FILE), you can now provide the certificate content directly via the CONJUR_CERT_CONTENT variable. This is useful when you prefer to include the certificate in the form of a string (PEM format) instead of referencing a file on disk.
+
+### How it works
+
+The lookup plugin will first attempt to use the CONJUR_CERT_CONTENT variable. If it is invalid or missing, the plugin will fall back to using the certificate file specified in the CONJUR_CERT_FILE.
+
+### Example
+
+1. CONJUR_CERT_CONTENT as PEM format
+
+You can provide the certificate directly as a string in PEM format inside the CONJUR_CERT_CONTENT environment variable. Ensure that the content includes the full certificate block starting with -----BEGIN CERTIFICATE----- and ending with -----END CERTIFICATE-----.
+
+```sh
+export CONJUR_CERT_CONTENT="-----BEGIN CERTIFICATE-----
+your certificate content
+-----END CERTIFICATE-----"
+```
+
+Once set, the plugin will look for this variable and use the certificate content as needed.
+
+2. CONJUR_CERT_FILE as File
+
+If CONJUR_CERT_CONTENT is not set or is invalid, the plugin will attempt to use the certificate file specified in the CONJUR_CERT_FILE environment variable.
+
+To specify the certificate file, set the environment variable like this:
+
+```sh
+export CONJUR_CERT_FILE="<path>/certificate.pem"
+```
+
+3. If both CONJUR_CERT_CONTENT and CONJUR_CERT_FILE are missing or invalid, the plugin will return an error. This allows you to quickly diagnose the issue and ensure that the required certificate is provided.
 
 ### Role Variables
 
