@@ -40,8 +40,8 @@ pipeline {
 
   environment {
     MODE = release.canonicalizeMode()
-    ANSIBLE_VERSION = 'stable-2.17' 
-    PYTHON_VERSION = '3.12' 
+    ANSIBLE_VERSION = 'stable-2.18' 
+    PYTHON_VERSION = '3.13' 
   }
 
 
@@ -106,7 +106,14 @@ pipeline {
             }
           }
         }
-        stage('conjur_variable sanity tests for Ansible core (2.17) - default') {
+        stage('conjur_variable sanity tests for Ansible core 2.17') {
+          steps {
+            script {
+              infrapool.agentSh './dev/test_sanity.sh -a stable-2.17 -p 3.12'
+            }
+          }
+        }
+        stage('conjur_variable sanity tests for Ansible core (2.18) - default') {
           steps {
             script {
               infrapool.agentSh './dev/test_sanity.sh -r'
