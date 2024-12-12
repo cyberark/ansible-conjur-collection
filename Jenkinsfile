@@ -92,13 +92,6 @@ pipeline {
 
     stage('Run conjur_variable sanity tests') {
       stages {
-        stage('conjur_variable sanity tests for Ansible core 2.15') {
-          steps {
-            script {
-              infrapool.agentSh './dev/test_sanity.sh -a stable-2.15 -p 3.10'
-            }
-          }
-        }
         stage('conjur_variable sanity tests for Ansible core 2.16') {
           steps {
             script {

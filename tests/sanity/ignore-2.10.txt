@@ -1,3 +1,0 @@
-Jenkinsfile shebang
-tests/conjur_variable/policy/root.yml yamllint:unparsable-with-libyaml
-roles/conjur_host_identity/tests/policy/root.yml yamllint:unparsable-with-libyaml # File loaded by summon utility (in Jenkinsfile), not via Python

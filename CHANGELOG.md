@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [1.3.2] - 2024-11-18
+## [1.3.2] - 2024-12-12
 
 ### Added
 - Added ignore file for ansible-core 2.18 sanity test
