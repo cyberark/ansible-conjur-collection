@@ -1,0 +1,4 @@
+Jenkinsfile shebang
+plugins/lookup/conjur_variable.py validate-modules:version-added-must-be-major-or-minor
+dev/policy/root.yml yamllint:unparsable-with-libyaml # File loaded by Conjur server, not via Python
+secrets.yml yamllint:unparsable-with-libyaml # File loaded by Summon, not via Python
