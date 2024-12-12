@@ -27,15 +27,15 @@ class TestConjurLookup(TestCase):
             {},
             {'id': 'host/ansible/ansible-fake', 'api_key': 'fakekey'}
         )
-        self.assertEquals(MockMergeDictionaries.RESPONSE, functionOutput)
+        self.assertEqual(MockMergeDictionaries.RESPONSE, functionOutput)
 
     def test_load_identity_from_file(self):
         load_identity = _load_identity_from_file("/etc/conjur.identity", "https://conjur-fake")
-        self.assertEquals(MockFileload.RESPONSE, load_identity)
+        self.assertEqual(MockFileload.RESPONSE, load_identity)
 
     def test_load_conf_from_file(self):
         load_conf = _load_conf_from_file("/etc/conjur.conf")
-        self.assertEquals(MockFileload.RESPONSE, load_conf)
+        self.assertEqual(MockFileload.RESPONSE, load_conf)
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     def test_fetch_conjur_token(self, mock_open_url):
@@ -49,7 +49,7 @@ class TestConjurLookup(TestCase):
                                          method="POST",
                                          validate_certs=True,
                                          ca_path="cert_file")
-        self.assertEquals("response body", result)
+        self.assertEqual("response body", result)
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
     def test_fetch_conjur_variable(self, mock_repeat_open_url):
@@ -63,7 +63,7 @@ class TestConjurLookup(TestCase):
                                                 method="GET",
                                                 validate_certs=True,
                                                 ca_path="cert_file")
-        self.assertEquals(['response body'], result)
+        self.assertEqual(['response body'], result)
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
@@ -80,7 +80,7 @@ class TestConjurLookup(TestCase):
         kwargs = {'as_file': False, 'conf_file': 'conf_file', 'validate_certs': False}
         result = self.lookup.run(terms, **kwargs)
 
-        self.assertEquals(result, ["conjur_variable"])
+        self.assertEqual(result, ["conjur_variable"])
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')

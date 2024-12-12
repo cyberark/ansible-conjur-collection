@@ -1,2 +1,0 @@
-Jenkinsfile shebang
-plugins/lookup/conjur_variable.py validate-modules:version-added-must-be-major-or-minor
