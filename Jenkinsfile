@@ -91,7 +91,7 @@ pipeline {
     }
 
     stage('Run conjur_variable sanity tests') {
-      stages {
+      parallel {
         stage('conjur_variable sanity tests for Ansible core 2.16') {
           steps {
             script {
@@ -176,61 +176,12 @@ pipeline {
           }
         }
 
-        stage('Ansible v9 (core 2.16)') {
+        stage('Ansible v11 (core 2.18) - latest') {
           stages {
             stage('Deploy Conjur') {
               steps {
                 script {
-                  infrapool.agentSh './dev/start.sh -v 9 -p 3.12'
-                }
-              }
-            }
-            stage('Run tests') {
-              parallel {
-                stage('Testing conjur_variable lookup plugin') {
-                  steps {
-                    script {
-                      infrapool.agentSh './ci/test.sh -d -t conjur_variable'
-                    }
-                  }
-                  post {
-                    always {
-                      script {
-                        infrapool.agentStash name: 'conjur_variable', includes: 'tests/conjur_variable/junit/*'
-                        unstash 'conjur_variable'
-                        junit 'tests/conjur_variable/junit/*'
-                      }
-                    }
-                  }
-                }
-
-                stage('Testing conjur_host_identity role') {
-                  steps {
-                    script {
-                      infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
-                    }
-                  }
-                  post {
-                    always {
-                      script {
-                        infrapool.agentStash name: 'conjur_host_identity', includes: 'roles/conjur_host_identity/tests/junit/*'
-                        unstash 'conjur_host_identity'
-                        junit 'roles/conjur_host_identity/tests/junit/*'
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        stage('Ansible v8 (core 2.15)') {
-          stages {
-            stage('Deploy Conjur') {
-              steps {
-                script {
-                  infrapool.agentSh './dev/start.sh -v 8 -p 3.11'
+                  infrapool.agentSh './dev/start.sh -v 11 -p 3.13'
                 }
               }
             }
@@ -281,7 +232,7 @@ pipeline {
         stage('Deploy Conjur Enterprise') {
           steps {
             script {
-              infrapool.agentSh './dev/start.sh -e -v 10 -p 3.12'
+              infrapool.agentSh './dev/start.sh -e -v 11 -p 3.13'
             }
           }
         }
@@ -361,11 +312,11 @@ pipeline {
           }
           steps {
             script {
-              infrapool.agentSh "./dev/start.sh -c -v 10 -p 3.12"
+              infrapool.agentSh "./dev/start.sh -c -v 11 -p 3.13"
             }
           }
         }
-        stage('Ansible v10 (core 2.17) - latest') {
+        stage('Ansible v11 (core 2.18) - latest') {
           stages {
             stage('Run tests') {
               parallel {

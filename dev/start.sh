@@ -8,8 +8,8 @@ declare -x CLOUD='false'
 declare -x ANSIBLE_API_KEY=''
 declare -x ADMIN_API_KEY=''
 
-declare -x ANSIBLE_VERSION='8'
-declare -x PYTHON_VERSION='3.11'
+declare -x ANSIBLE_VERSION='11'
+declare -x PYTHON_VERSION='3.13'
 
 source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
