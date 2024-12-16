@@ -115,8 +115,6 @@ function deploy_conjur_enterprise {
       fi
       conjur login -i admin -p MySecretP@ss1
     "
-    # get admin credentials
-    ADMIN_API_KEY="$(rotate_api_key)"
     # configure conjur
     cp ../policy/root.yml . && setup_conjur_resources
   popd

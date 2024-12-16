@@ -1,3 +1,4 @@
 [submodule "dev/conjur-intro"]
 	path = dev/conjur-intro
 	url = https://github.com/conjurdemos/conjur-intro
+	branch = main

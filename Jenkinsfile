@@ -232,7 +232,7 @@ pipeline {
         stage('Deploy Conjur Enterprise') {
           steps {
             script {
-              infrapool.agentSh './dev/start.sh -e -v 11 -p 3.13'
+              infrapool.agentSh './dev/start.sh -e -v 11 -p 3.12'
             }
           }
         }

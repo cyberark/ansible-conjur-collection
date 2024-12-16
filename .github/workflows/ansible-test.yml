@@ -1,3 +1,6 @@
+# DO NOT DELETE THIS FILE - even though our internal CI/CD pipeline is
+# Jenkins-based, we leave this file here for better visibility of sanity
+# test status in the public repo.
 # This file implements a Github action to run Ansible collection sanity tests
 # and unit tests on the Conjur Ansible Collection. The Ansible collection tests
 # are run across the following matrices:
