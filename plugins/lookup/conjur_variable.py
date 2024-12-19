@@ -17,8 +17,10 @@ DOCUMENTATION = """
     description:
       Retrieves credentials from Conjur using the controlling host's Conjur identity,
       environment variables, or extra-vars.
-      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_TOKEN_FILE
-      Extra-vars could be conjur_account, conjur_appliance_url, conjur_cert_file, conjur_authn_login, conjur_authn_api_key, conjur_authn_token_file
+      Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE, CONJUR_CERT_CONTENT,
+      CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_TOKEN_FILE
+      Extra-vars could be conjur_account, conjur_appliance_url, conjur_cert_file, conjur_cert_content,
+      conjur_authn_login, conjur_authn_api_key, conjur_authn_token_file
       Conjur info - U(https://www.conjur.org/).
     requirements:
       - 'The controlling host running Ansible has a Conjur identity.
@@ -112,6 +114,17 @@ DOCUMENTATION = """
           - name: conjur_cert_file
         env:
           - name: CONJUR_CERT_FILE
+      conjur_cert_content:
+        description: Content of the Conjur cert
+        type: string
+        required: False
+        ini:
+          - section: conjur,
+            key: cert_content
+        vars:
+          - name: conjur_cert_content
+        env:
+          - name: CONJUR_CERT_CONTENT
       conjur_authn_token_file:
         description: Path to the access token file
         type: path
@@ -142,8 +155,12 @@ RETURN = """
       - Value stored in Conjur.
 """
 
-import os.path
+import os
 import socket
+import yaml
+import traceback
+import ssl
+import re
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
@@ -153,12 +170,85 @@ from time import sleep
 from ansible.module_utils.six.moves.urllib.parse import quote
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
-import yaml
+try:
+    from cryptography.x509 import load_pem_x509_certificate
+    from cryptography.hazmat.backends import default_backend
+except ImportError:
+    CRYPTOGRAPHY_IMPORT_ERROR = traceback.format_exc()
+else:
+    CRYPTOGRAPHY_IMPORT_ERROR = None
+
 
 from ansible.module_utils.urls import open_url
 from ansible.utils.display import Display
 
 display = Display()
+temp_cert_file = None
+
+
+def _validate_pem_certificate(cert_content):
+    # Normalize line endings
+    if '\r\n' in cert_content:
+        cert_content = cert_content.replace('\r\n', '\n').strip()
+    elif '\r' in cert_content:
+        cert_content = cert_content.replace('\r', '\n').strip()
+    cert_content = re.sub(r'^[ \t]+', '', cert_content, flags=re.M)
+    cert_content = re.sub(r'[ \t]+$', '', cert_content, flags=re.M)
+    cert_content = re.sub(r'\n+', '\n', cert_content)
+
+    if not re.match(r"^-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----$", cert_content, re.DOTALL):
+        raise AnsibleError("Invalid Certificate format.")
+
+    try:
+        load_pem_x509_certificate(cert_content.encode(), default_backend())
+        return cert_content
+    except ValueError as e:
+        raise AnsibleError(f"Invalid certificate content provided: {str(e)}. Please check the certificate format.")
+    except ssl.SSLError as e:
+        raise AnsibleError(f"SSL error while validating the certificate: {str(e)}. The certificate may be corrupted or invalid.")
+    except Exception as e:
+        raise AnsibleError(f"An error occurred while validating the certificate: {str(e)}. Please verify the certificate format and try again.")
+
+
+def _get_valid_certificate(cert_content, cert_file):
+    if cert_content:
+        try:
+            display.vvv("Validating provided certificate content")
+            cert_content = _validate_pem_certificate(cert_content)
+            return cert_content
+        except AnsibleError as e:
+            display.warning(f"Invalid certificate content: {str(e)}. Attempting to use certificate file.")
+
+    # If cert_content is invalid or missing, fall back to cert_file
+    if cert_file:
+        if not os.path.exists(cert_file):
+            raise AnsibleError(f"Certificate file `{cert_file}` does not exist or cannot be found.")
+        try:
+            with open(cert_file, 'rb') as f:
+                cert_file_content = f.read().decode('utf-8')
+                cert_file_content = _validate_pem_certificate(cert_file_content)
+                return cert_file_content
+        except Exception as e:
+            raise AnsibleError(f"Failed to load or validate certificate file `{cert_file}`: {str(e)}")
+
+    # If both cert_content and cert_file are missing or invalid, raise an error
+    raise AnsibleError("Both certificate content and certificate file are invalid or missing. Please provide a valid certificate.")
+
+
+def _get_certificate_file(cert_content, cert_file):
+    global temp_cert_file
+    cert_content = _get_valid_certificate(cert_content, cert_file)
+
+    if cert_content:
+        try:
+            temp_cert_file = NamedTemporaryFile(delete=False, mode='w', encoding='utf-8')
+            temp_cert_file.write(cert_content)
+            temp_cert_file.close()
+            cert_file = temp_cert_file.name
+        except Exception as e:
+            raise AnsibleError(f"Failed to create temporary certificate file: {str(e)}")
+
+    return cert_file
 
 
 # Load configuration and return as dictionary if file is present on file system
@@ -345,6 +435,7 @@ class LookupModule(LookupBase):
         authn_login = self.get_var_value("conjur_authn_login")
         authn_api_key = self.get_var_value("conjur_authn_api_key")
         cert_file = self.get_var_value("conjur_cert_file")
+        cert_content = self.get_var_value("conjur_cert_content")
         authn_token_file = self.get_var_value("conjur_authn_token_file")
 
         validate_certs = self.get_option('validate_certs')
@@ -356,6 +447,9 @@ class LookupModule(LookupBase):
 
         if 'http://' in str(appliance_url):
             raise AnsibleError(('[WARNING]: Conjur URL uses insecure connection. Please consider using HTTPS.'))
+
+        if validate_certs is True:
+            cert_file = _get_certificate_file(cert_content, cert_file)
 
         conf = _merge_dictionaries(
             _load_conf_from_file(conf_file),
@@ -414,31 +508,39 @@ class LookupModule(LookupBase):
             display.vvv("Using cert file path {0}".format(conf['cert_file']))
             cert_file = conf['cert_file']
 
-        token = None
-        if 'authn_token_file' not in conf:
-            token = _fetch_conjur_token(
+        try:
+            token = None
+            if 'authn_token_file' not in conf:
+                token = _fetch_conjur_token(
+                    conf['appliance_url'],
+                    conf['account'],
+                    identity['id'],
+                    identity['api_key'],
+                    validate_certs,
+                    cert_file
+                )
+            else:
+                if not os.path.exists(conf['authn_token_file']):
+                    raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
+                                       .format(conf['authn_token_file']))
+                with open(conf['authn_token_file'], 'rb') as f:
+                    token = f.read()
+
+            conjur_variable = _fetch_conjur_variable(
+                terms[0],
+                token,
                 conf['appliance_url'],
                 conf['account'],
-                identity['id'],
-                identity['api_key'],
                 validate_certs,
                 cert_file
             )
-        else:
-            if not os.path.exists(conf['authn_token_file']):
-                raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
-                                   .format(conf['authn_token_file']))
-            with open(conf['authn_token_file'], 'rb') as f:
-                token = f.read()
-
-        conjur_variable = _fetch_conjur_variable(
-            terms[0],
-            token,
-            conf['appliance_url'],
-            conf['account'],
-            validate_certs,
-            cert_file
-        )
+        finally:
+            if temp_cert_file:
+                try:
+                    if os.path.exists(temp_cert_file.name):
+                        os.unlink(temp_cert_file.name)
+                except (OSError, PermissionError) as e:
+                    raise AnsibleError(f"Failed to delete temporary certificate file `{temp_cert_file.name}`: {str(e)}")
 
         if as_file:
             return _store_secret_in_file(conjur_variable)

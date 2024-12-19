@@ -3,6 +3,7 @@ pytest
 pytest-mock
 pytest-xdist
 pytest-forked
+cryptography
 pyyaml  # required by the collection loader (only needed for collections)
 coverage==4.5.4
 
