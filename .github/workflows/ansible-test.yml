@@ -1,0 +1,112 @@
+# DO NOT DELETE THIS FILE - even though our internal CI/CD pipeline is
+# Jenkins-based, we leave this file here for better visibility of sanity
+# test status in the public repo.
+# This file implements a Github action to run Ansible collection sanity tests
+# and unit tests on the Conjur Ansible Collection. The Ansible collection tests
+# are run across the following matrices:
+#
+# Ansible versions (Python versions):
+# - stable-2.16 (3.10, 3.12)
+# - stable-2.17 (3.10, 3.12)
+# - stable-2.18 (3.13)
+# - devel       (3.13)
+#
+# As Ansible's devel version is unstable, it should be considered a smoke signal
+# for the next released version. Failures against the devel version should not
+# be considered blocking.
+
+name: CI
+on:
+# Run CI against all pushes (direct commits) and Pull Requests
+- push
+- pull_request
+
+jobs:
+
+###
+# Sanity tests
+#
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+
+  sanity:
+    name: Sanity (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
+    strategy:
+      # fail-fast means one failing matrix case will cancel all other
+      # still-incomplete cases. As tests against Ansible's devel branch are
+      # unstable, this is disabled.
+      fail-fast: false
+      matrix:
+        ansible:
+          - stable-2.16
+          - stable-2.17
+        python:
+          - '3.10'
+          - '3.12'
+        include:
+          - ansible: stable-2.18
+            python: '3.13'
+          - ansible: devel
+            python: '3.13'
+
+    runs-on: ubuntu-latest
+    steps:
+
+      # ansible-test requires the collection to be in a directory in the form
+      # .../ansible_collections/cyberark/conjur/
+
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          path: ansible_collections/cyberark/conjur
+
+      - name: Set up Python ${{ matrix.ansible }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      # Install the head of the given branch
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      # run ansible-test sanity inside of Docker.
+      # The docker container has all the pinned dependencies that are required.
+      # Explicitly specify the version of Python we want to test
+      - name: Run sanity tests
+        run: ansible-test sanity --docker -v --color --python ${{ matrix.python }} --exclude dev/ --exclude ci/ --exclude secrets.yml
+        working-directory: ./ansible_collections/cyberark/conjur
+
+###
+# Unit tests
+#
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
+
+  units:
+    name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
+    strategy:
+      # fail-fast means one failing matrix case will cancel all other
+      # still-incomplete cases. As tests against Ansible's devel branch are
+      # unstable, this is disabled.
+      fail-fast: false
+      matrix:
+        ansible:
+          - stable-2.16
+          - stable-2.17
+        python:
+          - '3.10'
+          - '3.12'
+        include:
+          - ansible: stable-2.18
+            python: '3.13'
+          - ansible: devel
+            python: '3.13'
+          
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          path: ansible_collections/cyberark/conjur
+
+      - name: Run unit tests
+        run: ./dev/test_unit.sh -a ${{ matrix.ansible }} -p ${{ matrix.python }}
+        working-directory: ./ansible_collections/cyberark/conjur

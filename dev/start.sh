@@ -8,8 +8,8 @@ declare -x CLOUD='false'
 declare -x ANSIBLE_API_KEY=''
 declare -x ADMIN_API_KEY=''
 
-declare -x ANSIBLE_VERSION='8'
-declare -x PYTHON_VERSION='3.11'
+declare -x ANSIBLE_VERSION='11'
+declare -x PYTHON_VERSION='3.13'
 
 source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
@@ -115,8 +115,6 @@ function deploy_conjur_enterprise {
       fi
       conjur login -i admin -p MySecretP@ss1
     "
-    # get admin credentials
-    ADMIN_API_KEY="$(rotate_api_key)"
     # configure conjur
     cp ../policy/root.yml . && setup_conjur_resources
   popd

@@ -80,7 +80,7 @@ function user_api_key {
 }
 
 function rotate_api_key {
-  docker exec "$(cli_cid)" conjur user rotate_api_key
+  docker exec "$(cli_cid)" conjur user rotate-api-key
 }
 
 function host_api_key {
