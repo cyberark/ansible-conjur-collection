@@ -158,7 +158,7 @@ password as the application is started.
 ## Conjur Ansible Lookup Plugin
 
 Fetch credentials from CyberArk Conjur using the controlling host's Conjur identity or environment
-variables.
+variables, or extra-vars.
 
 The controlling host running Ansible must have a Conjur identity, provided for example by the
 [ConjurAnsible role](#conjur-ansible-role).
@@ -176,39 +176,96 @@ Conjur host, if they are present on the system running the lookup plugin.
 - `CONJUR_AUTHN_API_KEY` : The api key that corresponds to the Conjur host username
 - `CONJUR_AUTHN_TOKEN_FILE` : Path to a file containing a valid Conjur auth token
 
+### Extra-vars
+
+In addition to environment variables, extra-vars is an inbuilt feature in Ansible that allows you to pass variables directly to the playbook. The lookup plugin can also utilize extra-vars to retrieve secrets.
+
+The following extra-vars can be used to authenticate with Conjur host:
+
+- `conjur_account` : The Conjur account name
+- `conjur_appliance_url` : URL of the running Conjur service
+- `conjur_cert_file` : Path to the Conjur certificate file
+- `conjur_cert_content` : Content of the Conjur certificate (PEM format).
+- `conjur_authn_login` : A valid Conjur host username
+- `conjur_authn_api_key` : The api key that corresponds to the Conjur host username
+- `conjur_authn_token_file` : Path to a file containing a valid Conjur auth token
+
+### Usage with Extra-vars
+
+You can pass Conjur Identities directly from the command line using extra-vars when running the playbook.
+
+For example, to run the playbook with extra-vars for Conjur login, Conjur account, Conjur appliance url,Conjur authn API key, and conjur certificate content, Conjur certificate file:
+
+```sh
+ansible-playbook -v \
+--extra-vars "conjur_authn_login=<conjur_authn_login>" \
+--extra-vars "conjur_account=<conjur_account>" \
+--extra-vars "conjur_appliance_url=<conjur_appliance_url>" \
+--extra-vars "conjur_authn_api_key=<conjur_authn_api_key>" \
+--extra-vars "conjur_cert_file=<path>/certificate.pem" retrieve-secrets.yaml
+```
+
+Alternatively, to provide the certificate content in PEM format as a string:
+
+```sh
+ansible-playbook -v \
+--extra-vars "conjur_authn_login=<conjur_authn_login>" \
+--extra-vars "conjur_account=<conjur_account>" \
+--extra-vars "conjur_appliance_url=<conjur_appliance_url>" \
+--extra-vars "conjur_authn_api_key=<conjur_authn_api_key >" \
+--extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----\n<your certificate content>\n-----END CERTIFICATE-----\n'" retrieve-secrets.yaml
+```
+
 ### Certificate Content Format
 
-In addition to specifying a certificate file (CONJUR_CERT_FILE), you can now provide the certificate content directly via the CONJUR_CERT_CONTENT variable. This is useful when you prefer to include the certificate in the form of a string (PEM format) instead of referencing a file on disk.
+In addition to specifying a certificate file (using CONJUR_CERT_FILE environment variable or conjur_cert_file extra-vars), you can now provide the certificate content directly via the CONJUR_CERT_CONTENT environment variable or conjur_cert_content extra-vars. This is useful when you prefer to include the certificate as a string (PEM format) instead of referencing a file on disk.
 
 ### How it works
 
-The lookup plugin will first attempt to use the CONJUR_CERT_CONTENT variable. If it is invalid or missing, the plugin will fall back to using the certificate file specified in the CONJUR_CERT_FILE.
+The lookup plugin will first attempt to use the CONJUR_CERT_CONTENT or conjur_cert_content variable (either from the environment or extra-vars). If it is invalid or missing, the plugin will fall back to using the certificate file specified in the CONJUR_CERT_FILE or conjur_cert_file.
 
 ### Example
 
-1. CONJUR_CERT_CONTENT as PEM format
+1. CONJUR_CERT_CONTENT or conjur_cert_content as PEM format
 
-You can provide the certificate directly as a string in PEM format inside the CONJUR_CERT_CONTENT environment variable. Ensure that the content includes the full certificate block starting with -----BEGIN CERTIFICATE----- and ending with -----END CERTIFICATE-----.
+You can provide the certificate directly as a string in PEM format inside the CONJUR_CERT_CONTENT environment variable or conjur_cert_content extra-vars. Ensure that the content includes the full certificate block starting with -----BEGIN CERTIFICATE----- and ending with -----END CERTIFICATE-----.
+
+Using Environment Variable:
 
 ```sh
 export CONJUR_CERT_CONTENT="-----BEGIN CERTIFICATE-----
-your certificate content
+<your certificate content>
 -----END CERTIFICATE-----"
+```
+
+Using extra-vars:
+
+```sh
+ansible-playbook -v \
+--extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----
+<your certificate content>
+-----END CERTIFICATE-----'" retrieve-secrets.yaml
 ```
 
 Once set, the plugin will look for this variable and use the certificate content as needed.
 
-2. CONJUR_CERT_FILE as File
+2. CONJUR_CERT_FILE or conjur_cert_file as File
 
-If CONJUR_CERT_CONTENT is not set or is invalid, the plugin will attempt to use the certificate file specified in the CONJUR_CERT_FILE environment variable.
+If CONJUR_CERT_CONTENT environment variable or conjur_cert_content extra-vars is not set or is invalid, the plugin will attempt to use the certificate file specified in the CONJUR_CERT_FILE environment variable or conjur_cert_file extra-vars.
 
-To specify the certificate file, set the environment variable like this:
+Using Environment Variable:
 
 ```sh
 export CONJUR_CERT_FILE="<path>/certificate.pem"
 ```
+Using extra-vars:
 
-3. If both CONJUR_CERT_CONTENT and CONJUR_CERT_FILE are missing or invalid, the plugin will return an error. This allows you to quickly diagnose the issue and ensure that the required certificate is provided.
+```sh
+ansible-playbook -v \
+--extra-vars "conjur_cert_file=<path>/certificate.pem" retrieve-secrets.yaml
+```
+
+3. If both CONJUR_CERT_CONTENT or conjur_cert_content and CONJUR_CERT_FILE or conjur_cert_file are missing or invalid, the plugin will return an error. This allows you to quickly diagnose the issue and ensure that the required certificate is provided.
 
 ### Role Variables
 
