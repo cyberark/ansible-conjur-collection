@@ -7,7 +7,7 @@ WORKDIR /cyberark
 
 # Install Ansible and its test tool
 ARG ANSIBLE_VERSION
-RUN pip3 install ansible==${ANSIBLE_VERSION}.* pytest-testinfra
+RUN pip3 install ansible==${ANSIBLE_VERSION}.* pytest-testinfra --no-cache-dir
 
 # Install Docker dependencies
 RUN apt-get update && \
