@@ -3,7 +3,7 @@ FROM nginx:1.24.0
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y iputils-ping procps openssl && \
+    apt-get install -y --no-install-recommends iputils-ping procps openssl && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /etc/nginx/
