@@ -1,0 +1,13 @@
+---
+exclude_paths:
+  - "dev/"
+  - "ci/"
+  - "tests/"
+  - "secrets.yml"
+  - "codeclimate.yml"
+  - ".github/"
+
+skip_list:
+  - no-changed-when
+  - no-handler
+  - yaml[line-length]

@@ -38,3 +38,4 @@ vendor/
 *.retry
 *.tmp
 conjur.pem
+.ansible/

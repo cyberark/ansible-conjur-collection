@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION
-FROM python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION:-3.12}-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \

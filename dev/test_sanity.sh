@@ -39,12 +39,12 @@ fi
 docker build \
   --build-arg PYTHON_VERSION="${python_version}" \
   --build-arg ANSIBLE_VERSION="${ansible_version}" \
-  -t pytest-tools:latest \
+  -t "pytest-tools:${ansible_version}" \
   -f tests/sanity/Dockerfile .
 docker run --rm \
   -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
   -w /ansible_collections/cyberark/conjur/tests/sanity/ \
-  pytest-tools:latest /bin/bash -c "
+  "pytest-tools:${ansible_version}" /bin/bash -c "
     git config --global --add safe.directory /ansible_collections/cyberark/conjur
     git config --global --add safe.directory /ansible_collections/cyberark/conjur/dev/conjur-intro
     $test_cmd

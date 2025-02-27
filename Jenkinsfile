@@ -92,6 +92,13 @@ pipeline {
 
     stage('Run conjur_variable sanity tests') {
       parallel {
+        stage ('Run ansible-lint') {
+          steps {
+            script {
+              infrapool.agentSh './dev/lint.sh'
+            }
+          }
+        }
         stage('conjur_variable sanity tests for Ansible core 2.16') {
           steps {
             script {
