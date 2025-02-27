@@ -1,3 +1,4 @@
+---
 # This is our default .CodeClimate.yml, broken out by language. Uncomment the
 # sections at the bottom that apply to your project. ACTION comments indicate
 # places where config might need to be tweaked.
@@ -18,24 +19,23 @@ plugins:
         javascript:
         php:
         python:
-          python_version: 3  # ACTION Comment this out if using Python 2
+          python_version: 3 # ACTION Comment this out if using Python 2
         ruby:
         swift:
         typescript:
-
   fixme: # Flags any FIXME, TODO, BUG, XXX, HACK comments so they can be fixed
     enabled: true
     config:
       strings:
-      - FIXME
-      - TODO
-      - HACK
-      - XXX
-      - BUG
+        - FIXME
+        - TODO
+        - HACK
+        - XXX
+        - BUG
 
-# ---------------
-# Commonly-used languages - run time is minimal and all of these will work
-# whether files of that language are found or not. In general, leave uncommented
+  # ---------------
+  # Commonly-used languages - run time is minimal and all of these will work
+  # whether files of that language are found or not. In general, leave uncommented
 
   # Markdown
   markdownlint:
@@ -57,18 +57,18 @@ plugins:
   rubocop:
     enabled: true
     channel: rubocop-0-79 # As of March 10, 2020, rubocop 0.80.1 is the latest
-                          # However, it does not work with CodeClimate - throws
-                          # an Invalid JSON error.
+  # However, it does not work with CodeClimate - throws
+  # an Invalid JSON error.
   # ACTION uncomment bundler-audit below if using Gemfile/Gemfile.lock
   # ACTION uncomment brakeman below if using Rails
 
   # Shell scripts
   shellcheck:
-   enabled: true
+    enabled: true
 
-# ---------------
-# Other languages - will work with or without language files present. Again,
-# runtime is minimal, so OK to leave uncommented.
+  # ---------------
+  # Other languages - will work with or without language files present. Again,
+  # runtime is minimal, so OK to leave uncommented.
 
   # CoffeeScript
   coffeelint:
@@ -134,26 +134,26 @@ plugins:
 # missing. Should be commented out unless the project already includes the
 # necessary files that the linter looks at
 
-  # Ruby - requires presence of Gemfile and Gemfile.lock
-  # bundler-audit:
-  #   enabled: true
+# Ruby - requires presence of Gemfile and Gemfile.lock
+# bundler-audit:
+#   enabled: true
 
-  # Rails - requires detecting a Rails application
-  # brakeman:
-  #   enabled: true
+# Rails - requires detecting a Rails application
+# brakeman:
+#   enabled: true
 
-  # Chef - requires detecting a cookbook
-  # foodcritic:
-  #   enabled: true
+# Chef - requires detecting a cookbook
+# foodcritic:
+#   enabled: true
 
-  # Java - might require Java code? Errored when run without
-  # checkstyle:
-  #   enabled: true
+# Java - might require Java code? Errored when run without
+# checkstyle:
+#   enabled: true
 
-  # JavaScript - requires an eslintrc to be created and added to project
-  # eslint:
-  #   enabled: true
-  #   channel: "eslint-6"
+# JavaScript - requires an eslintrc to be created and added to project
+# eslint:
+#   enabled: true
+#   channel: "eslint-6"
 
 # ---------------
 # List any files/folders to exclude from checking. Wildcards accepted. Leave

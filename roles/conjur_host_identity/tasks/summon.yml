@@ -1,7 +1,7 @@
 ---
 - name: Download and unpack Summon
-  unarchive:
-    src: https://github.com/cyberark/summon/releases/download/v{{ summon.version }}/summon-{{ summon.os }}.tar.gz
+  ansible.builtin.unarchive:
+    src: https://github.com/cyberark/summon/releases/download/v{{ conjur_host_identity_summon.version }}/summon-{{ conjur_host_identity_summon.os }}.tar.gz
     dest: /usr/local/bin
-    remote_src: yes
+    remote_src: true
     creates: /usr/local/bin/summon

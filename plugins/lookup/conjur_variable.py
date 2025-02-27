@@ -2,7 +2,8 @@
 # (c) 2018 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+
+__metaclass__ = type  # pylint: disable=invalid-name
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -140,13 +141,13 @@ DOCUMENTATION = """
 
 EXAMPLES = """
 ---
-  - hosts: localhost
-    collections:
-      - cyberark.conjur
-    tasks:
-      - name: Lookup variable in Conjur
-        debug:
-          msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
+- hosts: localhost
+  collections:
+    - cyberark.conjur
+  tasks:
+    - name: Lookup variable in Conjur
+      debug:
+        msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
 """
 
 RETURN = """
@@ -157,19 +158,21 @@ RETURN = """
 
 import os
 import socket
-import yaml
 import traceback
 import ssl
 import re
-import ansible.module_utils.six.moves.urllib.error as urllib_error
-from ansible.errors import AnsibleError
-from ansible.plugins.lookup import LookupBase
 from base64 import b64encode
 from netrc import netrc
 from time import sleep
-from ansible.module_utils.six.moves.urllib.parse import quote
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
+import yaml
+import ansible.module_utils.six.moves.urllib.error as urllib_error
+from ansible.errors import AnsibleError
+from ansible.plugins.lookup import LookupBase
+from ansible.module_utils.six.moves.urllib.parse import quote
+from ansible.module_utils.urls import open_url
+from ansible.utils.display import Display
 try:
     from cryptography.x509 import load_pem_x509_certificate
     from cryptography.hazmat.backends import default_backend
@@ -178,12 +181,8 @@ except ImportError:
 else:
     CRYPTOGRAPHY_IMPORT_ERROR = None
 
-
-from ansible.module_utils.urls import open_url
-from ansible.utils.display import Display
-
 display = Display()
-temp_cert_file = None
+TEMP_CERT_FILE = None
 
 
 def _validate_pem_certificate(cert_content):
@@ -202,12 +201,21 @@ def _validate_pem_certificate(cert_content):
     try:
         load_pem_x509_certificate(cert_content.encode(), default_backend())
         return cert_content
-    except ValueError as e:
-        raise AnsibleError(f"Invalid certificate content provided: {str(e)}. Please check the certificate format.")
-    except ssl.SSLError as e:
-        raise AnsibleError(f"SSL error while validating the certificate: {str(e)}. The certificate may be corrupted or invalid.")
-    except Exception as e:
-        raise AnsibleError(f"An error occurred while validating the certificate: {str(e)}. Please verify the certificate format and try again.")
+    except ValueError as err:
+        raise AnsibleError(
+            f"Invalid certificate content provided: {str(err)}. "
+            "Please check the certificate format."
+        ) from err
+    except ssl.SSLError as err:
+        raise AnsibleError(
+            f"SSL error while validating the certificate: {str(err)}. "
+            "The certificate may be corrupted or invalid."
+        ) from err
+    except Exception as err:
+        raise AnsibleError(
+            f"An error occurred while validating the certificate: {str(err)}. "
+            "Please verify the certificate format and try again."
+        ) from err
 
 
 def _get_valid_certificate(cert_content, cert_file):
@@ -216,79 +224,77 @@ def _get_valid_certificate(cert_content, cert_file):
             display.vvv("Validating provided certificate content")
             cert_content = _validate_pem_certificate(cert_content)
             return cert_content
-        except AnsibleError as e:
-            display.warning(f"Invalid certificate content: {str(e)}. Attempting to use certificate file.")
+        except AnsibleError as err:
+            display.warning(f"Invalid certificate content: {str(err)}. Attempting to use certificate file.")
 
     # If cert_content is invalid or missing, fall back to cert_file
     if cert_file:
         if not os.path.exists(cert_file):
             raise AnsibleError(f"Certificate file `{cert_file}` does not exist or cannot be found.")
         try:
-            with open(cert_file, 'rb') as f:
-                cert_file_content = f.read().decode('utf-8')
+            with open(cert_file, 'rb') as file:
+                cert_file_content = file.read().decode('utf-8')
                 cert_file_content = _validate_pem_certificate(cert_file_content)
                 return cert_file_content
-        except Exception as e:
-            raise AnsibleError(f"Failed to load or validate certificate file `{cert_file}`: {str(e)}")
+        except Exception as err:
+            raise AnsibleError(f"Failed to load or validate certificate file `{cert_file}`: {str(err)}") from err
 
     # If both cert_content and cert_file are missing or invalid, raise an error
     raise AnsibleError("Both certificate content and certificate file are invalid or missing. Please provide a valid certificate.")
 
 
 def _get_certificate_file(cert_content, cert_file):
-    global temp_cert_file
+    global TEMP_CERT_FILE
     cert_content = _get_valid_certificate(cert_content, cert_file)
 
     if cert_content:
         try:
-            temp_cert_file = NamedTemporaryFile(delete=False, mode='w', encoding='utf-8')
-            temp_cert_file.write(cert_content)
-            temp_cert_file.close()
-            cert_file = temp_cert_file.name
-        except Exception as e:
-            raise AnsibleError(f"Failed to create temporary certificate file: {str(e)}")
+            TEMP_CERT_FILE = NamedTemporaryFile(delete=False, mode='w', encoding='utf-8')  # pylint: disable=consider-using-with
+            TEMP_CERT_FILE.write(cert_content)
+            TEMP_CERT_FILE.close()
+            cert_file = TEMP_CERT_FILE.name
+        except Exception as err:
+            raise AnsibleError(f"Failed to create temporary certificate file: {str(err)}") from err
 
     return cert_file
 
 
 # Load configuration and return as dictionary if file is present on file system
 def _load_conf_from_file(conf_path):
-    display.vvv('conf file: {0}'.format(conf_path))
+    display.vvv(f'conf file: {conf_path}')
 
     if not os.path.exists(conf_path):
         return {}
-        # raise AnsibleError('Conjur configuration file `{0}` was not found on the controlling host'
-        #                    .format(conf_path))
+        # raise AnsibleError('Conjur configuration file `{conf_path}` was not found on the controlling host')
 
-    display.vvvv('Loading configuration from: {0}'.format(conf_path))
-    with open(conf_path) as f:
-        config = yaml.safe_load(f.read())
+    display.vvvv(f'Loading configuration from: {conf_path}')
+    with open(conf_path, encoding="utf-8") as file:
+        config = yaml.safe_load(file.read())
         return config
 
 
 # Load identity and return as dictionary if file is present on file system
 def _load_identity_from_file(identity_path, appliance_url):
-    display.vvvv('identity file: {0}'.format(identity_path))
+    display.vvvv(f'identity file: {identity_path}')
 
     if not os.path.exists(identity_path):
         return {}
-        # raise AnsibleError('Conjur identity file `{0}` was not found on the controlling host'
-        #                    .format(identity_path))
+        # raise AnsibleError(f'Conjur identity file `{identity_path}` was not found on the controlling host')
 
-    display.vvvv('Loading identity from: {0} for {1}'.format(identity_path, appliance_url))
+    display.vvvv(f'Loading identity from: {identity_path} for {appliance_url}')
 
-    conjur_authn_url = '{0}/authn'.format(appliance_url)
+    conjur_authn_url = f'{appliance_url}/authn'
     identity = netrc(identity_path)
 
     if identity.authenticators(conjur_authn_url) is None:
-        raise AnsibleError('The netrc file on the controlling host does not contain an entry for: {0}'
-                           .format(conjur_authn_url))
+        raise AnsibleError(f'The netrc file on the controlling host does not contain an entry for: {conjur_authn_url}')
 
-    id, account, api_key = identity.authenticators(conjur_authn_url)
-    if not id or not api_key:
+    host_id, unused, api_key = identity.authenticators(conjur_authn_url)  # pylint: disable=unused-variable
+
+    if not host_id or not api_key:
         return {}
 
-    return {'id': id, 'api_key': api_key}
+    return {'id': host_id, 'api_key': api_key}
 
 
 # Merge multiple dictionaries by using dict.update mechanism
@@ -309,11 +315,9 @@ def _encode_str(input_str):
 
 
 # Use credentials to retrieve temporary authorization token
-def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):
-    conjur_url = '{0}/authn/{1}/{2}/authenticate'.format(conjur_url, account, _encode_str(username))
-    display.vvvv('Authentication request to Conjur at: {0}, with user: {1}'.format(
-        conjur_url,
-        _encode_str(username)))
+def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):  # pylint: disable=too-many-arguments
+    conjur_url = f'{conjur_url}/authn/{account}/{_encode_str(username)}/authenticate'
+    display.vvvv(f'Authentication request to Conjur at: {conjur_url}, with user: {_encode_str(username)}')
 
     response = open_url(conjur_url,
                         data=api_key,
@@ -322,8 +326,7 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
                         ca_path=cert_file)
     code = response.getcode()
     if code != 200:
-        raise AnsibleError('Failed to authenticate as \'{0}\' (got {1} response)'
-                           .format(username, code))
+        raise AnsibleError(f'Failed to authenticate as \'{username}\' (got {code} response)')
 
     return response.read()
 
@@ -344,13 +347,13 @@ def retry(retries, retry_interval):
                 try:
                     return_value = target(*args, **kwargs)
                     return return_value
-                except urllib_error.HTTPError as e:
+                except urllib_error.HTTPError as err:
                     if retry_count >= retries:
-                        raise e
+                        raise err
                     display.v('Error encountered. Retrying..')
-                except socket.timeout:
+                except socket.timeout as err:
                     if retry_count >= retries:
-                        raise e
+                        raise err
                     display.v('Socket timeout encountered. Retrying..')
                 sleep(retry_interval)
         return decorator
@@ -367,12 +370,12 @@ def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_pat
 
 
 # Retrieve Conjur variable using the temporary token
-def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):
+def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):  # pylint: disable=too-many-arguments
     token = b64encode(token)
-    headers = {'Authorization': 'Token token="{0}"'.format(token.decode("utf-8"))}
+    headers = {'Authorization': f'Token token="{token.decode("utf-8")}"'}
 
-    url = '{0}/secrets/{1}/variable/{2}'.format(conjur_url, account, _encode_str(conjur_variable))
-    display.vvvv('Conjur Variable URL: {0}'.format(url))
+    url = f'{conjur_url}/secrets/{account}/variable/{_encode_str(conjur_variable)}'
+    display.vvvv(f'Conjur Variable URL: {url}')
 
     response = _repeat_open_url(url,
                                 headers=headers,
@@ -381,16 +384,15 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
                                 ca_path=cert_file)
 
     if response.getcode() == 200:
-        display.vvvv('Conjur variable {0} was successfully retrieved'.format(conjur_variable))
+        display.vvvv(f'Conjur variable {conjur_variable} was successfully retrieved')
         value = response.read().decode("utf-8")
         return [value]
     if response.getcode() == 401:
         raise AnsibleError('Conjur request has invalid authorization credentials')
     if response.getcode() == 403:
-        raise AnsibleError('The controlling host\'s Conjur identity does not have authorization to retrieve {0}'
-                           .format(conjur_variable))
+        raise AnsibleError(f'The controlling host\'s Conjur identity does not have authorization to retrieve {conjur_variable}')
     if response.getcode() == 404:
-        raise AnsibleError('The variable {0} does not exist'.format(conjur_variable))
+        raise AnsibleError(f'The variable {conjur_variable} does not exist')
 
     return {}
 
@@ -403,7 +405,7 @@ def _default_tmp_path():
 
 
 def _store_secret_in_file(value):
-    secrets_file = NamedTemporaryFile(mode='w', dir=_default_tmp_path(), delete=False)
+    secrets_file = NamedTemporaryFile(mode='w', dir=_default_tmp_path(), delete=False)  # pylint: disable=consider-using-with
     os.chmod(secrets_file.name, S_IRUSR | S_IWUSR)
     secrets_file.write(value[0])
 
@@ -412,10 +414,10 @@ def _store_secret_in_file(value):
 
 class LookupModule(LookupBase):
 
-    def run(self, terms, variables=None, **kwargs):
+    def run(self, terms, variables=None, **kwargs):  # pylint: disable=too-many-locals,missing-function-docstring,too-many-branches,too-many-statements
         if terms == []:
             raise AnsibleError("Invalid secret path: no secret path provided.")
-        elif not terms[0] or terms[0].isspace():
+        if not terms[0] or terms[0].isspace():
             raise AnsibleError("Invalid secret path: empty secret path not accepted.")
 
         # We should register the variables as LookupModule options.
@@ -505,7 +507,7 @@ class LookupModule(LookupBase):
 
         cert_file = None
         if 'cert_file' in conf:
-            display.vvv("Using cert file path {0}".format(conf['cert_file']))
+            display.vvv(f"Using cert file path {conf['cert_file']}")
             cert_file = conf['cert_file']
 
         try:
@@ -521,10 +523,9 @@ class LookupModule(LookupBase):
                 )
             else:
                 if not os.path.exists(conf['authn_token_file']):
-                    raise AnsibleError('Conjur authn token file `{0}` was not found on the host'
-                                       .format(conf['authn_token_file']))
-                with open(conf['authn_token_file'], 'rb') as f:
-                    token = f.read()
+                    raise AnsibleError(f"Conjur authn token file `{conf['authn_token_file']}` was not found on the host")
+                with open(conf['authn_token_file'], 'rb') as file:
+                    token = file.read()
 
             conjur_variable = _fetch_conjur_variable(
                 terms[0],
@@ -535,12 +536,12 @@ class LookupModule(LookupBase):
                 cert_file
             )
         finally:
-            if temp_cert_file:
+            if TEMP_CERT_FILE:
                 try:
-                    if os.path.exists(temp_cert_file.name):
-                        os.unlink(temp_cert_file.name)
-                except (OSError, PermissionError) as e:
-                    raise AnsibleError(f"Failed to delete temporary certificate file `{temp_cert_file.name}`: {str(e)}")
+                    if os.path.exists(TEMP_CERT_FILE.name):
+                        os.unlink(TEMP_CERT_FILE.name)
+                except (OSError, PermissionError) as err:
+                    raise AnsibleError(f"Failed to delete temporary certificate file `{TEMP_CERT_FILE.name}`: {str(err)}") from err
 
         if as_file:
             return _store_secret_in_file(conjur_variable)
@@ -550,7 +551,7 @@ class LookupModule(LookupBase):
     def get_var_value(self, key):
         try:
             variable_value = self.get_option(key)
-        except KeyError:
-            raise AnsibleError("{0} was not defined in configuration".format(key))
+        except KeyError as err:
+            raise AnsibleError(f"{key} was not defined in configuration") from err
 
         return variable_value

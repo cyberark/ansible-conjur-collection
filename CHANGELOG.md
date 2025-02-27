@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.3] - 2025-02-26
+
+### Fixed
+- Fixed various code quality issues (CNJR-6414)
+
 ## [1.3.2] - 2024-12-12
 
 ### Added

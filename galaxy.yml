@@ -1,12 +1,13 @@
+---
 namespace: "cyberark"
 name: "conjur"
-version: "1.3.0"
+version: "1.3.3"
 readme: README.md
 authors:
-    - CyberArk Business Development (@cyberark-bizdev)
-    - (@cyberark/community-and-integrations-team)
+  - CyberArk Business Development (@cyberark-bizdev)
+  - (@cyberark/community-and-integrations-team)
 description: "This is a Collection of the CyberArk Conjur/DAP toolkit."
-license: "Apache-2.0"
+license: ["Apache-2.0"]
 tags:
   - cyberark
   - conjur
@@ -25,3 +26,13 @@ build_ignore:
   - "dev"
   - "ci"
   - "secrets.yml"
+  - ".infrapool"
+  - ".infrapool@tmp"
+  - "conjur-cloud-tools"
+  - "internal_url_patterns"
+  - ".codeclimate.yml"
+  - ".github"
+  - ".gitmodules"
+  - "Jenkinsfile"
+  - "kics.config"
+  - ".ansible"
