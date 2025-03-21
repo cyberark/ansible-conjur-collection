@@ -2,12 +2,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, mock_open
 from ansible.errors import AnsibleError
 from ansible.plugins.loader import lookup_loader
+from base64 import b64encode
 
 from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _merge_dictionaries, _fetch_conjur_token, _fetch_conjur_variable, \
-    _validate_pem_certificate, _load_identity_from_file, _load_conf_from_file
+    _validate_pem_certificate, _load_identity_from_file, _load_conf_from_file, telemetry_header
 
 
 class MockMergeDictionaries(MagicMock):
@@ -37,32 +38,42 @@ class TestConjurLookup(TestCase):
         load_conf = _load_conf_from_file("/etc/conjur.conf")
         self.assertEqual(MockFileload.RESPONSE, load_conf)
 
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
-    def test_fetch_conjur_token(self, mock_open_url):
+    def test_fetch_conjur_token(self, mock_open_url, mock_telemetry_header):
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
         mock_response.read.return_value = "response body"
         mock_open_url.return_value = mock_response
+        mock_telemetry_header.return_value = 'fake_encoded_telemetry_value'
         result = _fetch_conjur_token("url", "account", "username", "api_key", True, "cert_file")
         mock_open_url.assert_called_with("url/authn/account/username/authenticate",
                                          data="api_key",
                                          method="POST",
                                          validate_certs=True,
-                                         ca_path="cert_file")
+                                         ca_path="cert_file",
+                                         headers={'x-cybr-telemetry': 'fake_encoded_telemetry_value'})
         self.assertEqual("response body", result)
 
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
-    def test_fetch_conjur_variable(self, mock_repeat_open_url):
+    def test_fetch_conjur_variable(self, mock_repeat_open_url, mock_telemetry_header):
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
         mock_response.read.return_value = "response body".encode("utf-8")
         mock_repeat_open_url.return_value = mock_response
+        mock_telemetry_header.return_value = 'fake_encoded_telemetry_value'
         result = _fetch_conjur_variable("variable", b'{"protected":"fakeid"}', "url", "account", True, "cert_file")
-        mock_repeat_open_url.assert_called_with("url/secrets/account/variable/variable",
-                                                headers={'Authorization': 'Token token="eyJwcm90ZWN0ZWQiOiJmYWtlaWQifQ=="'},
-                                                method="GET",
-                                                validate_certs=True,
-                                                ca_path="cert_file")
+        mock_repeat_open_url.assert_called_with(
+            "url/secrets/account/variable/variable",
+            headers={
+                'Authorization': 'Token token="eyJwcm90ZWN0ZWQiOiJmYWtlaWQifQ=="',
+                'x-cybr-telemetry': 'fake_encoded_telemetry_value'
+            },
+            method="GET",
+            validate_certs=True,
+            ca_path="cert_file"
+        )
         self.assertEqual(['response body'], result)
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
@@ -160,6 +171,16 @@ class TestConjurLookup(TestCase):
 
         output = self.lookup.run(terms, variables)
         self.assertEqual(output, ["conjur_variable"])
+
+    def test_run_telemetry_header(self):
+        with patch('builtins.open', mock_open(read_data='1.0.0')), \
+             patch('os.path.abspath', return_value='/fake/path/to/collection'), \
+             patch('os.path.dirname', return_value='/fake/path/to/plugin'):
+            expected_version = '1.0.0'
+            telemetry_val = f'in=Ansible Collections&it=cybr-secretsmanager&iv={expected_version}&vv=Ansible'
+            expected_encoded = b64encode(telemetry_val.encode()).decode().rstrip("=")
+            result = telemetry_header()
+            self.assertEqual(result, expected_encoded)
 
     # Negative test cases
 
