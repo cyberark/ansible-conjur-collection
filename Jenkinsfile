@@ -77,16 +77,18 @@ pipeline {
       steps {
         script {
           infrapool.agentSh './dev/test_unit.sh -r'
-          infrapool.agentStash name: 'unit-test-report', includes: 'tests/output/reports/coverage=units/*'
-          unstash 'unit-test-report'
+          infrapool.agentStash name: 'junit-xml', includes: 'tests/output/junit/*.xml'
+          infrapool.agentStash name: 'coverage-xml', includes: 'tests/output/reports/*.xml'
         }
-        publishHTML (target : [allowMissing: false,
-        alwaysLinkToLastBuild: false,
-        keepAll: true,
-        reportDir: 'tests/output/reports/coverage=units/',
-        reportFiles: 'index.html',
-        reportName: 'Ansible Coverage Report',
-        reportTitles: 'Conjur Ansible Collection report'])
+      }
+      post {
+        always {
+          unstash 'junit-xml'
+          unstash 'coverage-xml'
+          junit 'tests/output/junit/*.xml'
+          cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'tests/output/reports/coverage=units.xml', conditionalCoverageTargets: '30, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '30, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '30, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+          codacy action: 'reportCoverage', filePath: "tests/output/reports/coverage=units.xml"
+        }
       }
     }
 
