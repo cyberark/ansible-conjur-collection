@@ -34,16 +34,16 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '30'))
   }
 
-  triggers {
-    cron(getDailyCronString())
-  }
-
   environment {
     MODE = release.canonicalizeMode()
     ANSIBLE_VERSION = 'stable-2.18' 
     PYTHON_VERSION = '3.13' 
   }
 
+  triggers {
+    cron(getDailyCronString())
+    parameterizedCron(getWeeklyCronString("H(1-5)","%MODE=RELEASE"))
+  }
 
   stages {
     stage('Scan for internal URLs') {
