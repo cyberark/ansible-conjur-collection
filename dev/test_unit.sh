@@ -32,7 +32,7 @@ test_cmd="ansible-test units -v --python $python_version"
 if [[ "$gen_report" == "true" ]]; then
   test_cmd="ansible-test coverage erase;
     $test_cmd --coverage;
-    ansible-test coverage html --requirements --group-by command;
+    ansible-test coverage xml --requirements --group-by command;
   "
 fi
 
