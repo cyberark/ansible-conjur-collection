@@ -58,6 +58,12 @@
         headers:
           Authorization: Token token="{{ conjur_host_factory_token }}"
           Content-Type: "application/x-www-form-urlencoded"
+          x-cybr-telemetry: >-
+            {{
+              ('in=Ansible Collections&it=cybr-secretsmanager&iv=' +
+              lookup('file', '../../../VERSION') +
+              '&vv=Ansible') | b64encode | regex_replace('=', '')
+            }}
         status_code: 201
         validate_certs: "{{ conjur_validate_certs }}"
       register: host_factory_response

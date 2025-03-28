@@ -183,6 +183,7 @@ else:
 
 display = Display()
 TEMP_CERT_FILE = None
+TELEMETRY_HEADER = None
 
 
 def _validate_pem_certificate(cert_content):
@@ -314,16 +315,48 @@ def _encode_str(input_str):
     return quote(input_str, safe='')
 
 
+# Prepare the telemetry header
+def telemetry_header():
+    global TELEMETRY_HEADER
+
+    if TELEMETRY_HEADER is None:
+        plugin_dir = os.path.dirname(__file__)
+        collection_root = os.path.abspath(os.path.join(plugin_dir, '..', '..'))
+        if collection_root.find('ansible_collections') != -1:
+            version_file_path = os.path.join(collection_root, 'VERSION')
+        else:
+            version_file_path = os.path.join(collection_root, 'collections', 'ansible_collections', 'cyberark', 'conjur', 'VERSION')
+
+        with open(version_file_path, 'r', encoding='utf-8') as version_file:
+            version = version_file.read().strip()
+
+        # Prepare the telemetry value
+        telemetry_val = f'in=Ansible Collections&it=cybr-secretsmanager&iv={version}&vv=Ansible'
+
+        # Encode to base64
+        TELEMETRY_HEADER = b64encode(telemetry_val.encode()).decode().rstrip("=")
+    return TELEMETRY_HEADER
+
+
 # Use credentials to retrieve temporary authorization token
 def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):  # pylint: disable=too-many-arguments
     conjur_url = f'{conjur_url}/authn/{account}/{_encode_str(username)}/authenticate'
     display.vvvv(f'Authentication request to Conjur at: {conjur_url}, with user: {_encode_str(username)}')
 
+    # Get the telemetry header
+    encoded_telemetry = telemetry_header()
+
+    # Prepare headers
+    headers = {
+        'x-cybr-telemetry': encoded_telemetry
+    }
+
     response = open_url(conjur_url,
                         data=api_key,
                         method='POST',
                         validate_certs=validate_certs,
-                        ca_path=cert_file)
+                        ca_path=cert_file,
+                        headers=headers)
     code = response.getcode()
     if code != 200:
         raise AnsibleError(f'Failed to authenticate as \'{username}\' (got {code} response)')
@@ -372,7 +405,13 @@ def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_pat
 # Retrieve Conjur variable using the temporary token
 def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):  # pylint: disable=too-many-arguments
     token = b64encode(token)
-    headers = {'Authorization': f'Token token="{token.decode("utf-8")}"'}
+    # Get the telemetry header
+    encoded_telemetry = telemetry_header()
+
+    headers = {
+        'Authorization': f'Token token="{token.decode("utf-8")}"',
+        'x-cybr-telemetry': encoded_telemetry
+    }
 
     url = f'{conjur_url}/secrets/{account}/variable/{_encode_str(conjur_variable)}'
     display.vvvv(f'Conjur Variable URL: {url}')
