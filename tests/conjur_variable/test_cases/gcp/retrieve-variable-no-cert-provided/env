@@ -1,0 +1,3 @@
+export CONJUR_CERT_FILE=""
+export CONJUR_CERT_CONTENT=""
+export CONJUR_AUTHN_TOKEN_FILE=/cyberark/dev/access_token

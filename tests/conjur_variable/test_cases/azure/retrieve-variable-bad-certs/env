@@ -1,0 +1,2 @@
+export CONJUR_CERT_FILE=./test_cases/retrieve-variable-bad-certs/bad_cert.pem
+

@@ -1,0 +1,1 @@
+export CONJUR_AUTHN_TOKEN_FILE=/cyberark/dev/access_token

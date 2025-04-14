@@ -1,0 +1,3 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+export CONJUR_CERT_CONTENT="MIBIADERGYHHFV5ANBgkqhkiG9w0BAQEFAAerdfhBCgKCAQEA..."
+export CONJUR_AUTHN_TOKEN_FILE=/cyberark/dev/access_token

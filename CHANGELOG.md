@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.6] - 2025-06-11
+
+### Added
+- Added support for AWS, Azure, and GCP authentication
+
 ## [1.3.5] - 2025-03-28
 
 ### Added

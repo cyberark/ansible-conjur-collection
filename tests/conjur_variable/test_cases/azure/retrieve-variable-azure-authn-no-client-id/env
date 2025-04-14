@@ -1,0 +1,2 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+unset AZURE_CLIENT_ID

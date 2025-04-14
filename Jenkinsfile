@@ -58,9 +58,11 @@ pipeline {
       steps {
         script {
           // Request InfraPool
-          INFRAPOOL_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "ExecutorV2", quantity: 1, duration: 1)
+          INFRAPOOL_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "ExecutorV2", quantity: 1, duration: 2)
           INFRAPOOL_EXECUTORV2_AGENT_0 = INFRAPOOL_EXECUTORV2_AGENTS[0]
           infrapool = infraPoolConnect(INFRAPOOL_EXECUTORV2_AGENT_0, {})
+          INFRAPOOL_AZURE_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "AzureExecutorV2", quantity: 1, duration: 2)[0]
+          INFRAPOOL_GCP_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "GcpExecutorV2", quantity: 1, duration: 2)[0]
         }
       }
     }
@@ -70,6 +72,8 @@ pipeline {
       steps {
         script {
           updateVersion(infrapool, "CHANGELOG.md", "${BUILD_NUMBER}")
+          updateVersion(INFRAPOOL_AZURE_EXECUTORV2_AGENT_0, "CHANGELOG.md", "${BUILD_NUMBER}")
+          updateVersion(INFRAPOOL_GCP_EXECUTORV2_AGENT_0, "CHANGELOG.md", "${BUILD_NUMBER}")
         }
       }
     }
@@ -97,30 +101,28 @@ pipeline {
         stage ('Run ansible-lint') {
           steps {
             script {
-              infrapool.agentSh './dev/lint.sh'
+              runAnsibleLint()
             }
           }
         }
         stage('conjur_variable sanity tests for Ansible core 2.16') {
           steps {
             script {
-              infrapool.agentSh './dev/test_sanity.sh -a stable-2.16 -p 3.12'
+              runSanityTests('stable-2.16', '3.12')
             }
           }
         }
         stage('conjur_variable sanity tests for Ansible core 2.17') {
           steps {
             script {
-              infrapool.agentSh './dev/test_sanity.sh -a stable-2.17 -p 3.12'
+              runSanityTests('stable-2.17', '3.12')
             }
           }
         }
         stage('conjur_variable sanity tests for Ansible core (2.18) - default') {
           steps {
             script {
-              infrapool.agentSh './dev/test_sanity.sh -r'
-              infrapool.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
-              unstash 'sanity-test-report'
+              runSanityTestsDefault()
             }
             publishHTML (target : [allowMissing: false,
             alwaysLinkToLastBuild: false,
@@ -134,14 +136,14 @@ pipeline {
       }
     }
     
-    stage('Run integration tests with Conjur Open Source') {
+    stage('Run API Key integration tests with Conjur Open Source') {
       stages {
         stage('Ansible v10 (core 2.17) - latest') {
           stages {
             stage('Deploy Conjur') {
               steps {
                 script {
-                  infrapool.agentSh './dev/start.sh -v 10 -p 3.12'
+                  infrapool.agentSh './dev/start.sh -f oss -a api_key -v 10 -p 3.12'
                 }
               }
             }
@@ -150,15 +152,13 @@ pipeline {
                 stage('Testing conjur_variable lookup plugin') {
                   steps {
                     script {
-                      infrapool.agentSh './ci/test.sh -d -t conjur_variable'
+                      infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
                     }
                   }
                   post {
                     always {
                       script {
-                        infrapool.agentStash name: 'conjur_variable', includes: 'tests/conjur_variable/junit/*'
-                        unstash 'conjur_variable'
-                        junit 'tests/conjur_variable/junit/*'
+                        handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
                       }
                     }
                   }
@@ -173,9 +173,7 @@ pipeline {
                   post {
                     always {
                       script {
-                        infrapool.agentStash name: 'conjur_host_identity', includes: 'roles/conjur_host_identity/tests/junit/*'
-                        unstash 'conjur_host_identity'
-                        junit 'roles/conjur_host_identity/tests/junit/*'
+                        handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
                       }
                     }
                   }
@@ -190,7 +188,7 @@ pipeline {
             stage('Deploy Conjur') {
               steps {
                 script {
-                  infrapool.agentSh './dev/start.sh -v 11 -p 3.13'
+                  infrapool.agentSh './dev/start.sh -f oss -a api_key -v 11 -p 3.13'
                 }
               }
             }
@@ -199,15 +197,13 @@ pipeline {
                 stage('Testing conjur_variable lookup plugin') {
                   steps {
                     script {
-                      infrapool.agentSh './ci/test.sh -d -t conjur_variable'
+                      infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
                     }
                   }
                   post {
                     always {
                       script {
-                        infrapool.agentStash name: 'conjur_variable', includes: 'tests/conjur_variable/junit/*'
-                        unstash 'conjur_variable'
-                        junit 'tests/conjur_variable/junit/*'
+                        handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
                       }
                     }
                   }
@@ -222,9 +218,7 @@ pipeline {
                   post {
                     always {
                       script {
-                        infrapool.agentStash name: 'conjur_host_identity', includes: 'roles/conjur_host_identity/tests/junit/*'
-                        unstash 'conjur_host_identity'
-                        junit 'roles/conjur_host_identity/tests/junit/*'
+                        handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
                       }
                     }
                   }
@@ -236,12 +230,12 @@ pipeline {
       }
     }
 
-    stage('Run integration tests with Conjur Enterprise') {
+    stage('Run API Key integration tests with Conjur Enterprise') {
       stages {
         stage('Deploy Conjur Enterprise') {
           steps {
             script {
-              infrapool.agentSh './dev/start.sh -e -v 11 -p 3.12'
+              infrapool.agentSh './dev/start.sh -f enterprise -a api_key  -v 11 -p 3.12'
             }
           }
         }
@@ -250,15 +244,13 @@ pipeline {
             stage("Testing conjur_variable lookup plugin") {
               steps {
                 script {
-                  infrapool.agentSh './ci/test.sh -d -t conjur_variable'
+                  infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
                 }
               }
               post {
                 always {
                   script {
-                    infrapool.agentStash name: 'conjur_variable', includes: 'tests/conjur_variable/junit/*'
-                    unstash 'conjur_variable'
-                    junit 'tests/conjur_variable/junit/*'
+                    handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
                   }
                 }
               }
@@ -272,9 +264,7 @@ pipeline {
               post {
                 always {
                   script {
-                    infrapool.agentStash name: 'conjur_host_identity', includes: 'roles/conjur_host_identity/tests/junit/*'
-                    unstash 'conjur_host_identity'
-                    junit 'roles/conjur_host_identity/tests/junit/*'
+                    handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
                   }
                 }
               }
@@ -284,6 +274,148 @@ pipeline {
       }
     }
     
+    stage('Run IAM integration tests with Conjur OSS') {
+      stages {
+        stage('Deploy Conjur OSS for IAM') {
+          steps {
+            script {
+              infrapool.agentSh './dev/start.sh -f oss -a iam  -v 11 -p 3.13'
+            }
+          }
+        }
+        stage("Testing conjur_variable lookup plugin for IAM") {
+          steps {
+            script {
+              infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Run IAM integration tests with Conjur Enterprise') {
+      stages {
+        stage('Deploy Conjur Enterprise for IAM') {
+          steps {
+            script {
+              infrapool.agentSh './dev/start.sh -f enterprise -a iam  -v 11 -p 3.12'
+            }
+          }
+        }
+        stage("Testing conjur_variable lookup plugin for IAM") {
+          steps {
+            script {
+              infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Run Azure integration tests with Conjur OSS') {
+      stages {
+        stage('Deploy Conjur OSS for Azure') {
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f oss -a azure -v 11 -p 3.13'
+            }
+          }
+        }
+        stage("Testing conjur_variable lookup plugin for Azure") {
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+            }
+          }
+        }
+      }
+    }
+    stage('Run Azure integration tests with Conjur Enterprise') {
+      stages {
+        stage('Deploy Conjur Enterprise for Azure') {
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f enterprise -a azure -v 11 -p 3.12'
+            }
+          }
+        }
+        stage("Testing conjur_variable lookup plugin for Azure") {
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Generate GCP token for Conjur OSS') {
+      steps {
+        script {
+          INFRAPOOL_GCP_EXECUTORV2_AGENT_0.agentSh './dev/get_gcp_token.sh host/gcp-apps/test-app cucumber'
+          INFRAPOOL_GCP_EXECUTORV2_AGENT_0.agentStash name: 'token-out', includes: 'dev/gcp/*'
+        }
+      }
+    }
+
+    stage('Run GCP integration tests with Conjur OSS') {
+      stages {
+        stage('Deploy Conjur OSS for GCP') {
+          steps {
+            script {
+              infrapool.agentUnstash name: 'token-out'
+              infrapool.agentSh './dev/start.sh -f oss -a gcp  -v 11 -p 3.13'
+            }
+          }
+        }
+        stage("Testing conjur_variable lookup plugin for GCP") {
+          steps {
+            script {
+              infrapool.agentSh './ci/test.sh -u gcp -d -t conjur_variable'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Generate GCP token for Conjur Enterprise') {
+      steps {
+        script {
+          INFRAPOOL_GCP_EXECUTORV2_AGENT_0.agentSh './dev/get_gcp_token.sh host/gcp-apps/test-app demo'
+          INFRAPOOL_GCP_EXECUTORV2_AGENT_0.agentStash name: 'token-out-enterprise', includes: 'dev/gcp/*'
+        }
+      }
+    }
+
+    stage('Run GCP integration tests with Conjur Enterprise') {
+      stages {
+        stage('Deploy Conjur Enterprise for GCP') {
+          steps {
+            script {
+              infrapool.agentUnstash name: 'token-out-enterprise'
+              infrapool.agentSh './dev/start.sh -f enterprise -a gcp  -v 11 -p 3.12'
+            }
+          }
+        }
+        stage("Testing conjur_variable lookup plugin for GCP") {
+          steps {
+            script {
+              infrapool.agentSh './ci/test.sh -u gcp -d -t conjur_variable'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Delete the Running Docker containers') {
+      steps {
+        script {
+          infrapool.agentSh 'docker rm -f $(docker ps -aq)'
+          INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'docker rm -f $(docker ps -aq)'
+        }
+      }
+    }
+
     stage('Run Conjur Cloud tests') {
       stages {
         stage('Create a Tenant') {
@@ -312,7 +444,30 @@ pipeline {
             }
           }
         }
-        stage('Run tests against Tenant') {
+        stage('Get Edge Token') {
+          steps {
+            script {
+              def edge_token = getConjurCloudTenant.tokens(
+                infrapool: infrapool,
+                conjur_url: "${TENANT.conjur_cloud_url}",
+                edge_name: "${TENANT.conjur_edge_name}",
+                conjur_token: "${conj_token}"
+              )
+
+              def deploy_edge = getConjurCloudTenant.edge(
+                infrapool: infrapool,
+                conjur_url: "${TENANT.conjur_cloud_url}",
+                edge_name: "edge-test",
+                edge_token: "${edge_token}",
+                common_name: "edge-test",
+                subject_alt_names: "edge-test"
+              )
+
+              env.edge_token = edge_token
+            }
+          }
+        }
+        stage('Run API Key tests against Cloud Tenant') {
           environment {
             INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
             INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
@@ -321,31 +476,29 @@ pipeline {
           }
           steps {
             script {
-              infrapool.agentSh "./dev/start.sh -c -v 11 -p 3.13"
+              infrapool.agentSh "./dev/start.sh -f cloud -a api_key -v 11 -p 3.13"
             }
           }
         }
-        stage('Ansible v11 (core 2.18) - latest') {
+        stage('Ansible v11 (core 2.18) for API Key - latest') {
           stages {
-            stage('Run tests') {
+            stage('Run tests for API Key') {
               parallel {
-                stage('Testing conjur_variable lookup plugin') {
+                stage('Testing conjur_variable lookup plugin for API Key') {
                   steps {
                     script {
-                      infrapool.agentSh './ci/test.sh -d -t conjur_variable'
+                      infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
                     }
                   }
                   post {
                     always {
                       script {
-                        infrapool.agentStash name: 'conjur_variable', includes: 'tests/conjur_variable/junit/*'
-                        unstash 'conjur_variable'
-                        junit 'tests/conjur_variable/junit/*'
+                        handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
                       }
                     }
                   }
                 }
-                stage('Testing conjur_host_identity role') {
+                stage('Testing conjur_host_identity role for API Key') {
                   steps {
                     script {
                       infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
@@ -354,14 +507,169 @@ pipeline {
                   post {
                     always {
                       script {
-                        infrapool.agentStash name: 'conjur_host_identity', includes: 'roles/conjur_host_identity/tests/junit/*'
-                        unstash 'conjur_host_identity'
-                        junit 'roles/conjur_host_identity/tests/junit/*'
+                        handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
                       }
                     }
                   }
                 }
               }
+            }
+          }
+        }
+        stage('Testing Conjur Variable Lookup plugin for Api Key on Edge') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              infrapool.agentSh "./dev/start.sh -f edge -a api_key -v 11 -p 3.13"
+              infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
+            }
+          }
+        }
+
+        stage('Run IAM tests against Cloud Tenant') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              infrapool.agentSh "./dev/start.sh -f cloud -a iam -v 11 -p 3.13"
+            }
+          }
+        }
+
+        stage('Testing conjur_variable lookup plugin for IAM') {
+          steps {
+            script {
+              infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+            }
+          }
+        }
+
+        stage('Testing conjur_variable lookup plugin for IAM on Edge') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              infrapool.agentSh "./dev/start.sh -f edge -a iam -v 11 -p 3.13"
+              infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+            }
+          }
+        }
+
+        stage('Generate GCP token for Conjur Cloud') {
+          steps {
+            script{
+              INFRAPOOL_GCP_EXECUTORV2_AGENT_0.agentSh './dev/get_gcp_token.sh host/data/gcp-apps/test-app conjur'
+              INFRAPOOL_GCP_EXECUTORV2_AGENT_0.agentStash name: 'token-out-cloud', includes: 'dev/gcp/*'
+            }
+          }
+        }
+        stage('Run GCP tests against Cloud Tenant') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              infrapool.agentUnstash name: 'token-out-cloud'
+              infrapool.agentSh "./dev/start.sh -f cloud -a gcp -v 11 -p 3.13"
+            }
+          }
+        }
+
+        stage('Testing conjur_variable lookup plugin for GCP') {
+          steps {
+            script {
+              infrapool.agentSh './ci/test.sh -u gcp -d -t conjur_variable'
+            }
+          }
+        }
+
+        stage('Testing conjur_variable lookup plugin for GCP on Edge') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              infrapool.agentUnstash name: 'token-out-cloud'
+              infrapool.agentSh "./dev/start.sh -f edge -a gcp -v 11 -p 3.13"
+              infrapool.agentSh './ci/test.sh -u gcp -d -t conjur_variable'
+            }
+          }
+        }
+        stage('Get Edge Token for Azure') {
+          steps {
+            script {
+              def edge_token = getConjurCloudTenant.tokens(
+                infrapool: infrapool,
+                conjur_url: "${TENANT.conjur_cloud_url}",
+                edge_name: "${TENANT.conjur_edge_name}",
+                conjur_token: "${conj_token}"
+              )
+
+              def deploy_edge = getConjurCloudTenant.edge(
+                infrapool:  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0,,
+                conjur_url: "${TENANT.conjur_cloud_url}",
+                edge_name: "edge-test",
+                edge_token: "${edge_token}",
+                common_name: "edge-test",
+                subject_alt_names: "edge-test"
+              )
+
+              env.edge_token = edge_token
+            }
+          }
+        }
+        stage('Run Azure tests against Cloud Tenant') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh"summon ./dev/start.sh -f cloud -a azure -v 11 -p 3.13"
+            }
+          }
+        }
+
+        stage('Testing conjur_variable lookup plugin for Azure') {
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+            }
+          }
+        }
+        
+        stage('Testing conjur_variable lookup plugin for Azure on Edge') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_CONJUR_AUTHN_LOGIN="${TENANT.login_name}"
+            INFRAPOOL_CONJUR_AUTHN_TOKEN="${env.conj_token}"
+            INFRAPOOL_TEST_CLOUD=true
+          }
+          steps {
+            script {
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh "summon ./dev/start.sh -f edge -a azure -v 11 -p 3.13"
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
             }
           }
         }
@@ -399,4 +707,24 @@ pipeline {
       releaseInfraPoolAgent(".infrapool/release_agents")
     }
   }
+}
+
+def runAnsibleLint() {
+    infrapool.agentSh './dev/lint.sh'
+}
+
+def runSanityTests(version, pythonVersion) {
+    infrapool.agentSh "./dev/test_sanity.sh -a ${version} -p ${pythonVersion}"
+}
+
+def runSanityTestsDefault() {
+    infrapool.agentSh './dev/test_sanity.sh -r'
+    infrapool.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
+    unstash 'sanity-test-report'
+}
+
+def handleJunitReports(stashName, testFilesPattern) {
+    infrapool.agentStash name: stashName, includes: testFilesPattern
+    unstash stashName
+    junit testFilesPattern
 }

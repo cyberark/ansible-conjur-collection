@@ -62,7 +62,7 @@
             {{
               ('in=Ansible Collections&it=cybr-secretsmanager&iv=' +
               lookup('file', '../../../VERSION') +
-              '&vv=Ansible') | b64encode | regex_replace('=', '')
+              '&vn=Ansible') | b64encode | regex_replace('=', '')
             }}
         status_code: 201
         validate_certs: "{{ conjur_validate_certs }}"

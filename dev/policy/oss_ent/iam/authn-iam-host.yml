@@ -1,0 +1,59 @@
+- !policy
+  id: ansible
+  annotations:
+    description: Policy for Ansible master and remote hosts
+  body:
+    - &variables
+      - !variable target-password
+      - !variable test-secret
+      - !variable test-secret-in-file
+      - !variable var with spaces
+
+    - !host
+      id: 601277729239/InstanceReadJenkinsExecutorHostFactoryToken
+      annotations:
+        description: Host for running Ansible on remote targets
+
+    - !layer &remote_hosts_layer
+      id: remote_hosts
+      annotations:
+        description: Layer for Ansible remote hosts
+
+    - !host-factory
+      id: ansible-factory
+      annotations:
+        description: Factory to create new hosts for Ansible
+      layer: [ *remote_hosts_layer ]
+
+    - !permit
+      role: !host 601277729239/InstanceReadJenkinsExecutorHostFactoryToken
+      privileges: [ read, execute ]
+      resource: *variables
+
+    - !permit
+      role: *remote_hosts_layer
+      privileges: [ execute ]
+      resource: *variables
+
+    - !group secrets-users
+
+    - !permit
+      role: !group secrets-users
+      privileges: [ read, execute ]
+      resource: *variables
+
+    - !grant
+      role: *remote_hosts_layer
+      member: !group secrets-users
+
+    - !grant
+      member: !host 601277729239/InstanceReadJenkinsExecutorHostFactoryToken
+      role: !group secrets-users
+
+- !grant
+  role: !group conjur/authn-iam/prod/clients
+  member: !host ansible/601277729239/InstanceReadJenkinsExecutorHostFactoryToken
+
+- !grant
+  role: !group conjur/authn-iam/prod/clients
+  member: !layer ansible/remote_hosts

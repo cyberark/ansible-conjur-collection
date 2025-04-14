@@ -1,0 +1,2 @@
+export CONJUR_CERT_FILE=""
+export CONJUR_CERT_CONTENT=""

@@ -1,0 +1,22 @@
+---
+- name: Retrieve Conjur variable fails with bad cert content
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact path
+      file:
+        state: absent
+        path: /conjur_secrets.txt
+
+    - name: Determine lookup path based on CONJUR flavour
+      set_fact:
+        lookup_path: >-
+          {{
+            'data/ansible' if lookup('env', 'IS_CLOUD') | bool else 'ansible'
+          }}
+
+    - name: Retrieve Conjur variable with bad cert content
+      vars:
+        super_secret_key: "{{ lookup('conjur_variable', lookup_path + '/test-secret') }}"
+      shell: echo "{{super_secret_key}}" > /conjur_secrets.txt
+      ignore_errors: True

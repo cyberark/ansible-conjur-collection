@@ -11,8 +11,11 @@ services:
       COMPOSE_PROJECT_NAME: dev
       CONJUR_ACCOUNT: ${CONJUR_ACCOUNT}
       CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}
+      CONJUR_AUTHN_LOGIN: ${CONJUR_AUTHN_LOGIN}
       CONJUR_AUTHN_API_KEY: ${ANSIBLE_API_KEY}
-      CONJUR_AUTHN_LOGIN: host/ansible/ansible-master
+      CONJUR_AUTHN_TYPE: ${CONJUR_AUTHN_TYPE}
+      CONJUR_AUTHN_SERVICE_ID: ${CONJUR_AUTHN_SERVICE_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
       IS_CLOUD: false
       # NOTE: Explicitly setting the ANSIBLE_CONFIG envvar avoids Ansible ignoring
       # the configuration because it is in a world-writable working directory,
@@ -52,6 +55,7 @@ services:
       CONJUR_APPLIANCE_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: "W0BuL8iTr/7QvtjIluJbrb5LDAnmXzmcpxkqihO3dXA="
+      CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp
     depends_on:
       - pg
     networks:
@@ -96,6 +100,8 @@ services:
     entrypoint: nginx-debug -g 'daemon off;'
     environment:
         TERM: xterm
+    ports:
+      - "443:443"
     depends_on:
       - conjur
 
