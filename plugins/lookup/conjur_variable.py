@@ -29,22 +29,22 @@ DOCUMENTATION = """
     options:
       _terms:
         description: Variable path
-        required: True
+        required: true
       validate_certs:
         description: Flag to control SSL certificate validation
         type: boolean
-        default: True
+        default: true
       as_file:
         description: >
           Store lookup result in a temporary file and returns the file path. Thus allowing it to be consumed as an ansible file parameter
           (eg ansible_ssh_private_key_file).
         type: boolean
-        default: False
+        default: false
       identity_file:
         description: Path to the Conjur identity file. The identity file follows the netrc file format convention.
         type: path
         default: /etc/conjur.identity
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: identity_file_path
@@ -54,7 +54,7 @@ DOCUMENTATION = """
         description: Path to the Conjur configuration file. The configuration file is a YAML file.
         type: path
         default: /etc/conjur.conf
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: config_file_path
@@ -63,7 +63,7 @@ DOCUMENTATION = """
       conjur_appliance_url:
         description: Conjur appliance url
         type: string
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: appliance_url
@@ -74,7 +74,7 @@ DOCUMENTATION = """
       conjur_authn_login:
         description: Conjur authn login
         type: string
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: authn_login
@@ -85,7 +85,7 @@ DOCUMENTATION = """
       conjur_account:
         description: Conjur account
         type: string
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: account
@@ -96,7 +96,7 @@ DOCUMENTATION = """
       conjur_authn_api_key:
         description: Conjur authn api key
         type: string
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: authn_api_key
@@ -107,7 +107,7 @@ DOCUMENTATION = """
       conjur_cert_file:
         description: Path to the Conjur cert file
         type: path
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: cert_file
@@ -118,7 +118,7 @@ DOCUMENTATION = """
       conjur_cert_content:
         description: Content of the Conjur cert
         type: string
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: cert_content
@@ -129,7 +129,7 @@ DOCUMENTATION = """
       conjur_authn_token_file:
         description: Path to the access token file
         type: path
-        required: False
+        required: false
         ini:
           - section: conjur,
             key: authn_token_file
