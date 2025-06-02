@@ -17,5 +17,5 @@
 
     - name: Retrieve Conjur variable into file using as_file option
       vars:
-        secret_path: "{{ lookup('conjur_variable', lookup_path + '/test-secret-in-file', as_file=True) }}"
+        secret_path: "{{ lookup('conjur_variable', lookup_path + '/test-secret-in-file', as_file=true) }}"
       shell: echo -n "{{ secret_path }}" > /lookup_output.txt

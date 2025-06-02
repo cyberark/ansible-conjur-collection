@@ -103,7 +103,7 @@ Configure a remote node with a Conjur identity and Summon:
       conjur_host_factory_token: "{{ lookup('env', 'HFTOKEN') }}"
       conjur_host_name: "{{ inventory_hostname }}"
       conjur_ssl_certificate: "{{ lookup('file', '/path/to/conjur.pem') }}"
-      conjur_validate_certs: yes
+      conjur_validate_certs: true
 ```
 
 This example:
@@ -289,10 +289,10 @@ None.
 ```yaml
 ---
 ansible_host: <host>
-ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'path/to/secret-id', as_file=True) }}"
+ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'path/to/secret-id', as_file=true) }}"
 ```
 
-**Note:** Using the `as_file=True` condition, the private key is stored in a temporary file and its path is written 
+**Note:** Using the `as_file=true` condition, the private key is stored in a temporary file and its path is written 
 in `ansible_ssh_private_key_file`.
 
 ## Contributing
