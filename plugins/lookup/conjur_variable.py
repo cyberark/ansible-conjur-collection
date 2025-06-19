@@ -228,7 +228,6 @@ TEMP_CERT_FILE = None
 TELEMETRY_HEADER = None
 
 
-# pylint: disable=duplicate-code
 # ************* REQUEST VALUES *************
 AWS_METADATA_URL = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
 AWS_AVAILABILITY_ZONE = "http://169.254.169.254/latest/meta-data/placement/availability-zone"
@@ -241,8 +240,6 @@ REQUEST_PARAMETERS = 'Action=GetCallerIdentity&Version=2011-06-15'
 
 AZURE_METADATA_URL = "http://169.254.169.254/metadata/identity/oauth2/token"
 GCP_METADATA_URL = "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity"
-
-# pylint: enable=duplicate-code
 
 
 class ConjurIAMAuthnException(Exception):
@@ -353,7 +350,8 @@ def _get_metadata_token():
         if response.getcode() == 200:
             return response_body
         return None
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception as error:  # pylint: disable=broad-except
+        display.warning(f"IMDSv2 token retrieval failed: {str(error)}. Falling back to IMDSv1.")
         return None
     finally:
         if token:
@@ -391,8 +389,8 @@ def _get_iam_role_metadata(role_name, token=None):
 
         return access_key_id, secret_access_key, token
 
-    except Exception as e:
-        raise AnsibleError(f"Error retrieving IAM role metadata: Exception occurred - {str(e)}") from e
+    except Exception as error:
+        raise AnsibleError(f"Error retrieving IAM role metadata: Exception occurred - {str(error)}") from error
 
 
 def _create_canonical_request(amzdate, token, signed_headers, payload_hash):
@@ -841,14 +839,14 @@ def _fetch_conjur_azure_token(
             raise AnsibleError(f"Error authenticating with Conjur: HTTP {str(response.getcode())}")
         return response.read()
 
-    except urllib.error.URLError as e:
-        raise AnsibleError(f"Error fetching identity token: URL error occurred - {str(e)}") from e
+    except urllib.error.URLError as error:
+        raise AnsibleError(f"Error fetching identity token: URL error occurred - {str(error)}") from error
 
-    except RuntimeError as e:
-        raise AnsibleError(f"Error fetching identity token: {str(e)}") from e
+    except RuntimeError as error:
+        raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
 
-    except Exception as e:
-        raise AnsibleError(f"Error fetching identity token: {str(e)}") from e
+    except Exception as error:
+        raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
     finally:
         client_id = None
         token = None
@@ -904,14 +902,14 @@ def _fetch_conjur_gcp_identity_token(
             raise AnsibleError(f"Error: Received status code {str(response.getcode())}")
 
         return response.read()
-    except urllib.error.URLError as e:
-        raise AnsibleError(f"Error fetching identity token: URL error occurred - {str(e)}") from e
+    except urllib.error.URLError as error:
+        raise AnsibleError(f"Error fetching identity token: URL error occurred - {str(error)}") from error
 
-    except RuntimeError as e:
-        raise AnsibleError(f"Error fetching identity token: {str(e)}") from e
+    except RuntimeError as error:
+        raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
 
-    except Exception as e:
-        raise AnsibleError(f"Error fetching identity token: {str(e)}") from e
+    except Exception as error:
+        raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
     finally:
         token = None
         response_body = None

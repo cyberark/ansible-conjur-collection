@@ -182,7 +182,7 @@ The controlling host running Ansible must have a Conjur identity, provided for e
 
 This is the default method for authenticating with Conjur using an API key.
 
-#### Required Extra-vars/Environmental Variables:
+#### Required Extra-vars/Environment Variables:
 
 - `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Conjur service (e.g., https://conjur.example.com).
 
@@ -190,7 +190,7 @@ This is the default method for authenticating with Conjur using an API key.
 
 - `conjur_authn_api_key / CONJUR_AUTHN_API_KEY`: The API key corresponding to the Conjur host username.
 
-#### Optional Extra-vars/Environmental Variables:
+#### Optional Extra-vars/Environment Variables:
 - `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
 
 - `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Conjur certificate (PEM format).
@@ -207,7 +207,7 @@ The lookup plugin authenticates the workload using the API key and retrieves the
 #### 2. AWS IAM Authentication
 This method uses AWS IAM roles and Instance Metadata Service (IMDS) tokens for authentication.
 
-#### Required Extra-vars/Environmental Variables:
+#### Required Extra-vars/Environment Variables:
 - `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("aws").
 
 - `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Conjur service (e.g., https://conjur.example.com).
@@ -216,7 +216,7 @@ This method uses AWS IAM roles and Instance Metadata Service (IMDS) tokens for a
 
 - `conjur_authn_service_id / CONJUR_AUTHN_SERVICE_ID`: The service ID used for the AWS Authenticator web service.
 
-#### Optional Extra-vars/Environmental Variables:
+#### Optional Extra-vars/Environment Variables:
 - `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
 
 - `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Conjur certificate (PEM format).
@@ -231,7 +231,7 @@ For AWS IAM Authentication, the plugin uses AWS Instance Metadata Service (IMDS)
 
 This method uses Azure Managed Identity to authenticate with Conjur.
 
-#### Required Extra-vars/Environmental Variables:
+#### Required Extra-vars/Environment Variables:
 
 - `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("azure").
 
@@ -241,7 +241,7 @@ This method uses Azure Managed Identity to authenticate with Conjur.
 
 - `conjur_authn_service_id / CONJUR_AUTHN_SERVICE_ID`: The service ID used for the Azure Authenticator web service.
 
-#### Optional Extra-vars/Environmental Variables:
+#### Optional Extra-vars/Environment Variables:
 
 - `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
 
@@ -259,7 +259,7 @@ For Azure Authentication, the plugin uses Azure Instance Metadata Service (IMDS)
 
 This method allows you to authenticate using a Google Cloud Platform (GCP) Service Account.
 
-#### Required Extra-vars/Environmental Variables:
+#### Required Extra-vars/Environment Variables:
 
 - `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("gcp").
 
@@ -268,7 +268,7 @@ This method allows you to authenticate using a Google Cloud Platform (GCP) Servi
 - `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Conjur host (e.g., host/my-host).
 
 
-#### Optional Extra-vars/Environmental Variables:
+#### Optional Extra-vars/Environment Variables:
 
 - `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
 
@@ -318,7 +318,7 @@ ansible-playbook -v \
 --extra-vars "conjur_authn_api_key=<your_conjur_api_key>" \
 --extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----\n<your certificate content>\n-----END CERTIFICATE-----\n'" retrieve-secrets.yaml
 ```
-#### Using with Environmental variables:
+#### Using with Environment variables:
 
 ```sh
 export CONJUR_APPLIANCE_URL="https://conjur.example.com"
@@ -367,7 +367,7 @@ ansible-playbook -v \
 --extra-vars "conjur_authn_service_id=<your_conjur_service_id>" \ 
 --extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----\n<your certificate content>\n-----END CERTIFICATE-----\n'" retrieve-secrets.yaml
 ```
-#### Using with Environmental variables:
+#### Using with Environment variables:
 
 ```sh
 export CONJUR_AUTHN_TYPE="aws"
@@ -419,7 +419,7 @@ ansible-playbook -v \
 --extra-vars "azure_client_id=<your_azure_client_id>" \
 --extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----\n<your certificate content>\n-----END CERTIFICATE-----\n'" retrieve-secrets.yaml
 ```
-#### Using with Environmental variables:
+#### Using with Environment variables:
 
 ```sh
 export CONJUR_AUTHN_TYPE="azure"
@@ -467,7 +467,7 @@ ansible-playbook -v \
 --extra-vars "conjur_authn_login=host/my-host" \
 --extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----\n<your certificate content>\n-----END CERTIFICATE-----\n'" retrieve-secrets.yaml
 ```
-#### Using with Environmental variables:
+#### Using with Environment variables:
 
 ```sh
 export CONJUR_AUTHN_TYPE="gcp"
