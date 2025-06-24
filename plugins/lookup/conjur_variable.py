@@ -573,6 +573,23 @@ def _get_valid_certificate(cert_content, cert_file):
 
 
 def _get_certificate_file(cert_content, cert_file):
+    """
+    Creates a temporary certificate file if certificate content is provided.
+
+    The file must persist until the end of the process, so `delete=False` is used 
+    to prevent automatic deletion. We manually handle deletion at the end of the process 
+    to ensure proper resource management. A global variable tracks the file for cleanup.
+
+    Pylint's warning about not using a `with` statement is disabled because the file 
+    needs to remain accessible beyond the function scope.
+
+    Args:
+        cert_content (str): Raw certificate content.
+        cert_file (str): Path to an existing certificate file, if provided.
+
+    Returns:
+        str: Path to the certificate file to be used.
+    """
     global TEMP_CERT_FILE
     cert_content = _get_valid_certificate(cert_content, cert_file)
 
@@ -772,6 +789,22 @@ def _default_tmp_path():
 
 
 def _store_secret_in_file(value):
+    """
+    Writes a secret value to a secure temporary file and returns its path.
+
+    The file is created in /dev/shm or /tmp (based on `_default_tmp_path()`),
+    with user-only read/write permissions. `delete=False` ensures the file 
+    persists beyond this function, as it needs to be accessible later.
+
+    Note: We avoid using a `with` statement here to prevent premature file 
+    closure or deletion, which would make the file unusable.
+    
+    Args:
+        value (list): List containing the secret string.
+
+    Returns:
+        list: Path to the temporary file as a single-item list.
+    """
     secrets_file = NamedTemporaryFile(mode='w', dir=_default_tmp_path(), delete=False)  # pylint: disable=consider-using-with
     os.chmod(secrets_file.name, S_IRUSR | S_IWUSR)
     secrets_file.write(value[0])
