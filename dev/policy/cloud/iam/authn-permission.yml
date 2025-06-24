@@ -1,0 +1,12 @@
+- !grant
+  role: !group clients
+  member: !host /data/ansible/601277729239/InstanceReadJenkinsExecutorHostFactoryToken
+
+- !grant
+  role: !group clients
+  member: !layer /data/ansible/remote_hosts
+
+ 
+- !grant
+  role: !group clients
+  member: !group /data/ansible/secrets-users

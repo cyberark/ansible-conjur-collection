@@ -1,0 +1,2 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+unset CONJUR_AUTHN_SERVICE_ID

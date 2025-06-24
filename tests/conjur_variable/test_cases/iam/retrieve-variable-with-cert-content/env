@@ -1,0 +1,1 @@
+export CONJUR_CERT_CONTENT=$(cat /cyberark/dev/conjur.pem)

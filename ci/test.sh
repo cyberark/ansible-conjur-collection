@@ -18,6 +18,9 @@ flags=""
 # Indicate whether to start a new test env or use an existing one
 start_dev_env="true"
 
+# Authentication type
+auth_type=""
+
 function help {
   cat <<EOF
 Conjur Ansible Collection :: Test runner
@@ -25,6 +28,7 @@ Conjur Ansible Collection :: Test runner
 $0 [options]
 
 -a            Run all test files in default test directories.
+-u <auth_type>  Specify the authentication type(e.g., api_key, azure, iam, gcp).
 -d            Run tests against the existing development environment. This option
               overrides -e, -p and -v in favor of existing services.
 -e            Deploy Conjur Enterprise. (Default: Conjur Open Source)
@@ -40,10 +44,17 @@ EOF
 # Run a `test.sh` file in a given subdirectory of the top-level `tests` directory
 # Expected directory structure is "tests/<plugin>/test.sh"
 function run_test {
-  pushd "${PWD}/tests/${1}"
-    echo "Running ${1} tests..."
-    ./test.sh
-  popd
+  if [[ "$1" == "conjur_variable" && -n "$auth_type" ]]; then
+    pushd "${PWD}/tests/${1}"
+      echo "Running ${1} tests with authentication type: ${auth_type}..."
+      ./test.sh "$auth_type"
+    popd
+  else
+    pushd "${PWD}/tests/${1}"
+      echo "Running ${1} tests..."
+      ./test.sh
+    popd
+  fi
 }
 
 # Run a `test.sh` file for a given role
@@ -93,8 +104,9 @@ if [[ $# -eq 0 ]] ; then
   exit 1
 fi
 
-while getopts adehp:t:v: option; do
+while getopts "u:adehp:t:v:" option; do
   case "$option" in
+    u) auth_type="${OPTARG}" ;;
     a) target='all' ;;
     d) start_dev_env="false" ;;
     e) flags="$flags -e" ;;

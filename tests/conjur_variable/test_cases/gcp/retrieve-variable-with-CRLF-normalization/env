@@ -1,0 +1,2 @@
+export CONJUR_CERT_CONTENT=$(cat /cyberark/dev/conjur.pem | sed 's/$/\r\n/')
+export CONJUR_AUTHN_TOKEN_FILE=/cyberark/dev/access_token

@@ -12,7 +12,10 @@ services:
       CONJUR_ACCOUNT: ${CONJUR_ACCOUNT}
       CONJUR_APPLIANCE_URL: ${CONJUR_APPLIANCE_URL}
       CONJUR_AUTHN_LOGIN: ${CONJUR_AUTHN_LOGIN}
-      CONJUR_AUTHN_TOKEN_FILE: /cyberark/dev/access_token
+      CONJUR_AUTHN_TYPE: ${CONJUR_AUTHN_TYPE}
+      CONJUR_AUTHN_SERVICE_ID: ${CONJUR_AUTHN_SERVICE_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      CONJUR_AUTHN_TOKEN_FILE: ${CONJUR_AUTHN_TOKEN_FILE}
       IS_CLOUD: true 
       # NOTE: Explicitly setting the ANSIBLE_CONFIG envvar avoids Ansible ignoring
       # the configuration because it is in a world-writable working directory,
