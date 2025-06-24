@@ -576,11 +576,11 @@ def _get_certificate_file(cert_content, cert_file):
     """
     Creates a temporary certificate file if certificate content is provided.
 
-    The file must persist until the end of the process, so `delete=False` is used 
-    to prevent automatic deletion. We manually handle deletion at the end of the process 
+    The file must persist until the end of the process, so `delete=False` is used
+    to prevent automatic deletion. We manually handle deletion at the end of the process
     to ensure proper resource management. A global variable tracks the file for cleanup.
 
-    Pylint's warning about not using a `with` statement is disabled because the file 
+    Pylint's warning about not using a `with` statement is disabled because the file
     needs to remain accessible beyond the function scope.
 
     Args:
@@ -793,12 +793,12 @@ def _store_secret_in_file(value):
     Writes a secret value to a secure temporary file and returns its path.
 
     The file is created in /dev/shm or /tmp (based on `_default_tmp_path()`),
-    with user-only read/write permissions. `delete=False` ensures the file 
+    with user-only read/write permissions. `delete=False` ensures the file
     persists beyond this function, as it needs to be accessible later.
 
-    Note: We avoid using a `with` statement here to prevent premature file 
+    Note: We avoid using a `with` statement here to prevent premature file
     closure or deletion, which would make the file unusable.
-    
+
     Args:
         value (list): List containing the secret string.
 
