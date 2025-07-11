@@ -47,16 +47,21 @@ environment :
 To use it:
 
 1. Install dependencies (as above)
+2. Clone the [Collection repository](https://github.com/cyberark/ansible-conjur-collection):
+```sh-session
+$ git clone https://github.com/cyberark/ansible-conjur-collection.git
+```
+3. Create a VERSION file in the project root containing the last version from CHANGELOG.md (example: 1.3.6)
+```sh-session
+$ cd ansible-conjur-collection
+$ cat <major>.<minor>.<patch> > VERSION
+```
+4. Run the setup script:
 
-1. To use the dev environment, clone the
-   [Collection repository](https://github.com/cyberark/ansible-conjur-collection)
-   and run the setup script:
-
-   ```sh-session
-   $ git clone https://github.com/cyberark/ansible-conjur-collection.git
-   $ cd ansible-conjur-collection/dev
-   $ ./start.sh
-   ```
+```sh-session
+$ cd dev
+$ ./start.sh
+```
 
 ### Verification
 
