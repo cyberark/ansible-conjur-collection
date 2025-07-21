@@ -119,7 +119,14 @@ pipeline {
             }
           }
         }
-        stage('conjur_variable sanity tests for Ansible core (2.18) - default') {
+        stage('conjur_variable sanity tests for Ansible core 2.18') {
+          steps {
+            script {
+              runSanityTests('stable-2.18', '3.13')
+            }
+          }
+        }
+        stage('conjur_variable sanity tests for Ansible core (2.19) - default') {
           steps {
             script {
               runSanityTestsDefault()
