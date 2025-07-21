@@ -234,44 +234,137 @@ pipeline {
             }
           }
         }
+
+        stage('Ansible v12 (core 2.19) - latest') {
+          stages {
+            stage('Deploy Conjur') {
+              steps {
+                script {
+                  infrapool.agentSh './dev/start.sh -f oss -a api_key -v 12 -p 3.13'
+                }
+              }
+            }
+            stage('Run tests') {
+              parallel {
+                stage('Testing conjur_variable lookup plugin') {
+                  steps {
+                    script {
+                      infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
+                      }
+                    }
+                  }
+                }
+
+                stage('Testing conjur_host_identity role') {
+                  steps {
+                    script {
+                      infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
 
     stage('Run API Key integration tests with Conjur Enterprise') {
       stages {
-        stage('Deploy Conjur Enterprise') {
-          steps {
-            script {
-              infrapool.agentSh './dev/start.sh -f enterprise -a api_key  -v 11 -p 3.12'
-            }
-          }
-        }
-        stage('Run tests') {
-          parallel {
-            stage("Testing conjur_variable lookup plugin") {
+        stage('Ansible v11 (core 2.18) - latest') {
+          stages {
+            stage('Deploy Conjur Enterprise') {
               steps {
                 script {
-                  infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
+                  infrapool.agentSh './dev/start.sh -f enterprise -a api_key  -v 11 -p 3.12'
                 }
               }
-              post {
-                always {
-                  script {
-                    handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
+            }
+            stage('Run tests') {
+              parallel {
+                stage("Testing conjur_variable lookup plugin") {
+                  steps {
+                    script {
+                      infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
+                      }
+                    }
+                  }
+                }
+                stage("Testing conjur_host_identity role") {
+                  steps {
+                    script {
+                      infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
+                      }
+                    }
                   }
                 }
               }
             }
-            stage("Testing conjur_host_identity role") {
+          }
+        }
+
+        stage('Ansible v12 (core 2.19) - latest') {
+          stages {
+            stage('Deploy Conjur Enterprise') {
               steps {
                 script {
-                  infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
+                  infrapool.agentSh './dev/start.sh -f enterprise -a api_key  -v 12 -p 3.12'
                 }
               }
-              post {
-                always {
-                  script {
-                    handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
+            }
+            stage('Run tests') {
+              parallel {
+                stage("Testing conjur_variable lookup plugin") {
+                  steps {
+                    script {
+                      infrapool.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        handleJunitReports('conjur_variable', 'tests/conjur_variable/junit/*')
+                      }
+                    }
+                  }
+                }
+                stage("Testing conjur_host_identity role") {
+                  steps {
+                    script {
+                      infrapool.agentSh './ci/test.sh -d -t conjur_host_identity'
+                    }
+                  }
+                  post {
+                    always {
+                      script {
+                        handleJunitReports('conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
+                      }
+                    }
                   }
                 }
               }
@@ -283,17 +376,40 @@ pipeline {
     
     stage('Run IAM integration tests with Conjur OSS') {
       stages {
-        stage('Deploy Conjur OSS for IAM') {
-          steps {
-            script {
-              infrapool.agentSh './dev/start.sh -f oss -a iam  -v 11 -p 3.13'
+        stage('Ansible v11 (core 2.18) - latest') {
+          stages {
+            stage('Deploy Conjur OSS for IAM') {
+              steps {
+                script {
+                  infrapool.agentSh './dev/start.sh -f oss -a iam  -v 11 -p 3.13'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for IAM") {
+              steps {
+                script {
+                  infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+                }
+              }
             }
           }
         }
-        stage("Testing conjur_variable lookup plugin for IAM") {
-          steps {
-            script {
-              infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+
+        stage('Ansible v12 (core 2.19) - latest') {
+          stages {
+            stage('Deploy Conjur OSS for IAM') {
+              steps {
+                script {
+                  infrapool.agentSh './dev/start.sh -f oss -a iam  -v 12 -p 3.13'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for IAM") {
+              steps {
+                script {
+                  infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+                }
+              }
             }
           }
         }
@@ -302,17 +418,40 @@ pipeline {
 
     stage('Run IAM integration tests with Conjur Enterprise') {
       stages {
-        stage('Deploy Conjur Enterprise for IAM') {
-          steps {
-            script {
-              infrapool.agentSh './dev/start.sh -f enterprise -a iam  -v 11 -p 3.12'
+        stage('Ansible v11 (core 2.18) - latest') {
+          stages {
+            stage('Deploy Conjur Enterprise for IAM') {
+              steps {
+                script {
+                  infrapool.agentSh './dev/start.sh -f enterprise -a iam  -v 11 -p 3.12'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for IAM") {
+              steps {
+                script {
+                  infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+                }
+              }
             }
           }
         }
-        stage("Testing conjur_variable lookup plugin for IAM") {
-          steps {
-            script {
-              infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+
+        stage('Ansible v12 (core 2.19) - latest') {
+          stages {
+            stage('Deploy Conjur Enterprise for IAM') {
+              steps {
+                script {
+                  infrapool.agentSh './dev/start.sh -f enterprise -a iam  -v 12 -p 3.12'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for IAM") {
+              steps {
+                script {
+                  infrapool.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+                }
+              }
             }
           }
         }
@@ -321,17 +460,40 @@ pipeline {
 
     stage('Run Azure integration tests with Conjur OSS') {
       stages {
-        stage('Deploy Conjur OSS for Azure') {
-          steps {
-            script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f oss -a azure -v 11 -p 3.13'
+        stage('Ansible v11 (core 2.18) - latest') {
+          stages {
+            stage('Deploy Conjur OSS for Azure') {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f oss -a azure -v 11 -p 3.13'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for Azure") {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+                }
+              }
             }
           }
         }
-        stage("Testing conjur_variable lookup plugin for Azure") {
-          steps {
-            script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+
+        stage('Ansible v12 (core 2.19) - latest') {
+          stages {
+            stage('Deploy Conjur OSS for Azure') {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f oss -a azure -v 12 -p 3.13'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for Azure") {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+                }
+              }
             }
           }
         }
@@ -339,17 +501,40 @@ pipeline {
     }
     stage('Run Azure integration tests with Conjur Enterprise') {
       stages {
-        stage('Deploy Conjur Enterprise for Azure') {
-          steps {
-            script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f enterprise -a azure -v 11 -p 3.12'
+        stage('Ansible v11 (core 2.18) - latest') {
+          stages {
+            stage('Deploy Conjur Enterprise for Azure') {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f enterprise -a azure -v 11 -p 3.12'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for Azure") {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+                }
+              }
             }
           }
         }
-        stage("Testing conjur_variable lookup plugin for Azure") {
-          steps {
-            script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+
+        stage('Ansible v12 (core 2.19) - latest') {
+          stages {
+            stage('Deploy Conjur Enterprise for Azure') {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./dev/start.sh -f enterprise -a azure -v 12 -p 3.12'
+                }
+              }
+            }
+            stage("Testing conjur_variable lookup plugin for Azure") {
+              steps {
+                script {
+                  INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+                }
+              }
             }
           }
         }
