@@ -51,7 +51,7 @@ To use it:
 ```sh-session
 $ git clone https://github.com/cyberark/ansible-conjur-collection.git
 ```
-3. Create a VERSION file in the project root containing the last version from CHANGELOG.md (example: 1.3.6)
+3. Create a VERSION file in the project root containing the last version from CHANGELOG.md (example: 1.3.7)
 ```sh-session
 $ cd ansible-conjur-collection
 $ cat <major>.<minor>.<patch> > VERSION

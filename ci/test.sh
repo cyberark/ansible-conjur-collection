@@ -37,7 +37,7 @@ $0 [options]
 -t            Run test files in a given directory. Valid options are:
                 ${test_directories[*]} ${role_directories[*]} all
 -v <version>  Run the Ansible service with the desired Ansible Community Package
-              version. (Default: 8)
+              version. (Default: 10)
 EOF
 }
 
