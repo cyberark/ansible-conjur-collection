@@ -113,14 +113,6 @@ pipeline {
           }
         }
 
-        stage('conjur_variable sanity tests for Ansible core 2.16') {
-          steps {
-            script {
-              runSanityTests(INFRAPOOL_EXECUTORV2_AGENT_1, 'stable-2.16', '3.12')
-            }
-          }
-        }
-
         stage('conjur_variable sanity tests for Ansible core 2.17') {
           steps {
             script {

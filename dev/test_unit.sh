@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
-ansible_version="stable-2.15"
-python_version="3.10"
+ansible_version="stable-2.17"
+python_version="3.12"
 gen_report="false"
 
 cd "$(dirname "$0")"/..
@@ -12,8 +12,8 @@ Run unit tests for Conjur Variable Lookup plugin.
 
 ./ansibletest.sh [options]
 
--a <version>     Run tests against specified Ansible version (Default: stable-2.15)
--p <version>     Run tests against specified Python version  (Default: 3.10)
+-a <version>     Run tests against specified Ansible version (Default: stable-2.17)
+-p <version>     Run tests against specified Python version  (Default: 3.12)
 -r               Generate test coverage report
 EOF
 }

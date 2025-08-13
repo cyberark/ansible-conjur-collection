@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.7] - 2025-08-13
+
+### Changed
+- Raised minimum required Ansible version to 2.17.
+
 ## [1.3.6] - 2025-06-11
 
 ### Added
