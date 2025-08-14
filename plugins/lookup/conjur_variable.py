@@ -198,6 +198,7 @@ import socket
 import traceback
 import ssl
 import re
+import shutil
 from base64 import b64encode
 from netrc import netrc
 from time import sleep
@@ -574,7 +575,8 @@ def _get_valid_certificate(cert_content, cert_file):
 
 def _get_certificate_file(cert_content, cert_file):
     """
-    Creates a temporary certificate file if certificate content is provided.
+    Creates a CA bundle containing CAs from the system truststore appended with the
+    provided certificate. The CA bundle is stored in a temporary file.
 
     The file must persist until the end of the process, so `delete=False` is used
     to prevent automatic deletion. We manually handle deletion at the end of the process
@@ -595,12 +597,23 @@ def _get_certificate_file(cert_content, cert_file):
 
     if cert_content:
         try:
-            TEMP_CERT_FILE = NamedTemporaryFile(delete=False, mode='w', encoding='utf-8')  # pylint: disable=consider-using-with
-            TEMP_CERT_FILE.write(cert_content)
+            TEMP_CERT_FILE = NamedTemporaryFile(delete=False)  # pylint: disable=consider-using-with
+
+            # Prepare a CA bundle including system CA certificates
+            system_ca_bundle = ssl.get_default_verify_paths().cafile
+            if system_ca_bundle and os.path.exists(system_ca_bundle):
+                with open(system_ca_bundle, 'rb') as bundle:
+                    shutil.copyfileobj(bundle, TEMP_CERT_FILE)
+            else:
+                display.warning("System CA bundle not found, only the provided cert(s) will be used.")
+
+            # Normalize and append custom cert(s)
+            cert_bytes = cert_content.encode() if isinstance(cert_content, str) else cert_content
+            TEMP_CERT_FILE.write(b"\n" + cert_bytes.strip().replace(b"\r\n", b"\n") + b"\n")
             TEMP_CERT_FILE.close()
             cert_file = TEMP_CERT_FILE.name
         except Exception as err:
-            raise AnsibleError(f"Failed to create temporary certificate file: {str(err)}") from err
+            raise AnsibleError(f"Failed to create temporary CA bundle: {str(err)}") from err
 
     return cert_file
 

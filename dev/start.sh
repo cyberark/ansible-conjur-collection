@@ -254,6 +254,7 @@ function deploy_conjur_open_source() {
 function deploy_conjur_enterprise {
   echo "---- deploying Conjur Enterprise ----"
 
+  clean_submodules
   ensure_submodules
 
   pushd ./conjur-intro
