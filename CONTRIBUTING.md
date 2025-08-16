@@ -54,7 +54,7 @@ $ git clone https://github.com/cyberark/ansible-conjur-collection.git
 3. Create a VERSION file in the project root containing the last version from CHANGELOG.md (example: 1.3.7)
 ```sh-session
 $ cd ansible-conjur-collection
-$ cat <major>.<minor>.<patch> > VERSION
+$ echo <major>.<minor>.<patch> > VERSION
 ```
 4. Run the setup script:
 
@@ -117,7 +117,7 @@ To run the tests for a particular module:
 
 Integration tests can be run against Conjur Enterprise by adding the `-e` flag:
 ```
-./ci/test/sh -e -a
+./ci/test.sh -e -a
 ```
 
 ## Releasing

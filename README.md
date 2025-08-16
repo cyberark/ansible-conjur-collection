@@ -569,7 +569,7 @@ descriptions of our development workflows, please see our [contributing guide][c
 
 ## License
 
-Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the

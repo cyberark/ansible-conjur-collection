@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.3.7] - 2025-08-13
 
+### Fixed
+- Fixed an issue in variable lookup plugin where TLS verification fails even when 
+  the Conjur certificate was issued by a trusted CA. (CNJR-7650)
+
 ### Changed
 - Raised minimum required Ansible version to 2.17.
 
