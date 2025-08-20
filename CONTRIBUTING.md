@@ -122,22 +122,31 @@ Integration tests can be run against Conjur Enterprise by adding the `-e` flag:
 
 ## Releasing
 
-From a clean instance of main, perform the following actions to release a new version
-of this plugin:
+Releases should be created by maintainers only. To create a tag and release,
+follow the instructions in this section.
 
-- Update the version number in [`galaxy.yml`](galaxy.yml) and [`CHANGELOG.md`](CHANGELOG.md)
-    - Verify that all changes for this version in `CHANGELOG.md` are clear and accurate,
-      and are followed by a link to their respective issue
-    - Create a PR with these changes
+### Update the changelog and notices (if necessary)
+1. Update the `CHANGELOG.md` file with the new version and the changes that are included in the release.
+1. Update the version number in [`galaxy.yml`](galaxy.yml)
 
-- Create an annotated tag with the new version, formatted as `v##.##.##`
-    - This will kick off an automated script which publish the release to
+### Pre-requisites
+
+1. Review the git log and ensure the [changelog](CHANGELOG.md) contains all
+   relevant recent changes with references to GitHub issues or PRs, if possible.
+   Also ensure the latest unreleased version is accurate - our pipeline generates 
+   a VERSION file based on the changelog, which is then used to assign the version
+   of the release and any release artifacts.
+1. Ensure that all documentation that needs to be written has been 
+   written by TW, approved by PO/Engineer, and pushed to the forward-facing documentation.
+1. Scan the project for vulnerabilities
+
+### Release and Promote
+
+1. Merging into main/master branches will automatically trigger a release. If successful, this release can be promoted at a later time.
+1. Jenkins build parameters can be utilized to promote a successful release or manually trigger aditional releases as needed.
+1. Reference the [internal automated release doc](https://github.com/conjurinc/docs/blob/master/reference/infrastructure/automated_releases.md#release-and-promotion-process) for releasing and promoting.
+1. A `PROMOTE` build will kick off an automated script which publish the release to
       [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur)
-
-- Create the release on GitHub for that tag
-    - Build the release package with `./ci/build_release`
-    - Attach package to Github Release
-
 
 # Ansible Conjur Collection Quick Start
 

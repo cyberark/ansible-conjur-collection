@@ -85,7 +85,7 @@ manner.
 * `conjur_ssl_certificate`: Public SSL certificate of the Conjur endpoint
 * `conjur_validate_certs`: Boolean value to indicate if the Conjur endpoint should validate
   certificates
-* `state`: Specifies whether to install of uninstall the Role on the specified nodes
+* `state`: Specifies whether to install or uninstall the Role on the specified nodes
 * `summon.version`: version of Summon to install. Default is `0.8.2`.
 * `summon_conjur.version`: version of Summon-Conjur provider to install. Default is `0.5.3`.
 
