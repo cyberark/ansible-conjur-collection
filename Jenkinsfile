@@ -43,8 +43,14 @@ pipeline {
   }
 
   triggers {
-    cron(getDailyCronString())
-    parameterizedCron(getWeeklyCronString("H(1-5)","%MODE=RELEASE"))
+    parameterizedCron("""
+      ${getDailyCronString("%TEST_CLOUD=true")}
+      ${getWeeklyCronString("H(1-5)", "%MODE=RELEASE")}
+    """)
+  }
+
+  parameters {
+    booleanParam(name: 'TEST_CLOUD', defaultValue: false, description: 'Run integration tests against a Conjur Cloud tenant')
   }
 
   stages {
@@ -321,6 +327,9 @@ pipeline {
     }
 
     stage('Run Conjur Cloud tests') {
+      when {
+        expression { params.TEST_CLOUD }
+      }
       stages {
         stage('Create a Tenant') {
           steps {
@@ -606,7 +615,9 @@ pipeline {
   post {
     always {
       script {
-        deleteConjurCloudTenant("${TENANT.id}")
+        if (params.TEST_CLOUD) {
+          deleteConjurCloudTenant("${TENANT.id}")
+        }
       }
       releaseInfraPoolAgent(".infrapool/release_agents")
     }
