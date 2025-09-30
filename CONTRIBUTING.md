@@ -1,12 +1,12 @@
-# Contributing to the Ansible Conjur Collection
+# Contributing to the Ansible Secrets Manager Collection
 
-Thanks for your interest in Conjur. Before contributing, please take a moment to
+Thanks for your interest in Secrets Manager. Before contributing, please take a moment to
 read and sign our <a href="https://github.com/cyberark/community/blob/master/documents/CyberArk_Open_Source_Contributor_Agreement.pdf" download="conjur_contributor_agreement">Contributor Agreement</a>.
-This provides patent protection for all Conjur users and allows CyberArk to enforce
+This provides patent protection for all Secrets Manager users and allows CyberArk to enforce
 its license terms. Please email a signed copy to <a href="oss@cyberark.com">oss@cyberark.com</a>.
 For general contribution and community guidelines, please see the [community repo](https://github.com/cyberark/community).
 
-- [Contributing to the Ansible Conjur Collection](#contributing-to-the-ansible-conjur-collection)
+- [Contributing to the Ansible Secrets Manager Collection](#contributing-to-the-ansible-secrets-manager-collection)
   * [Prerequisites](#prerequisites)
   * [Set up a development environment](#set-up-a-development-environment)
     + [Verification](#verification)
@@ -15,12 +15,12 @@ For general contribution and community guidelines, please see the [community rep
     + [Unit tests](#unit-tests)
     + [Integration tests](#integration-tests)
   * [Releasing](#releasing)
-- [Ansible Conjur Collection Quick Start](#ansible-conjur-collection-quick-start)
+- [Ansible Secrets Manager Collection Quick Start](#ansible-secrets-manager-collection-quick-start)
   * [Setup a conjur OSS Environment](#setup-a-conjur-oss-environment)
-  * [Load policy to set up Conjur Ansible integration](#load-policy-to-set-up-conjur-ansible-integration)
+  * [Load policy to set up Secrets Manager Ansible integration](#load-policy-to-set-up-secrets-manager-ansible-integration)
   * [Create Ansible managed nodes](#create-ansible-managed-nodes)
-  * [Use Conjur Ansible Role to set up identity on managed nodes](#use-conjur-ansible-role-to-set-up-identity-on-managed-nodes)
-  * [Use Conjur Lookup Plugin to provide secrets to Ansible Playbooks](#use-conjur-lookup-plugin-to-provide-secrets-to-ansible-playbooks)
+  * [Use Secrets Manager Ansible Role to set up identity on managed nodes](#use-secrets-manager-ansible-role-to-set-up-identity-on-managed-nodes)
+  * [Use Secrets Manager Lookup Plugin to provide secrets to Ansible Playbooks](#use-secrets-manager-lookup-plugin-to-provide-secrets-to-ansible-playbooks)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -65,7 +65,7 @@ $ ./start.sh
 
 ### Verification
 
-When the Conjur and Ansible containers have been successfully setup, the
+When the Secrets Manager and Ansible containers have been successfully setup, the
 terminal prints the following:
 
 ```sh-session
@@ -77,23 +77,23 @@ terminal prints the following:
   ansibleplugingtestingconjurhostidentity-test_app_ubuntu-2 : ok=16 ...
   ```
 
-Your Conjur instance will be configured with the following:
+Your Secrets Manager instance will be configured with the following:
 * Account: `cucumber`
 * User: `admin`
 * Password: Run `conjurctl role retrieve-key cucumber:user:admin` inside the
-  Conjur container shell to retrieve the admin user API key
+  Secrets Manager container shell to retrieve the admin user API key
 
 ### Useful links
 
-- [Official documentation for Conjur's Ansible integration](https://docs.conjur.org/Latest/en/Content/Integrations/ansible.html)
-- [Conjur Collection on Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur)
-- [Ansible documentation for the Conjur collection](https://docs.ansible.com/ansible/latest/collections/cyberark/conjur/index.html)
+- [Official documentation for Secrets Manager's Ansible integration](https://docs.conjur.org/Latest/en/Content/Integrations/ansible.html)
+- [Secrets Manager Collection on Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur)
+- [Ansible documentation for the Secrets Manager collection](https://docs.ansible.com/ansible/latest/collections/cyberark/conjur/index.html)
 
 ## Testing
 
 ### Unit tests
 
-Unit tests are only available for the Conjur Variable Lookup plugin. To run
+Unit tests are only available for the Secrets Manager Variable Lookup plugin. To run
 these tests:
 ```
 ./dev/test_unit.sh
@@ -102,7 +102,7 @@ these tests:
 ### Integration tests
 
 The collection has integration tests for both the Variable Lookup plugin and the
-Host Identity role that will validate each against live Conjur and Ansible
+Host Identity role that will validate each against live Secrets Manager and Ansible
 containers.
 
 To run all tests:
@@ -115,7 +115,7 @@ To run the tests for a particular module:
 ./ci/test.sh -d <role or plugin name>
 ```
 
-Integration tests can be run against Conjur Enterprise by adding the `-e` flag:
+Integration tests can be run against Secrets Manager, Self-Hosted by adding the `-e` flag:
 ```
 ./ci/test.sh -e -a
 ```
@@ -148,7 +148,7 @@ follow the instructions in this section.
 1. A `PROMOTE` build will kick off an automated script which publish the release to
       [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur)
 
-# Ansible Conjur Collection Quick Start
+# Ansible Secrets Manager Collection Quick Start
 
 ## Setup a conjur OSS Environment
 
@@ -173,19 +173,19 @@ Retrieve the admin user's API key, and store the value in an environment variabl
 export CLI_CONJUR_AUTHN_API_KEY="$(docker compose exec conjur conjurctl role retrieve-key cucumber:user:admin)"
 ```
 
-Start the Conjur CLI container. The CLI will be automatically authenticated as
+Start the Secrets Manager CLI container. The CLI will be automatically authenticated as
 the user `cucumber:user:admin`.
 
 ```sh-session
 docker compose up -d conjur_cli
 ```
 
-## Load policy to set up Conjur Ansible integration
+## Load policy to set up Secrets Manager Ansible integration
 
-Policy defines Conjur entities and the relationships between them. An entity can
+Policy defines Secrets Manager entities and the relationships between them. An entity can
 be a policy, a host, a user, a layer, a group, or a variable.
 
-Check out the policy file, and load it into Conjur:
+Check out the policy file, and load it into Secrets Manager:
 
 ```sh-session
 docker compose exec conjur_cli cat /policy/root.yml
@@ -202,7 +202,7 @@ docker compose exec conjur_cli conjur variable values add ansible/target-passwor
 ## Create Ansible managed nodes
 
 The Ansible environment will include a control node and a number of managed
-nodes. First, retrieve the API key for the Conjur host representing the control
+nodes. First, retrieve the API key for the Secrets Manager host representing the control
 node, then create it:
 
 ```sh-session
@@ -217,9 +217,9 @@ docker compose up -d --scale test_app_ubuntu=2 test_app_ubuntu
 docker compose up -d --scale test_app_centos=2 test_app_centos
 ```
 
-## Use Conjur Ansible Role to set up identity on managed nodes
+## Use Secrets Manager Ansible Role to set up identity on managed nodes
 
-To grant your Ansible host a Conjur identity, first install the Conjur
+To grant your Ansible host a Secrets Manager identity, first install the Secrets Manager
 Collection on your Ansible control node:
 
 ```sh-session
@@ -232,7 +232,7 @@ Set up the host factory token in the HFTOKEN env var
 export HFTOKEN="$(docker compose exec conjur_cli conjur hostfactory tokens create ansible/ansible-factory | jq -r '.[0].token')"
 ```
 
-Once you've done this, you can configure each Ansible node with a Conjur
+Once you've done this, you can configure each Ansible node with a Secrets Manager
 identity by including a section like the example below in your Ansible playbook:
 
 ```yaml
@@ -246,13 +246,13 @@ identity by including a section like the example below in your Ansible playbook:
       conjur_host_name: "{{inventory_hostname}}"
 ```
 
-First we register the host with Conjur, adding it into the layer specific to the
-provided host factory token, and then install Summon with the Summon Conjur
-provider for secret retrieval from Conjur.
+First we register the host with Secrets Manager, adding it into the layer specific to the
+provided host factory token, and then install Summon with the Summon Secrets Manager
+provider for secret retrieval from Secrets Manager.
 
-## Use Conjur Lookup Plugin to provide secrets to Ansible Playbooks
+## Use Secrets Manager Lookup Plugin to provide secrets to Ansible Playbooks
 
-The Conjur lookup plugin can inject secret data directly into an Ansible
+The Secrets Manager lookup plugin can inject secret data directly into an Ansible
 playbook, like it the following example:
 
 ```yaml

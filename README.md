@@ -1,6 +1,6 @@
-# CyberArk Ansible Conjur Collection
+# CyberArk Ansible Secrets Manager Collection
 
-This collection contains components to be used with CyberArk Conjur & Conjur Enterprise
+This collection contains components to be used with CyberArk Conjur OSS & Secrets Manager
 hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ## Table of Contents
@@ -8,13 +8,13 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 * [Certification Level](#certification-level)
 * [Requirements](#requirements)
 * [Installation](#installation)
-* [Conjur Ansible Role](#conjur-ansible-role)
+* [Secrets Manager Ansible Role](#secrets-manager-ansible-role)
   + [Usage](#usage)
   + [Role Variables](#role-variables)
   + [Example Playbook](#example-playbook)
   + [Summon & Service Managers](#summon---service-managers)
   + [Recommendations](#recommendations)
-* [Conjur Ansible Lookup Plugin](#conjur-ansible-lookup-plugin)
+* [Secrets Manager Ansible Lookup Plugin](#secrets-manager-ansible-lookup-plugin)
   + [Environment variables](#environment-variables)
   + [Role Variables](#role-variables-1)
   + [Examples](#examples)
@@ -39,8 +39,8 @@ detailed information on our certification levels, see
 ## Requirements
 
 - An instance of [CyberArk Conjur Open Source](https://www.conjur.org) v1.x+ or [CyberArk
-  Conjur Enterprise](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
-  (formerly DAP) v10.x+ accessible from the target node
+  Secrets Manager, Self-Hosted](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
+  (formerly Conjur Enterprise) v10.x+ accessible from the target node
 - Ansible >= 2.17
 
 ## Using ansible-conjur-collection with Conjur Open Source
@@ -48,8 +48,8 @@ detailed information on our certification levels, see
 Are you using this project with [Conjur Open Source](https://github.com/cyberark/conjur)? Then we
 **strongly** recommend choosing the version of this project to use from the latest [Conjur OSS
 suite release](https://docs.conjur.org/Latest/en/Content/Overview/Conjur-OSS-Suite-Overview.html).
-Conjur maintainers perform additional testing on the suite release versions to ensure
-compatibility. When possible, upgrade your Conjur version to match the
+Secrets Manager maintainers perform additional testing on the suite release versions to ensure
+compatibility. When possible, upgrade your Secrets Manager version to match the
 [latest suite release](https://docs.conjur.org/Latest/en/Content/ReleaseNotes/ConjurOSS-suite-RN.htm);
 when using integrations, choose the latest suite release that matches your Conjur version. For any
 questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/c/conjur/5).
@@ -61,39 +61,39 @@ From terminal, run the following command:
 ansible-galaxy collection install cyberark.conjur
 ```
 
-## Conjur Ansible Role
+## Secrets Manager Ansible Role
 
-This Ansible role provides the ability to grant Conjur machine identity to a host. Based on that
-identity, secrets can then be retrieved securely using the [Conjur Lookup
-Plugin](#conjur-ansible-lookup-plugin) or using the [Summon](https://github.com/cyberark/summon)
+This Ansible role provides the ability to grant Secrets Manager machine identity to a host. Based on that
+identity, secrets can then be retrieved securely using the [Secrets Manager Lookup
+Plugin](#secrets-manager-ansible-lookup-plugin) or using the [Summon](https://github.com/cyberark/summon)
 tool (installed on hosts with identities created by this role).
 
 ### Usage
 
-The Conjur role provides a method to establish the Conjur identity of a remote node with Ansible.
+The Secrets Manager role provides a method to establish the Secrets Manager identity of a remote node with Ansible.
 The node can then be granted least-privilege access to retrieve the secrets it needs in a secure
 manner.
 
 ### Role Variables
 
-* `conjur_appliance_url` _(Required)_: URL of the running Conjur service
-* `conjur_account` _(Required)_: Conjur account name
+* `conjur_appliance_url` _(Required)_: URL of the running Secrets Manager service
+* `conjur_account` _(Required)_: Secrets Manager account name
 * `conjur_host_factory_token` _(Required)_: [Host
   Factory](https://developer.conjur.net/reference/services/host_factory/) token for layer
   enrollment. This should be specified in the environment on the Ansible controlling host.
 * `conjur_host_name` _(Required)_: Name of the host to be created.
-* `conjur_ssl_certificate`: Public SSL certificate of the Conjur endpoint
-* `conjur_validate_certs`: Boolean value to indicate if the Conjur endpoint should validate
+* `conjur_ssl_certificate`: Public SSL certificate of the Secrets Manager endpoint
+* `conjur_validate_certs`: Boolean value to indicate if the Secrets Manager endpoint should validate
   certificates
 * `state`: Specifies whether to install or uninstall the Role on the specified nodes
 * `summon.version`: version of Summon to install. Default is `0.8.2`.
-* `summon_conjur.version`: version of Summon-Conjur provider to install. Default is `0.5.3`.
+* `summon_conjur.version`: version of summon-conjur provider to install. Default is `0.5.3`.
 
-The variables not marked _`(Required)`_ are required for running with an HTTPS Conjur endpoint.
+The variables not marked _`(Required)`_ are required for running with an HTTPS Secrets Manager endpoint.
 
 ### Example Playbook
 
-Configure a remote node with a Conjur identity and Summon:
+Configure a remote node with a Secrets Manager identity and Summon:
 ```yml
 - hosts: servers
   roles:
@@ -107,15 +107,15 @@ Configure a remote node with a Conjur identity and Summon:
 ```
 
 This example:
-- Registers the host `{{ inventory_hostname }}` with Conjur, adding it into the Conjur policy layer
+- Registers the host `{{ inventory_hostname }}` with Secrets Manager, adding it into the Secrets Manager policy layer
   defined for the provided host factory token.
-- Installs Summon with the Summon Conjur provider for secret retrieval from Conjur.
+- Installs Summon with the summon-conjur provider for secret retrieval from Secrets Manager.
 
 ### Role Cleanup
 
 Executing the following playbook will clean up configuration and identity files
 written to the specified remote nodes, as well as uninstalling Summon and the
-Summon Conjur provider:
+summon-conjur provider:
 ```yml
 - hosts: servers
   roles:
@@ -125,8 +125,8 @@ Summon Conjur provider:
 
 ### Summon & Service Managers
 
-With Summon installed, using Conjur with a Service Manager (like systemd) becomes a snap. Here's a
-simple example of a `systemd` file connecting to Conjur:
+With Summon installed, using Secrets Manager with a Service Manager (like systemd) becomes a snap. Here's a
+simple example of a `systemd` file connecting to Secrets Manager:
 
 ```ini
 [Unit]
@@ -139,7 +139,6 @@ User=DemoUser
 ExecStart=/usr/local/bin/summon --yaml 'DB_PASSWORD: !var staging/demoapp/database/password' /usr/local/bin/myapp
 ```
 
-> Note: When connecting to Conjur 4 (Conjur Enterprise), Summon requires the environment variable
 `CONJUR_MAJOR_VERSION` set to `4`. You can provide it by uncommenting the relevant line above.
 
 The above example uses Summon to retrieve the password stored in `staging/myapp/database/password`,
@@ -155,7 +154,7 @@ password as the application is started.
 - Set the Ansible files to minimum permissions. Ansible uses the permissions of the user that runs
   it.
 
-## Conjur Ansible Lookup Plugin
+## Secrets Manager Ansible Lookup Plugin
 
 The Conjur Ansible Lookup Plugin allows you to securely fetch credentials from CyberArk Conjur using various authentication methods. The plugin supports the following types of authentication:
 
@@ -174,30 +173,30 @@ Each authentication method retrieves secrets from Conjur dynamically, ensuring s
 Credentials can be fetched from CyberArk Conjur using the controlling host's Conjur identity, environment variables, or extra-vars.
 
 The controlling host running Ansible must have a Conjur identity, provided for example by the
-[ConjurAnsible role](#conjur-ansible-role).
+[Secrets Manager role](#secrets-manager-ansible-role).
 
 ### Authentication Methods
 
 #### 1. API Key Authentication
 
-This is the default method for authenticating with Conjur using an API key.
+This is the default method for authenticating with Secrets Manager using an API key.
 
 #### Required Extra-vars/Environment Variables:
 
-- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Conjur service (e.g., https://conjur.example.com).
+- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Secrets Manager service (e.g., https://conjur.example.com).
 
-- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Conjur host (e.g., host/my-host).
+- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Secrets Manager host (e.g., host/my-host).
 
-- `conjur_authn_api_key / CONJUR_AUTHN_API_KEY`: The API key corresponding to the Conjur host username.
+- `conjur_authn_api_key / CONJUR_AUTHN_API_KEY`: The API key corresponding to the Secrets Manager host username.
 
 #### Optional Extra-vars/Environment Variables:
-- `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
+- `conjur_account / CONJUR_ACCOUNT`: The Secrets Manager account name (default: conjur).
 
-- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Conjur certificate (PEM format).
+- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
 
-- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Conjur certificate file.
+- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
 
-- `conjur_authn_token_file / CONJUR_AUTHN_TOKEN_FILE`: Path to a file containing a valid Conjur auth token.
+- `conjur_authn_token_file / CONJUR_AUTHN_TOKEN_FILE`: Path to a file containing a valid Secrets Manager auth token.
 
 #### API Key Authentication
 
@@ -210,50 +209,50 @@ This method uses AWS IAM roles and Instance Metadata Service (IMDS) tokens for a
 #### Required Extra-vars/Environment Variables:
 - `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("aws").
 
-- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Conjur service (e.g., https://conjur.example.com).
+- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Secrets Manager service (e.g., https://conjur.example.com).
 
-- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Conjur host (e.g., host/my-host).
+- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Secrets Manager host (e.g., host/my-host).
 
 - `conjur_authn_service_id / CONJUR_AUTHN_SERVICE_ID`: The service ID used for the AWS Authenticator web service.
 
 #### Optional Extra-vars/Environment Variables:
-- `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
+- `conjur_account / CONJUR_ACCOUNT`: The Secrets Manager account name (default: conjur).
 
-- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Conjur certificate (PEM format).
+- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
 
-- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Conjur certificate file.
+- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
 
 #### How AWS Authentication Works
 
-For AWS IAM Authentication, the plugin uses AWS Instance Metadata Service (IMDS) to obtain a token for the current instance. This token is then used to authenticate the instance against Conjur and obtain secrets securely. This eliminates the need for static API keys and enhances security by utilizing temporary credentials provided by the IMDS.
+For AWS IAM Authentication, the plugin uses AWS Instance Metadata Service (IMDS) to obtain a token for the current instance. This token is then used to authenticate the instance against Secrets Manager and obtain secrets securely. This eliminates the need for static API keys and enhances security by utilizing temporary credentials provided by the IMDS.
 
 #### 3. Azure Authentication
 
-This method uses Azure Managed Identity to authenticate with Conjur.
+This method uses Azure Managed Identity to authenticate with Secrets Manager.
 
 #### Required Extra-vars/Environment Variables:
 
 - `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("azure").
 
-- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Conjur service (e.g., https://conjur.example.com).
+- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Secrets Manager service (e.g., https://conjur.example.com).
 
-- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Conjur host (e.g., host/my-host).
+- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Secrets Manager host (e.g., host/my-host).
 
 - `conjur_authn_service_id / CONJUR_AUTHN_SERVICE_ID`: The service ID used for the Azure Authenticator web service.
 
 #### Optional Extra-vars/Environment Variables:
 
-- `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
+- `conjur_account / CONJUR_ACCOUNT`: The Secrets Manager account name (default: conjur).
 
-- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Conjur certificate (PEM format).
+- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
 
-- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Conjur certificate file.
+- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
 
 - `azure_client_id / AZURE_CLIENT_ID`: The Azure client ID for User Assigned Managed Identity (optional).
 
 #### How Azure Authentication Works
 
-For Azure Authentication, the plugin uses Azure Instance Metadata Service (IMDS) to retrieve authentication tokens for Azure Managed Identity. This allows the plugin to authenticate workloads running in Azure dynamically, fetching the necessary secrets from Conjur without needing static credentials.
+For Azure Authentication, the plugin uses Azure Instance Metadata Service (IMDS) to retrieve authentication tokens for Azure Managed Identity. This allows the plugin to authenticate workloads running in Azure dynamically, fetching the necessary secrets from Secrets Manager without needing static credentials.
 
 #### 4. GCP Authentication
 
@@ -263,22 +262,22 @@ This method allows you to authenticate using a Google Cloud Platform (GCP) Servi
 
 - `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("gcp").
 
-- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Conjur service (e.g., https://conjur.example.com).
+- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Secrets Manager service (e.g., https://conjur.example.com).
 
-- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Conjur host (e.g., host/my-host).
+- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Secrets Manager host (e.g., host/my-host).
 
 
 #### Optional Extra-vars/Environment Variables:
 
-- `conjur_account / CONJUR_ACCOUNT`: The Conjur account name (default: conjur).
+- `conjur_account / CONJUR_ACCOUNT`: The Secrets Manager account name (default: conjur).
 
-- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Conjur certificate (PEM format).
+- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
 
-- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Conjur certificate file.
+- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
 
 #### How GCP Authentication Works
 
-For GCP Authentication, the plugin uses Google Cloud Instance Metadata Service (IMDS) to authenticate the workload by retrieving a JWT token. The token is used to authenticate against Conjur, allowing the plugin to fetch the requested secrets securely.
+For GCP Authentication, the plugin uses Google Cloud Instance Metadata Service (IMDS) to authenticate the workload by retrieving a JWT token. The token is used to authenticate against Secrets Manager, allowing the plugin to fetch the requested secrets securely.
 
 ### Example Playbooks and Ansible Commands
 
@@ -294,7 +293,7 @@ Below are example playbooks and the corresponding Ansible commands to run them f
   collections:
     - cyberark.conjur
   tasks:
-    - name: Lookup variable in Conjur
+    - name: Lookup variable in Secrets Manager
       debug:
         msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/ansible/target-secret') }}"
 ```
@@ -342,7 +341,7 @@ ansible-playbook -v retrieve-secrets.yaml
   collections:
     - cyberark.conjur
   tasks:
-    - name: Lookup variable in Conjur
+    - name: Lookup variable in Secrets Manager
       debug:
         msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/ansible/target-secret') }}"
 ```
@@ -392,7 +391,7 @@ ansible-playbook -v retrieve-secrets.yaml
   collections:
     - cyberark.conjur
   tasks:
-    - name: Lookup variable in Conjur
+    - name: Lookup variable in Secrets Manager
       debug:
         msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/ansible/target-secret') }}"
 ```
@@ -444,7 +443,7 @@ ansible-playbook -v retrieve-secrets.yaml
   collections:
     - cyberark.conjur
   tasks:
-    - name: Lookup variable in Conjur
+    - name: Lookup variable in Secrets Manager
       debug:
         msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/ansible/target-secret') }}"
 ```
@@ -544,7 +543,7 @@ None.
 ---
 - hosts: localhost
   tasks:
-  - name: Lookup variable in Conjur
+  - name: Lookup variable in Secrets Manager
     debug:
       msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret') }}"
 ```
