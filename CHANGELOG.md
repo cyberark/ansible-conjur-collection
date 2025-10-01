@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [1.3.8] - 2025-08-18
+## [1.3.8] - 2025-09-30
+
+### Changed
+- Updated documentation to align with Conjur Enterprise name change to Secrets Manager. (CNJR-10991)
 
 ## [1.3.7] - 2025-08-13
 
@@ -147,7 +150,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.7...HEAD
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.8...HEAD
+[1.3.8]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.7...v1.3.8
 [1.3.7]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.6...v1.3.7
 [1.3.6]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.3...v1.3.6
 [1.3.3]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.2...v1.3.3
