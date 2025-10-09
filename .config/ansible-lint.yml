@@ -11,3 +11,4 @@ skip_list:
   - no-changed-when
   - no-handler
   - yaml[line-length]
+  - var-naming[no-role-prefix]
