@@ -220,13 +220,13 @@ try:
     from cryptography.x509 import load_pem_x509_certificate
     from cryptography.hazmat.backends import default_backend
 except ImportError:
-    CRYPTOGRAPHY_IMPORT_ERROR = traceback.format_exc()
+    cryptography_import_error = traceback.format_exc()
 else:
-    CRYPTOGRAPHY_IMPORT_ERROR = None
+    cryptography_import_error = None
 
 display = Display()
-TEMP_CERT_FILE = None
-TELEMETRY_HEADER = None
+temp_cert_file = None
+telemetry_header = None
 
 
 # ************* REQUEST VALUES *************
@@ -592,26 +592,26 @@ def _get_certificate_file(cert_content, cert_file):
     Returns:
         str: Path to the certificate file to be used.
     """
-    global TEMP_CERT_FILE
+    global temp_cert_file
     cert_content = _get_valid_certificate(cert_content, cert_file)
 
     if cert_content:
         try:
-            TEMP_CERT_FILE = NamedTemporaryFile(delete=False)  # pylint: disable=consider-using-with
+            temp_cert_file = NamedTemporaryFile(delete=False)  # pylint: disable=consider-using-with
 
             # Prepare a CA bundle including system CA certificates
             system_ca_bundle = ssl.get_default_verify_paths().cafile
             if system_ca_bundle and os.path.exists(system_ca_bundle):
                 with open(system_ca_bundle, 'rb') as bundle:
-                    shutil.copyfileobj(bundle, TEMP_CERT_FILE)
+                    shutil.copyfileobj(bundle, temp_cert_file)
             else:
                 display.warning("System CA bundle not found, only the provided cert(s) will be used.")
 
             # Normalize and append custom cert(s)
             cert_bytes = cert_content.encode() if isinstance(cert_content, str) else cert_content
-            TEMP_CERT_FILE.write(b"\n" + cert_bytes.strip().replace(b"\r\n", b"\n") + b"\n")
-            TEMP_CERT_FILE.close()
-            cert_file = TEMP_CERT_FILE.name
+            temp_cert_file.write(b"\n" + cert_bytes.strip().replace(b"\r\n", b"\n") + b"\n")
+            temp_cert_file.close()
+            cert_file = temp_cert_file.name
         except Exception as err:
             raise AnsibleError(f"Failed to create temporary CA bundle: {str(err)}") from err
 
@@ -675,9 +675,9 @@ def _encode_str(input_str):
 
 # Prepare the telemetry header
 def _telemetry_header():
-    global TELEMETRY_HEADER
+    global telemetry_header
 
-    if TELEMETRY_HEADER is None:
+    if telemetry_header is None:
         plugin_dir = os.path.dirname(__file__)
         collection_root = os.path.abspath(os.path.join(plugin_dir, '..', '..'))
         if collection_root.find('ansible_collections') != -1:
@@ -692,8 +692,8 @@ def _telemetry_header():
         telemetry_val = f'in=Ansible Collections&it=cybr-secretsmanager&iv={version}&vn=Ansible'
 
         # Encode to base64
-        TELEMETRY_HEADER = b64encode(telemetry_val.encode()).decode().rstrip("=")
-    return TELEMETRY_HEADER
+        telemetry_header = b64encode(telemetry_val.encode()).decode().rstrip("=")
+    return telemetry_header
 
 
 # Use credentials to retrieve temporary authorization token
@@ -1123,12 +1123,12 @@ class LookupModule(LookupBase):
             else:
                 token = None
 
-            if TEMP_CERT_FILE:
+            if temp_cert_file:
                 try:
-                    if os.path.exists(TEMP_CERT_FILE.name):
-                        os.unlink(TEMP_CERT_FILE.name)
+                    if os.path.exists(temp_cert_file.name):
+                        os.unlink(temp_cert_file.name)
                 except (OSError, PermissionError) as err:
-                    raise AnsibleError(f"Failed to delete temporary certificate file `{TEMP_CERT_FILE.name}`: {str(err)}") from err
+                    raise AnsibleError(f"Failed to delete temporary certificate file `{temp_cert_file.name}`: {str(err)}") from err
 
         if as_file:
             return _store_secret_in_file(conjur_variable)
