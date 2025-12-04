@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Strip the 'v' from the Tag Name
+TAG=${TAG//"v"}
+
+TOP_LEVEL_DIR="$(cd "$(dirname "$BASH_SOURCE")"; pwd)/.."
+
+if [[ -z "${GALAXY_API_KEY:-}" ]]; then
+  echo "❌ GALAXY_API_KEY is not set. Cannot publish to Ansible Galaxy."
+  exit 1
+elif [[ -z "${AUTOMATION_HUB_TOKEN:-}" ]]; then
+  echo "❌ AUTOMATION_HUB_TOKEN is not set. Cannot publish to Automation Hub."
+  exit 1
+fi
+
+# Validate the version in galaxy.yml matches the promote version
+GALAXY_YML_VERSION=$(grep '^version:' "$TOP_LEVEL_DIR/galaxy.yml" | awk '{print $2}' | tr -d '"')
+if [[ "$GALAXY_YML_VERSION" != "$TAG" ]]; then
+  echo "❌ Version mismatch: galaxy.yml version ($GALAXY_YML_VERSION) does not match promote version ($TAG)."
+  exit 1
+fi
+
+pushd "$TOP_LEVEL_DIR" >/dev/null
+  docker run --rm -t \
+    -e ANSIBLE_GALAXY_SERVER_LIST=galaxy,automation_hub \
+    -e ANSIBLE_GALAXY_SERVER_GALAXY_URL=https://galaxy.ansible.com/ \
+    -e ANSIBLE_GALAXY_SERVER_GALAXY_API_KEY="$GALAXY_API_KEY" \
+    -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_URL=https://console.redhat.com/api/automation-hub/ \
+    -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_AUTH_URL=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token \
+    -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN="$AUTOMATION_HUB_TOKEN" \
+    -v "$TOP_LEVEL_DIR:/collection" \
+    python:3 /bin/bash -c "
+      set -euo pipefail
+      pip install ansible
+      
+      echo \"📦 Publishing to Ansible Galaxy...\"
+      ansible-galaxy collection publish \
+        /collection/cyberark-conjur-${TAG}.tar.gz \
+        --server galaxy
+
+      echo \"📦 Publishing to Automation Hub...\"
+      ansible-galaxy collection publish \
+        /collection/cyberark-conjur-1.3.8.tar.gz \
+        --server automation_hub
+    "
+popd >/dev/null

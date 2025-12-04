@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.10] - 2025-12-05
+
+### Added
+- Automate publishing to Automation Hub (CNJR-11678)
+
 ## [1.3.9] - 2025-11-10
 
 ### Security

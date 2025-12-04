@@ -18,7 +18,7 @@ if (params.MODE == "PROMOTE") {
       cp "${assetDirectory}/cyberark-conjur-${targetVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
 
       export TAG="v${targetVersion}"
-      summon ./ci/publish_to_galaxy
+      summon ./ci/publish
     """
 
   }
