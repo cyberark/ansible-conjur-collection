@@ -9,10 +9,6 @@ function dev_dir {
   echo "$repo/dev"
 }
 
-function compose_major_version {
-  docker compose version --short | cut -d "." -f 1
-}
-
 function set_network {
   echo "$1" > "$(dev_dir)/tmp/docker_network"
 }
@@ -137,8 +133,7 @@ function setup_conjur_identities {
 function generate_inventory {
   docker exec "$(ansible_cid)" bash -ec "
     cd dev
-    ansible-playbook playbooks/inventory-setup/inventory-playbook.yml \
-      -e \"compose_version=$(compose_major_version)\"
+    ansible-playbook playbooks/inventory-setup/inventory-playbook.yml
   "
 }
 
