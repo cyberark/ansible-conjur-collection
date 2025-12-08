@@ -18,7 +18,7 @@ if (params.MODE == "PROMOTE") {
       cp "${assetDirectory}/cyberark-conjur-${targetVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
 
       export TAG="v${targetVersion}"
-      summon ./ci/publish_to_galaxy
+      summon -e publish ./ci/publish
     """
 
   }
@@ -569,7 +569,7 @@ pipeline {
           }
           steps {
             script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh"summon ./dev/start.sh -f cloud -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh"summon -e azure ./dev/start.sh -f cloud -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
             }
           }
         }
@@ -577,7 +577,7 @@ pipeline {
         stage('Testing conjur_variable lookup plugin for Azure') {
           steps {
             script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh 'summon -e azure ./ci/test.sh -u azure -d -t conjur_variable'
             }
           }
         }
@@ -591,8 +591,8 @@ pipeline {
           }
           steps {
             script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh "summon ./dev/start.sh -f edge -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh "summon -e azure ./dev/start.sh -f edge -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh 'summon -e azure ./ci/test.sh -u azure -d -t conjur_variable'
             }
           }
         }
@@ -639,8 +639,8 @@ static def runIamIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, 
 }
 
 static def runAzureIntegrationTests(azureExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
-  azureExecutorAgent.agentSh "summon ./dev/start.sh -f ${conjurFlavour} -a azure -v ${ansibleVersion} -p ${pythonVersion}"
-  azureExecutorAgent.agentSh 'summon ./ci/test.sh -u azure -d -t conjur_variable'
+  azureExecutorAgent.agentSh "summon -e azure ./dev/start.sh -f ${conjurFlavour} -a azure -v ${ansibleVersion} -p ${pythonVersion}"
+  azureExecutorAgent.agentSh 'summon -e azure ./ci/test.sh -u azure -d -t conjur_variable'
 }
 
 static def runGcpIntegrationTests(executorAgent, gcpExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion, appName, stashName) {
