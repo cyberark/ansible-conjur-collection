@@ -5,8 +5,10 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
 
 ## Table of Contents
 
+* [Description](#description)
 * [Certification Level](#certification-level)
 * [Requirements](#requirements)
+* [Supported Ansible Versions](#supported-ansible-versions)
 * [Installation](#installation)
 * [Secrets Manager Ansible Role](#secrets-manager-ansible-role)
   + [Usage](#usage)
@@ -20,11 +22,22 @@ hosted in [Ansible Galaxy](https://galaxy.ansible.com/cyberark/conjur).
   + [Examples](#examples)
     - [Retrieve a secret in a Playbook](#retrieve-a-secret-in-a-playbook)
     - [Retrieve a private key in an Inventory file](#retrieve-a-private-key-in-an-inventory-file)
+* [Release Notes and Roadmap](#release-notes-and-roadmap)
+* [Support](#support)
 * [Contributing](#contributing)
 * [License](#license)
 
 <!-- Table of contents generated with markdown-toc
 http://ecotrust-canada.github.io/markdown-toc/ -->
+
+## Description
+
+The CyberArk Ansible Secrets Manager Collection provides Ansible users with the ability to securely retrieve secrets from CyberArk Conjur or CyberArk Secrets Manager. This collection includes:
+
+- **Lookup Plugin**: Retrieve secrets dynamically during playbook execution using multiple authentication methods (API Key, AWS IAM, Azure Managed Identity, GCP)
+- **Host Identity Role**: Configure remote nodes with Conjur identities and install Summon for secure secret injection
+
+This collection enables secure, centralized secret management for Ansible automation workflows, supporting both on-premises and cloud-based deployments.
 
 ## Certification Level
 
@@ -42,6 +55,14 @@ detailed information on our certification levels, see
   Secrets Manager, Self-Hosted](https://docs.cyberark.com/Product-Doc/OnlineHelp/AAM-DAP/Latest/en/Content/Resources/_TopNav/cc_Home.htm)
   (formerly Conjur Enterprise) v10.x+ accessible from the target node
 - Ansible >= 2.17
+
+## Supported Ansible Versions
+
+This collection is tested and supported with the following Ansible versions:
+
+- ansible-core >= 2.17
+
+For more information on Ansible version support, please refer to the [Release Notes](#release-notes-and-roadmap).
 
 ## Using ansible-conjur-collection with Conjur Open Source
 
@@ -558,6 +579,23 @@ ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'pat
 
 **Note:** Using the `as_file=true` condition, the private key is stored in a temporary file and its path is written 
 in `ansible_ssh_private_key_file`.
+
+## Release Notes and Roadmap
+
+The [CHANGELOG](CHANGELOG.md) describes notable changes for each release of this collection.
+
+For information on upcoming features and planned improvements, please visit our [GitHub Issues](https://github.com/cyberark/ansible-conjur-collection/issues) page.
+
+## Support
+
+**Commercial Support**: CyberArk provides Enterprise-level support for this certified collection as part of CyberArk Secrets Manager.
+
+**Community Support**: For community support, please visit our [CyberArk Commons Discourse](https://discuss.cyberarkcommons.org/c/conjur/5) forum.
+
+If you encounter issues or have questions:
+1. Search existing [GitHub Issues](https://github.com/cyberark/ansible-conjur-collection/issues)
+2. Create a new issue with detailed information about your environment and problem
+3. For security-related issues, please refer to our [Security Policy](SECURITY.md)
 
 ## Contributing
 
