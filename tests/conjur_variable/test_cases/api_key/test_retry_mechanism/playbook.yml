@@ -1,0 +1,84 @@
+---
+# Test retry mechanism in _repeat_open_url()
+# 1. Authenticate with Conjur and save token to file
+# 2. Use token with bad URL to test retry (expected ~75-125s)
+
+- name: Test retry mechanism in _repeat_open_url
+  hosts: localhost
+  connection: local
+  vars:
+    good_url: "{{ lookup('env', 'CONJUR_APPLIANCE_URL') | default('https://conjur-proxy-nginx', true) }}"
+    bad_url: "https://10.255.255.1:8443"
+    conjur_account: "{{ lookup('env', 'CONJUR_ACCOUNT') | default('cucumber', true) }}"
+    conjur_cert_file: "{{ lookup('env', 'CONJUR_CERT_FILE') | default('/cyberark/dev/conjur.pem', true) }}"
+    token_file: "/tmp/conjur_test_token.bin"
+    lookup_path: "{{ 'data/ansible' if lookup('env', 'IS_CLOUD') | bool else 'ansible' }}"
+  tasks:
+    - name: Get credentials from environment
+      set_fact:
+        conjur_login: "{{ lookup('env', 'CONJUR_AUTHN_LOGIN') }}"
+        conjur_api_key: "{{ lookup('env', 'CONJUR_AUTHN_API_KEY') }}"
+
+    - name: Authenticate with Conjur
+      uri:
+        url: "{{ good_url }}/authn/{{ conjur_account }}/{{ conjur_login | replace('/', '%2F') }}/authenticate"
+        method: POST
+        body: "{{ conjur_api_key }}"
+        return_content: yes
+        validate_certs: no
+        ca_path: "{{ conjur_cert_file }}"
+        status_code: 200
+      register: auth_response
+
+    - name: Save token to file
+      copy:
+        content: "{{ auth_response.content }}"
+        dest: "{{ token_file }}"
+        mode: '0600'
+
+    - name: Start timer
+      shell: date +%s
+      register: retry_start
+
+    - name: Fetch secret with bad URL (will retry 5 times with 2s interval)
+      debug:
+        msg: >-
+          {{ lookup('cyberark.conjur.conjur_variable',
+                    lookup_path + '/test-secret',
+                    conjur_appliance_url=bad_url,
+                    conjur_account=conjur_account,
+                    conjur_cert_file=conjur_cert_file,
+                    conjur_authn_token_file='/tmp/conjur_test_token.bin',
+                    retry_interval=2,
+                    validate_certs=False) }}
+      ignore_errors: yes
+      register: retry_result
+
+    - name: Stop timer
+      shell: date +%s
+      register: retry_end
+
+    - name: Calculate duration
+      set_fact:
+        retry_duration: "{{ retry_end.stdout|int - retry_start.stdout|int }}"
+
+    - name: Show results
+      debug:
+        msg:
+          - "Duration: {{ retry_duration }}s"
+          - "Expected: ~10-70s (5 retries × 2s + timeouts)"
+          - "Status: {{ 'RETRY WORKING' if retry_duration|int > 10 else 'RETRY NOT WORKING' }}"
+
+    - name: Verify retry worked
+      assert:
+        that:
+          - retry_result.failed
+          - retry_duration|int > 10
+        success_msg: "Retry mechanism works! ({{ retry_duration }}s)"
+        fail_msg: "Retry NOT working ({{ retry_duration }}s, expected >10s)"
+
+    - name: Cleanup
+      file:
+        path: "{{ token_file }}"
+        state: absent
+      ignore_errors: yes

@@ -174,6 +174,13 @@ DOCUMENTATION = """
           - name: azure_client_id
         env:
           - name: AZURE_CLIENT_ID
+      retry_interval:
+        description: Time in seconds to wait between retry attempts (default 10)
+        type: int
+        required: False
+        default: 10
+        vars:
+          - name: conjur_retry_interval
 """
 
 EXAMPLES = """
@@ -749,32 +756,39 @@ def retry(retries, retry_interval):
             while True:
                 retry_count += 1
                 try:
-                    return_value = target(*args, **kwargs)
-                    return return_value
-                except urllib_error.HTTPError as err:
+                    return target(*args, **kwargs)
+                except (socket.timeout, urllib_error.URLError) as e:
+                    # Only retry network/connectivity errors - other errors should fail-fast
+                    display.v(
+                        f'Retryable error encountered: {type(e).__name__} - {e}. '
+                        f'Retrying ({retry_count}/{retries})...'
+                    )
                     if retry_count >= retries:
-                        raise err
-                    display.v('Error encountered. Retrying..')
-                except socket.timeout as err:
-                    if retry_count >= retries:
-                        raise err
-                    display.v('Socket timeout encountered. Retrying..')
-                sleep(retry_interval)
+                        raise
+                    sleep(retry_interval)
         return decorator
     return parameters_wrapper
 
 
-@retry(retries=5, retry_interval=10)
-def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None):
-    return open_url(url,
-                    headers=headers,
-                    method=method,
-                    validate_certs=validate_certs,
-                    ca_path=ca_path)
+def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None, retry_interval=10):
+    """
+    Wrapper for open_url with retry logic
+
+    Args:
+        retry_interval: Time in seconds between retry attempts (default: 10)
+    """
+    @retry(retries=5, retry_interval=retry_interval)
+    def _do_request():
+        return open_url(url,
+                        headers=headers,
+                        method=method,
+                        validate_certs=validate_certs,
+                        ca_path=ca_path)
+    return _do_request()
 
 
 # Retrieve Conjur variable using the temporary token
-def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file):  # pylint: disable=too-many-arguments
+def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file, retry_interval=10):  # pylint: disable=too-many-arguments
     token = b64encode(token)
     # Get the telemetry header
     encoded_telemetry = _telemetry_header()
@@ -791,7 +805,8 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
                                 headers=headers,
                                 method='GET',
                                 validate_certs=validate_certs,
-                                ca_path=cert_file)
+                                ca_path=cert_file,
+                                retry_interval=retry_interval)
 
     if response.getcode() == 200:
         display.vvvv(f'Conjur variable {conjur_variable} was successfully retrieved')
@@ -1004,6 +1019,7 @@ class LookupModule(LookupBase):
         authn_type = self.get_var_value("conjur_authn_type")
         service_id = self.get_var_value("conjur_authn_service_id")
         azure_client_id = self.get_var_value("azure_client_id")
+        retry_interval = self.get_option('retry_interval')
 
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
@@ -1128,7 +1144,8 @@ class LookupModule(LookupBase):
                 conf['appliance_url'],
                 conf['account'],
                 validate_certs,
-                cert_file
+                cert_file,
+                retry_interval
             )
         finally:
             if isinstance(token, bytes):

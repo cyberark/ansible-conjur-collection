@@ -81,7 +81,8 @@ class TestConjurLookup(TestCase):
             },
             method="GET",
             validate_certs=True,
-            ca_path="cert_file"
+            ca_path="cert_file",
+            retry_interval=10
         )
         self.assertEqual(['response body'], result)
 
