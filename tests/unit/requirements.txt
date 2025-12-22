@@ -5,7 +5,7 @@ pytest-xdist
 pytest-forked
 cryptography
 pyyaml  # required by the collection loader (only needed for collections)
-coverage==4.5.4
+coverage
 
 bcrypt ; python_version >= '3.8'  # controller only
 passlib ; python_version >= '3.8'  # controller only
