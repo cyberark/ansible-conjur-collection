@@ -791,3 +791,200 @@ class TestConjurLookup(TestCase):
                 cert_file, validate_certs
             )
         self.assertIn("Something went wrong", str(context.exception))
+
+    # Cache functionality tests
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._load_cache')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._save_cache')
+    def test_cache_disabled_by_default(self, mock_save_cache, mock_load_cache, mock_fetch_conjur_token, 
+                                        mock_fetch_conjur_variable, mock_get_certificate_file):
+        """Test that cache is not used when use_cache parameter is not set or False"""
+        mock_get_certificate_file.return_value = "./conjur.pem"
+        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_variable.return_value = ["secret_value"]
+
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjurfake.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey'
+        }
+        terms = ['ansible/fake-secret']
+
+        result = self.lookup.run(terms, variables)
+
+        # Cache methods should not be called when use_cache is False (default)
+        mock_load_cache.assert_not_called()
+        mock_save_cache.assert_not_called()
+        mock_fetch_conjur_variable.assert_called_once()
+        self.assertEqual(result, ["secret_value"])
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._load_cache')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._save_cache')
+    def test_cache_miss_fetches_from_conjur(self, mock_save_cache, mock_load_cache, mock_fetch_conjur_token,
+                                             mock_fetch_conjur_variable, mock_get_certificate_file):
+        """Test that on cache miss, value is fetched from Conjur and stored in cache"""
+        mock_get_certificate_file.return_value = "./conjur.pem"
+        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_variable.return_value = ["secret_value"]
+        mock_load_cache.return_value = {}  # Empty cache - cache miss
+
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjurfake.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey'
+        }
+        terms = ['ansible/fake-secret']
+        kwargs = {'use_cache': True}
+
+        result = self.lookup.run(terms, variables, **kwargs)
+
+        # On cache miss, should load cache, fetch from Conjur, and save to cache
+        mock_load_cache.assert_called_once()
+        mock_fetch_conjur_variable.assert_called_once()
+        mock_save_cache.assert_called_once()
+        
+        # Verify the cache was saved with correct key and value
+        saved_cache = mock_save_cache.call_args[0][0]
+        expected_key = "https://conjur-fake|ansible/fake-secret"
+        self.assertIn(expected_key, saved_cache)
+        self.assertEqual(saved_cache[expected_key], ["secret_value"])
+        self.assertEqual(result, ["secret_value"])
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._load_cache')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._save_cache')
+    def test_cache_hit_returns_cached_value(self, mock_save_cache, mock_load_cache, mock_fetch_conjur_token,
+                                             mock_fetch_conjur_variable, mock_get_certificate_file):
+        """Test that on cache hit, cached value is returned without calling Conjur"""
+        mock_get_certificate_file.return_value = "./conjur.pem"
+        # Pre-populate cache with the value
+        cache_key = "https://conjur-fake|ansible/fake-secret"
+        mock_load_cache.return_value = {cache_key: ["cached_secret_value"]}
+
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjurfake.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey'
+        }
+        terms = ['ansible/fake-secret']
+        kwargs = {'use_cache': True}
+
+        result = self.lookup.run(terms, variables, **kwargs)
+
+        # On cache hit, should only load cache and not call Conjur
+        mock_load_cache.assert_called_once()
+        mock_fetch_conjur_token.assert_not_called()
+        mock_fetch_conjur_variable.assert_not_called()
+        mock_save_cache.assert_not_called()
+        self.assertEqual(result, ["cached_secret_value"])
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._store_secret_in_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._load_cache')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._save_cache')
+    def test_cache_with_as_file_option(self, mock_save_cache, mock_load_cache, mock_store_secret_in_file,
+                                        mock_get_certificate_file):
+        """Test that cache works correctly with as_file option"""
+        mock_get_certificate_file.return_value = "./conjur.pem"
+        cache_key = "https://conjur-fake|ansible/fake-secret"
+        mock_load_cache.return_value = {cache_key: ["cached_secret_value"]}
+        mock_store_secret_in_file.return_value = ["/tmp/secret_file"]
+
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjurfake.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey'
+        }
+        terms = ['ansible/fake-secret']
+        kwargs = {'use_cache': True, 'as_file': True}
+
+        result = self.lookup.run(terms, variables, **kwargs)
+
+        # Should return file path, not the secret value
+        mock_store_secret_in_file.assert_called_once_with(["cached_secret_value"])
+        self.assertEqual(result, ["/tmp/secret_file"])
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._load_cache')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._save_cache')
+    def test_cache_key_includes_url_and_variable(self, mock_save_cache, mock_load_cache, mock_fetch_conjur_token,
+                                                   mock_fetch_conjur_variable, mock_get_certificate_file):
+        """Test that cache key is correctly formed from appliance URL and variable path"""
+        mock_get_certificate_file.return_value = "./conjur.pem"
+        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_variable.return_value = ["secret_value"]
+        mock_load_cache.return_value = {}
+
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-production.example.com',
+            'conjur_cert_file': './conjurfake.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey'
+        }
+        terms = ['path/to/secret/variable']
+        kwargs = {'use_cache': True}
+
+        self.lookup.run(terms, variables, **kwargs)
+
+        # Verify cache key format
+        saved_cache = mock_save_cache.call_args[0][0]
+        expected_key = "https://conjur-production.example.com|path/to/secret/variable"
+        self.assertIn(expected_key, saved_cache)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._load_cache')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.LookupModule._save_cache')
+    def test_cache_multiple_variables(self, mock_save_cache, mock_load_cache, mock_fetch_conjur_token,
+                                       mock_fetch_conjur_variable, mock_get_certificate_file):
+        """Test that multiple variables are cached independently"""
+        mock_get_certificate_file.return_value = "./conjur.pem"
+        mock_fetch_conjur_token.return_value = "token"
+        
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjurfake.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey'
+        }
+        kwargs = {'use_cache': True}
+
+        # First lookup - cache username
+        mock_load_cache.return_value = {}
+        mock_fetch_conjur_variable.return_value = ["admin_user"]
+        self.lookup.run(['db/username'], variables, **kwargs)
+        
+        saved_cache_1 = mock_save_cache.call_args[0][0]
+        self.assertEqual(saved_cache_1["https://conjur-fake|db/username"], ["admin_user"])
+
+        # Second lookup - cache password (with username already cached)
+        mock_load_cache.return_value = {"https://conjur-fake|db/username": ["admin_user"]}
+        mock_fetch_conjur_variable.return_value = ["admin_pass"]
+        self.lookup.run(['db/password'], variables, **kwargs)
+        
+        saved_cache_2 = mock_save_cache.call_args[0][0]
+        # Should contain both entries
+        self.assertEqual(saved_cache_2["https://conjur-fake|db/username"], ["admin_user"])
+        self.assertEqual(saved_cache_2["https://conjur-fake|db/password"], ["admin_pass"])
+

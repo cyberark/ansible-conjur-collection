@@ -275,6 +275,8 @@ This method allows you to authenticate using a Google Cloud Platform (GCP) Servi
 
 - `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
 
+- 
+
 #### How GCP Authentication Works
 
 For GCP Authentication, the plugin uses Google Cloud Instance Metadata Service (IMDS) to authenticate the workload by retrieving a JWT token. The token is used to authenticate against Secrets Manager, allowing the plugin to fetch the requested secrets securely.
@@ -558,6 +560,24 @@ ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'pat
 
 **Note:** Using the `as_file=true` condition, the private key is stored in a temporary file and its path is written 
 in `ansible_ssh_private_key_file`.
+
+
+#### Retrieve a secret in play vars using the cache
+
+```yaml
+---
+- hosts: localhost
+  vars:
+    my_secret: "{{ lookup('cyberark.conjur.conjur_variable', 'path/to/secret-id', use_cache=true) }}"
+  tasks:
+  - name: This will call the plugin and cache the secret value for future lookups
+    debug:
+      msg: "my_secret with value {{ my_secret }} has just been stored in the cache."
+  - name: This will retrieve the secret value from the cache without calling the plugin
+    debug:
+      msg: "my_secret with value {{ my_secret }} has been retrieved from the cache without calling Conjur."
+```
+**Note:** Using the `use_cache=true` condition, the secret value is stored in an encrypted cache file after the first retrieval. Subsequent lookups for the same secret will retrieve the value from the cache. The cache file, stored in the temporary directory, is encrypted using PBKDF2HMAC with a unique salt and the Fernet symmetric encryption method.
 
 ## Contributing
 

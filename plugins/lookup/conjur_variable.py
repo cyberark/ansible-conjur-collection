@@ -174,6 +174,18 @@ DOCUMENTATION = """
           - name: azure_client_id
         env:
           - name: AZURE_CLIENT_ID
+      use_cache:
+        description: Enable caching of retrieved variable values and alleviate the load on the Conjur server.
+        type: boolean
+        default: false
+        required: false
+        ini:
+          - section: conjur,
+            key: use_cache
+        vars:
+          - name: conjur_use_cache
+        env:
+          - name: CONJUR_USE_CACHE
 """
 
 EXAMPLES = """
@@ -199,6 +211,7 @@ import traceback
 import ssl
 import re
 import shutil
+import pickle
 from base64 import b64encode
 from netrc import netrc
 from time import sleep
@@ -219,6 +232,9 @@ from ansible.utils.display import Display
 try:
     from cryptography.x509 import load_pem_x509_certificate
     from cryptography.hazmat.backends import default_backend
+    from cryptography.fernet import Fernet
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 except ImportError:
     cryptography_import_error = traceback.format_exc()
 else:
@@ -975,6 +991,78 @@ def _fetch_conjur_gcp_identity_token(
 
 
 class LookupModule(LookupBase):
+    # File-based cache that persists across Ansible tasks/processes
+    _cache_file = os.path.join(gettempdir(), 'ansible_conjur_cache.pkl')
+
+    @classmethod
+    def _get_encryption_key(cls):
+        """Generate a machine-specific encryption key."""
+        # Use machine-specific identifiers to generate a deterministic key
+        try:
+            import platform
+            import uuid
+            # Combine multiple machine identifiers
+            machine_id = f"{platform.node()}-{uuid.getnode()}".encode()
+            
+            # Derive a key using PBKDF2HMAC
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=b'ansible-conjur-cache-salt',  # Static salt for deterministic key
+                iterations=100000,
+                backend=default_backend()
+            )
+            key = b64encode(kdf.derive(machine_id))
+            display.vvv(f"Encryption key generated successfully")
+            return Fernet(key)
+        except Exception as e:  # pylint: disable=broad-except
+            # Fallback: use a basic key if advanced crypto fails
+            display.vvv(f"Failed to generate encryption key: {str(e)}")
+            return None
+
+    @classmethod
+    def _load_cache(cls):
+        """Load and decrypt cache from file."""
+        if os.path.exists(cls._cache_file):
+            try:
+                cipher = cls._get_encryption_key()
+                with open(cls._cache_file, 'rb') as f:
+                    encrypted_data = f.read()
+                
+                if cipher and encrypted_data:
+                    # Decrypt the data
+                    decrypted_data = cipher.decrypt(encrypted_data)
+                    return pickle.loads(decrypted_data)
+                elif encrypted_data:
+                    # Fallback for unencrypted data (backward compatibility)
+                    return pickle.loads(encrypted_data)
+            except Exception as e:  # pylint: disable=broad-except
+                display.vvv(f"Failed to load cache: {str(e)}")
+                return {}
+        return {}
+
+    @classmethod
+    def _save_cache(cls, cache):
+        """Encrypt and save cache to file."""
+        try:
+            cipher = cls._get_encryption_key()
+            serialized_data = pickle.dumps(cache)
+            
+            if cipher:
+                # Encrypt the data
+                encrypted_data = cipher.encrypt(serialized_data)
+                with open(cls._cache_file, 'wb') as f:
+                    f.write(encrypted_data)
+                display.vvv(f"Cache saved (encrypted) to {cls._cache_file}")
+            else:
+                # Fallback: save unencrypted if encryption fails
+                with open(cls._cache_file, 'wb') as f:
+                    f.write(serialized_data)
+                display.vvv(f"Cache saved (unencrypted) to {cls._cache_file}")
+            
+            os.chmod(cls._cache_file, S_IRUSR | S_IWUSR)
+        except Exception as e:  # pylint: disable=broad-except
+            display.vvv(f"Failed to save cache: {str(e)}")
 
     def run(self, terms, variables=None, **kwargs):  # pylint: disable=too-many-locals,missing-function-docstring,too-many-branches,too-many-statements
         if terms == []:
@@ -1008,6 +1096,7 @@ class LookupModule(LookupBase):
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
         as_file = self.get_option('as_file')
+        use_cache = self.get_option('use_cache')
 
         if validate_certs is False:
             display.warning('Certificate validation has been disabled. Please enable with validate_certs option.')
@@ -1076,6 +1165,21 @@ class LookupModule(LookupBase):
             display.vvv(f"Using cert file path {conf['cert_file']}")
             cert_file = conf['cert_file']
 
+        # Check cache if use_cache is enabled
+        if use_cache:
+            cache = self._load_cache()
+            cache_key = f"{conf['appliance_url']}|{terms[0]}"
+            display.vvv(f"Cache enabled. Cache key: {cache_key}")
+            display.vvv(f"Current cache size: {len(cache)} entries")
+            if cache_key in cache:
+                display.vvv(f"Cache HIT: Retrieving variable {terms[0]} from cache")
+                cached_value = cache[cache_key]
+                if as_file:
+                    return _store_secret_in_file(cached_value)
+                return cached_value
+            else:
+                display.vvv(f"Cache MISS: Variable {terms[0]} not in cache, will fetch from Conjur")
+
         try:
             token = None
             if 'authn_token_file' not in conf:
@@ -1130,6 +1234,13 @@ class LookupModule(LookupBase):
                 validate_certs,
                 cert_file
             )
+
+            # Store in cache if use_cache is enabled
+            if use_cache:
+                cache_key = f"{conf['appliance_url']}|{terms[0]}"
+                cache[cache_key] = conjur_variable
+                self._save_cache(cache)
+                display.vvv(f"Stored variable {terms[0]} in cache (total entries: {len(cache)})")
         finally:
             if isinstance(token, bytes):
                 token = b"\x00" * len(token)
