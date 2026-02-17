@@ -32,7 +32,11 @@ DOCUMENTATION = """
         (More: U(https://docs.conjur.org/latest/en/Content/Get%20Started/key_concepts/machine_identity.html))'
     options:
       _terms:
-        description: Variable path
+        description: >
+          Variable path to retrieve from Conjur.
+          IMPORTANT: Do NOT URL-encode this path. The plugin handles encoding automatically.
+          For paths with spaces, use: '/path/to/secret with spaces'
+          NOT: '/path/to/secret+with+spaces' or '/path/to/secret%20with%20spaces'
         required: true
       validate_certs:
         description: Flag to control SSL certificate validation
