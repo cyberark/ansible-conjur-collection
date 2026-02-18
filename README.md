@@ -580,6 +580,53 @@ ansible_ssh_private_key_file: "{{ lookup('cyberark.conjur.conjur_variable', 'pat
 **Note:** Using the `as_file=true` condition, the private key is stored in a temporary file and its path is written 
 in `ansible_ssh_private_key_file`.
 
+### Troubleshooting
+
+#### Issue: Variable with Spaces Not Found
+
+**Symptom:** You receive a 404 error when trying to retrieve a variable that contains spaces in its path.
+
+**Example Error:**
+```
+FAILED! => {"msg": "Failed to retrieve secret: 404 Client Error: Not Found for url: ..."}
+```
+
+**Conjur Log Entry:**
+```
+<13>1 2020-07-16T20:40:42.169+00:00 8b117ffb7cc7 nginx - - [meta sequenceId="22"] 
+10.202.76.252 "GET /secrets/variable/path%2Fto%2Fsecret+namespace%2Fsecret+with+spaces HTTP/1.1" 404 424 "-" "Python-urllib/2.7" 0.015 0.014
+```
+
+Note the `+` characters in the URL above - they indicate the path was incorrectly pre-encoded.
+
+**Cause:** The variable path was pre-encoded with `+` symbols replacing spaces before being passed to the lookup plugin.
+
+**Solution:** Pass the variable path without any encoding. The plugin will handle URL encoding automatically:
+
+```yaml
+# Change this:
+- debug:
+    msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret+namespace/secret+with+spaces') }}"
+
+# To this:
+- debug:
+    msg: "{{ lookup('cyberark.conjur.conjur_variable', '/path/to/secret namespace/secret with spaces') }}"
+```
+
+#### Issue: Special Characters in Variable Path
+
+**Symptom:** Variables with special characters (e.g., `/`, `@`, `:`) are not retrieved correctly.
+
+**Solution:** Pass the path as-is with all special characters. The plugin properly encodes these characters:
+
+```yaml
+# Correct - special characters are passed as-is
+- debug:
+    msg: "{{ lookup('cyberark.conjur.conjur_variable', 'my-app/database/user@host:port') }}"
+```
+
+The plugin will automatically encode this to: `my-app%2Fdatabase%2Fuser%40host%3Aport`
+
 ## Release Notes and Roadmap
 
 The [CHANGELOG](CHANGELOG.md) describes notable changes for each release of this collection.
