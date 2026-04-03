@@ -1,0 +1,16 @@
+---
+- !policy
+  id: conjur/authn-cert/x509-service
+  body:
+    - !webservice
+      annotations:
+        description: Certificate-based authentication service (authn-cert)
+
+    - !variable ca-cert
+
+    - !group apps
+
+    - !permit
+      role: !group apps
+      privilege: [ read, authenticate ]
+      resource: !webservice

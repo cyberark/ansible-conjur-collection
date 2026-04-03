@@ -1,0 +1,42 @@
+---
+- !policy
+  id: ansible
+  annotations:
+    description: Policy for Ansible hosts using certificate authentication
+  body:
+    - &variables
+      - !variable target-password
+      - !variable test-secret
+      - !variable test-secret-in-file
+      - !variable "var with spaces"
+
+    - !host
+      id: ansible-cert-host
+      annotations:
+        description: Ansible host authenticated via x509 client certificate
+        authn-cert/x509-service/cn: ansible-cert-host
+
+    - !layer &remote_hosts_layer
+      id: remote_hosts
+      annotations:
+        description: Layer for Ansible remote hosts
+
+    - !host-factory
+      id: ansible-factory
+      annotations:
+        description: Factory to create new hosts for Ansible
+      layer: [ *remote_hosts_layer ]
+
+    - !permit
+      role: !host ansible-cert-host
+      privileges: [ read, execute ]
+      resource: *variables
+
+    - !permit
+      role: *remote_hosts_layer
+      privileges: [ execute ]
+      resource: *variables
+
+- !grant
+  role: !group conjur/authn-cert/x509-service/apps
+  member: !host ansible/ansible-cert-host

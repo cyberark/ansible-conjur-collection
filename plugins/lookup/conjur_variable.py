@@ -178,6 +178,52 @@ DOCUMENTATION = """
           - name: azure_client_id
         env:
           - name: AZURE_CLIENT_ID
+      conjur_client_cert_file:
+        description: >
+          Path to the client certificate file (PEM format) used for authn-cert
+          mutual TLS authentication. Required when conjur_authn_type is set to 'authn-cert'.
+          The certificate must be signed by the CA configured for the authn-cert service in Conjur.
+        type: path
+        required: False
+        ini:
+          - section: conjur,
+            key: client_cert_file
+        vars:
+          - name: conjur_client_cert_file
+        env:
+          - name: CONJUR_CLIENT_CERT_FILE
+      conjur_client_key_file:
+        description: >
+          Path to the client private key file (PEM format) used for authn-cert
+          mutual TLS authentication. Required when conjur_authn_type is set to 'authn-cert'.
+        type: path
+        required: False
+        ini:
+          - section: conjur,
+            key: client_key_file
+        vars:
+          - name: conjur_client_key_file
+        env:
+          - name: CONJUR_CLIENT_KEY_FILE
+      conjur_authn_cert_mode:
+        description: >
+          Host resolution mode for authn-cert authentication. Valid values are
+          'request' (default) and 'spiffe'.
+          In 'request' mode the workload identity (conjur_authn_login) must be
+          provided and is included in the authentication URL.
+          In 'spiffe' mode the workload identity is derived from the X.509 SVID
+          SPIFFE URI embedded in the client certificate and conjur_authn_login is
+          not required.
+        type: str
+        required: False
+        default: request
+        ini:
+          - section: conjur,
+            key: authn_cert_mode
+        vars:
+          - name: conjur_authn_cert_mode
+        env:
+          - name: CONJUR_AUTHN_CERT_MODE
       retry_interval:
         description: Time in seconds to wait between retry attempts (default 10)
         type: int
@@ -856,6 +902,146 @@ def _store_secret_in_file(value):
     return [secrets_file.name]
 
 
+# Fetch token using Conjur Certificate Authenticator (authn-cert)
+def _validate_authn_cert_files(client_cert_file, client_key_file):
+    """Raise AnsibleError if the client certificate or key file is missing."""
+    if not client_cert_file or not os.path.exists(client_cert_file):
+        raise AnsibleError(
+            f"Client certificate file '{client_cert_file}' is missing or does not exist. "
+            "It is required for authn-cert authentication."
+        )
+    if not client_key_file or not os.path.exists(client_key_file):
+        raise AnsibleError(
+            f"Client key file '{client_key_file}' is missing or does not exist. "
+            "It is required for authn-cert authentication."
+        )
+
+
+def _http_error_detail(error):
+    """Return a diagnostic string for a URLError/HTTPError."""
+    detail = str(error)
+    if not hasattr(error, 'read'):
+        return detail
+    try:
+        body = error.read()
+        if isinstance(body, bytes):
+            body = body.decode('utf-8', errors='replace')
+        if body:
+            return f"{error} — server response: {body[:500]}"
+    except OSError:
+        pass
+    return detail
+
+
+def _fetch_conjur_cert_token(
+    appliance_url, account, service_id, host_id,
+    client_cert_file, client_key_file,
+    ca_cert_file, validate_certs
+):
+    """
+    Authenticates to Conjur using the authn-cert certificate authenticator.
+
+    API reference:
+      POST {appliance_url}/authn-cert/{service_id}/{account}[/{workload_id}]/authenticate
+
+    The client certificate is passed as the ``X-SSL-Client-Certificate`` HTTP
+    header (percent-encoded), matching Conjur's expected format when deployed
+    behind a TLS-terminating proxy (e.g. nginx).  This mirrors the Ruby
+    ``CGI.escape(client_cert.to_pem)`` pattern used by the Conjur server tests.
+
+    Two host-resolution modes are supported (configured server-side):
+      - request (default): workload identity is taken from the URL path
+        (``host_id`` must be provided, e.g. ``host/my-policy/my-host``).
+      - spiffe: workload identity is derived from the SPIFFE URI in the
+        client certificate's SAN field; ``host_id`` must be ``None``.
+
+    Args:
+        appliance_url (str):     Base URL of the Conjur appliance.
+        account (str):           Conjur account name.
+        service_id (str):        Service ID of the authn-cert authenticator.
+        host_id (str|None):      Full Conjur host identity for request mode,
+                                 or None for SPIFFE mode.
+        client_cert_file (str):  Path to the client PEM certificate file.
+        client_key_file (str):   Path to the client PEM private key file
+                                 (currently unused for header-based auth but
+                                 validated for presence).
+        ca_cert_file (str|None): Path to Conjur server CA/bundle cert file.
+        validate_certs (bool):   Whether to validate the server TLS certificate.
+
+    Returns:
+        bytes: The raw Conjur access token bytes.
+
+    Raises:
+        AnsibleError: On missing files, authentication failure, or HTTP errors.
+    """
+    _validate_authn_cert_files(client_cert_file, client_key_file)
+
+    try:
+        with open(client_cert_file, 'r', encoding='utf-8') as cert_fh:
+            client_cert_pem = cert_fh.read()
+    except OSError as err:
+        raise AnsibleError(
+            f"Failed to read client certificate file '{client_cert_file}': {err}"
+        ) from err
+
+    encoded_cert = urllib.parse.quote(client_cert_pem, safe='')
+    appliance_url = appliance_url.rstrip("/")
+
+    # host_id is required for 'request' mode (default) and absent for 'spiffe' mode.
+    # Per API docs: POST {url}/authn-cert/{service_id}/{account}[/{workload_id}]/authenticate
+    if host_id:
+        url = (
+            f"{appliance_url}/authn-cert/{service_id}/{account}/"
+            f"{urllib.parse.quote(host_id, safe='')}/authenticate"
+        )
+    else:
+        url = f"{appliance_url}/authn-cert/{service_id}/{account}/authenticate"
+
+    headers = {
+        'X-SSL-Client-Certificate': encoded_cert,
+        'x-cybr-telemetry': _telemetry_header()
+    }
+    display.warning(
+        f'authn-cert: POST {url} '
+        f'[cert={client_cert_file}, key={client_key_file}, ca={ca_cert_file}]'
+    )
+
+    try:
+        res = open_url(
+            url,
+            data=b'',
+            method='POST',
+            headers=headers,
+            validate_certs=validate_certs,
+            ca_path=ca_cert_file,
+            client_cert=client_cert_file,
+            client_key=client_key_file,
+        )
+        if res.getcode() != 200:
+            raise AnsibleError(
+                f'Failed to authenticate with certificate (got {str(res.getcode())} response)'
+            )
+        return res.read()
+    except AnsibleError:
+        raise
+    except urllib_error.URLError as error:
+        raise AnsibleError(
+            f"Error during authn-cert authentication: {_http_error_detail(error)}"
+        ) from error
+    except ssl.SSLError as error:
+        raise AnsibleError(
+            f"Error during authn-cert authentication: SSL error — {error}"
+        ) from error
+    except OSError as error:
+        raise AnsibleError(
+            f"Error during authn-cert authentication: {error}"
+        ) from error
+    except Exception as error:  # pylint: disable=broad-except
+        raise AnsibleError(
+            f"Error during authn-cert authentication: {error}"
+        ) from error
+
+
 # Fetch token from aure vm, func, app and authn with conjur for access token
 def _fetch_conjur_azure_token(
     appliance_url, account, service_id,
@@ -1023,6 +1209,9 @@ class LookupModule(LookupBase):
         authn_type = self.get_var_value("conjur_authn_type")
         service_id = self.get_var_value("conjur_authn_service_id")
         azure_client_id = self.get_var_value("azure_client_id")
+        client_cert_file = self.get_var_value("conjur_client_cert_file")
+        client_key_file = self.get_var_value("conjur_client_key_file")
+        cert_mode = self.get_var_value("conjur_authn_cert_mode") or "request"
         retry_interval = self.get_option('retry_interval')
 
         validate_certs = self.get_option('validate_certs')
@@ -1038,8 +1227,8 @@ class LookupModule(LookupBase):
         if validate_certs is True:
             cert_file = _get_certificate_file(cert_content, cert_file)
 
-        if authn_type in ("aws", "azure") and service_id is None:
-            raise AnsibleError("[WARNING]: Please set the conjur_authn_service_id for AWS or Azure authenticator")
+        if authn_type in ("aws", "azure", "authn-cert") and service_id is None:
+            raise AnsibleError("[WARNING]: Please set the conjur_authn_service_id for AWS, Azure, or authn-cert authenticator")
 
         if not account:
             display.vvv("No conjur account provided. Defaulting to 'conjur'.")
@@ -1083,13 +1272,18 @@ class LookupModule(LookupBase):
             )
 
             if 'id' not in identity:
-                raise AnsibleError(
-                    """Configuration must define options `conjur_authn_login`.
+                # For authn-cert SPIFFE mode the workload identity is derived
+                # from the SPIFFE URI in the client certificate; no login needed.
+                if authn_type == 'authn-cert' and cert_mode == 'spiffe':
+                    pass
+                else:
+                    raise AnsibleError(
+                        """Configuration must define options `conjur_authn_login`.
                     This config can be set by any of the following methods, listed in order of priority:
                     - Ansible variable `conjur_authn_login`, set either in the parent playbook or passed via --extra-vars
                     - Environment variable `CONJUR_AUTHN_LOGIN`
                     - An identity file with the field `login`"""
-                )
+                    )
 
         cert_file = None
         if 'cert_file' in conf:
@@ -1126,6 +1320,18 @@ class LookupModule(LookupBase):
                         host_id=identity['id'],
                         validate_certs=validate_certs,
                         cert_file=cert_file,
+                    )
+                elif authn_type == "authn-cert":
+                    token = _fetch_conjur_cert_token(
+                        appliance_url=conf['appliance_url'],
+                        account=conf['account'],
+                        service_id=service_id,
+                        # spiffe mode: identity comes from the certificate, not the URL
+                        host_id=identity.get('id') if cert_mode != 'spiffe' else None,
+                        client_cert_file=client_cert_file,
+                        client_key_file=client_key_file,
+                        ca_cert_file=cert_file,
+                        validate_certs=validate_certs
                     )
                 else:
                     token = _fetch_conjur_token(

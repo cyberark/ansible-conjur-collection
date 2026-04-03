@@ -1,0 +1,32 @@
+---
+# Integration test: successful secret retrieval using authn-cert (authn-x509).
+#
+# Prerequisites (handled by the CI wrapper):
+#   - A Conjur host identity enrolled with an x509 service
+#   - CONJUR_CLIENT_CERT_FILE / CONJUR_CLIENT_KEY_FILE point to valid PEM files
+#   - CONJUR_AUTHN_SERVICE_ID matches the authn-x509 service configured in Conjur
+- name: Retrieve Conjur variable using certificate authenticator (authn-x509)
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact path
+      file:
+        state: absent
+        path: /conjur_secrets.txt
+
+    - name: Determine lookup path based on CONJUR flavour
+      set_fact:
+        lookup_path: >-
+          {{
+            'data/ansible' if lookup('env', 'IS_CLOUD') | bool else 'ansible'
+          }}
+
+    - name: Retrieve Conjur variable via authn-cert
+      vars:
+        super_secret_key: >-
+          {{ lookup('conjur_variable', lookup_path + '/test-secret',
+               conjur_authn_type='authn-cert',
+               conjur_authn_service_id=lookup('env', 'CONJUR_AUTHN_SERVICE_ID'),
+               conjur_client_cert_file=lookup('env', 'CONJUR_CLIENT_CERT_FILE'),
+               conjur_client_key_file=lookup('env', 'CONJUR_CLIENT_KEY_FILE')) }}
+      shell: echo "{{ super_secret_key }}" > /conjur_secrets.txt
