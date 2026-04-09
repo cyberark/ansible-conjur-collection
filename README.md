@@ -166,6 +166,8 @@ The Conjur Ansible Lookup Plugin allows you to securely fetch credentials from C
 
 - GCP Authentication (via IMDS token)
 
+- JWT Token Authentication
+
 Each authentication method retrieves secrets from Conjur dynamically, ensuring secure and seamless integration with cloud environments and Conjur.
 
 ### Authentication Parameters
@@ -278,6 +280,26 @@ This method allows you to authenticate using a Google Cloud Platform (GCP) Servi
 #### How GCP Authentication Works
 
 For GCP Authentication, the plugin uses Google Cloud Instance Metadata Service (IMDS) to authenticate the workload by retrieving a JWT token. The token is used to authenticate against Secrets Manager, allowing the plugin to fetch the requested secrets securely.
+
+#### 5. JWT token Authentication
+This method uses jwt tokens for authentication.
+
+#### Required Extra-vars/Environment Variables:
+- `conjur_authn_type / CONJUR_AUTHN_TYPE` : Authentication type ("jwt").
+
+- `conjur_appliance_url / CONJUR_APPLIANCE_URL`: URL of the running Secrets Manager service (e.g., https://conjur.example.com).
+
+- `conjur_authn_login / CONJUR_AUTHN_LOGIN`: The identity of the Secrets Manager host (e.g., host/my-host).
+
+- `conjur_authn_service_id / CONJUR_AUTHN_SERVICE_ID`: The service ID as used for the JWT token Authenticator.
+
+#### Optional Extra-vars/Environment Variables:
+- `conjur_account / CONJUR_ACCOUNT`: The Secrets Manager account name (default: conjur).
+
+- `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
+
+- `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
+
 
 ### Example Playbooks and Ansible Commands
 
@@ -473,6 +495,58 @@ export CONJUR_AUTHN_TYPE="gcp"
 export CONJUR_APPLIANCE_URL="https://conjur.example.com"
 export CONJUR_ACCOUNT="myaccount"
 export CONJUR_AUTHN_LOGIN="host/testapp"
+export CONJUR_CERT_FILE="<path>/certificate.pem"
+```
+
+```sh
+ansible-playbook -v retrieve-secrets.yaml
+```
+
+#### 5. JWT token Authentication
+
+##### Playbook Example:
+
+```yaml
+---
+- hosts: localhost
+  collections:
+    - cyberark.conjur
+  tasks:
+    - name: Lookup variable in Secrets Manager
+      debug:
+        msg: "{{ lookup('cyberark.conjur.conjur_variable', 'data/ansible/target-secret') }}"
+```
+##### Using with Extra-vars:
+
+```sh
+ansible-playbook -v \
+--extra-vars "conjur_authn_type=jwt" \
+--extra-vars "conjur_appliance_url=https://conjur.example.com" \
+--extra-vars "conjur_authn_login=host/my-host" \
+--extra-vars "conjur_authn_service_id=<your_conjur_service_id>" \
+--extra-vars "conjur_cert_file=<path>/certificate.pem" retrieve-secrets.yaml
+```
+
+Alternatively, to provide the certificate content in PEM format as a string:
+
+```sh
+ansible-playbook -v \
+--extra-vars "conjur_authn_type=jwt" \
+--extra-vars "conjur_appliance_url=https://conjur.example.com" \
+--extra-vars "conjur_authn_jwt_token=<token>" \
+--extra-vars "conjur_authn_login=host/my-host" \
+--extra-vars "conjur_authn_service_id=<your_conjur_service_id>" \
+--extra-vars "conjur_cert_content='-----BEGIN CERTIFICATE-----\n<your certificate content>\n-----END CERTIFICATE-----\n'" retrieve-secrets.yaml
+```
+#### Using with Environment variables:
+
+```sh
+export CONJUR_AUTHN_TYPE="jwt"
+export CONJUR_APPLIANCE_URL="https://conjur.example.com"
+export CONJUR_ACCOUNT="myaccount"
+export CONJUR_AUTHN_JWT_TOKEN="token"
+export CONJUR_AUTHN_LOGIN="host/testapp"
+export CONJUR_AUTHN_SERVICE_ID="<your_conjur_service_id>"
 export CONJUR_CERT_FILE="<path>/certificate.pem"
 ```
 

@@ -21,10 +21,10 @@ DOCUMENTATION = """
       Retrieves credentials from Conjur using the controlling host's Conjur identity,
       environment variables, or extra-vars.
       Environment variables could be CONJUR_ACCOUNT, CONJUR_APPLIANCE_URL, CONJUR_CERT_FILE,
-      CONJUR_CERT_CONTENT, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_TOKEN_FILE,
+      CONJUR_CERT_CONTENT, CONJUR_AUTHN_LOGIN, CONJUR_AUTHN_API_KEY, CONJUR_AUTHN_JWT_TOKEN, CONJUR_AUTHN_TOKEN_FILE,
       CONJUR_AUTHN_TYPE, CONJUR_AUTHN_SERVICE_ID, AZURE_CLIENT_ID
       Extra-vars could be conjur_account, conjur_appliance_url, conjur_cert_file, conjur_cert_content,
-      conjur_authn_login, conjur_authn_api_key, conjur_authn_token_file,
+      conjur_authn_login, conjur_authn_jwt_token, conjur_authn_api_key, conjur_authn_token_file,
       conjur_authn_type, conjur_authn_service_id, azure_client_id
       Conjur info - U(https://www.conjur.org/).
     requirements:
@@ -152,6 +152,17 @@ DOCUMENTATION = """
           - name: conjur_authn_type
         env:
           - name: CONJUR_AUTHN_TYPE
+      conjur_authn_jwt_token:
+        description: Conjur authn-jwt token
+        type: string
+        required: False
+        ini:
+          - section: conjur,
+            key: authn_jwt_token
+        vars:
+          - name: conjur_authn_jwt_token
+        env:
+          - name: CONJUR_AUTHN_JWT_TOKEN
       conjur_authn_service_id:
         description: Service ID for cloud-based authenticators
         type: string
@@ -734,6 +745,51 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
 
     return response.read()
 
+def _fetch_conjur_jwt_token(
+    appliance_url, account, service_id,
+    host_id, jwt_token, cert_file, validate_certs
+):
+    # Get the telemetry header
+    encoded_telemetry = _telemetry_header()
+
+    # Prepare headers
+    headers = {
+        'x-cybr-telemetry': encoded_telemetry
+    }
+
+    try:
+        appliance_url = appliance_url.rstrip("/")
+        url = (
+            f"{appliance_url}/authn-jwt/{service_id}/{account}/"
+            f"{urllib.parse.quote(host_id, safe='')}/authenticate"
+        )
+
+        token = f"jwt={jwt_token}"
+
+        response = open_url(
+            url,
+            method='POST',
+            data=token,
+            headers=headers,
+            validate_certs=validate_certs,
+            ca_path=cert_file,
+            timeout=10
+        )
+        if response.getcode() != 200:
+            raise AnsibleError(f"Error authenticating with Conjur: HTTP {str(response.getcode())}")
+        return response.read()
+
+    except urllib.error.URLError as error:
+        raise AnsibleError(f"Error fetching identity token: URL error occurred - {str(error)}") from error
+
+    except RuntimeError as error:
+        raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
+
+    except Exception as error:
+        raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
+    finally:
+        token = None
+        jwt_token = None
 
 def retry(retries, retry_interval):
     """
@@ -1004,6 +1060,7 @@ class LookupModule(LookupBase):
         authn_type = self.get_var_value("conjur_authn_type")
         service_id = self.get_var_value("conjur_authn_service_id")
         azure_client_id = self.get_var_value("azure_client_id")
+        jwt_token = self.get_var_value("conjur_authn_jwt_token")
 
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
@@ -1018,8 +1075,8 @@ class LookupModule(LookupBase):
         if validate_certs is True:
             cert_file = _get_certificate_file(cert_content, cert_file)
 
-        if authn_type in ("aws", "azure") and service_id is None:
-            raise AnsibleError("[WARNING]: Please set the conjur_authn_service_id for AWS or Azure authenticator")
+        if authn_type in ("aws", "azure", "jwt") and service_id is None:
+            raise AnsibleError("[WARNING]: Please set the conjur_authn_service_id for AWS, Azure or JWT authenticator")
 
         if not account:
             display.vvv("No conjur account provided. Defaulting to 'conjur'.")
@@ -1104,6 +1161,16 @@ class LookupModule(LookupBase):
                         appliance_url=conf['appliance_url'],
                         account=conf['account'],
                         host_id=identity['id'],
+                        validate_certs=validate_certs,
+                        cert_file=cert_file,
+                    )
+                elif authn_type == "jwt":
+                    token = _fetch_conjur_jwt_token(
+                        appliance_url=conf['appliance_url'],
+                        account=conf['account'],
+                        service_id=service_id,
+                        host_id=identity['id'],
+                        jwt_token=jwt_token,
                         validate_certs=validate_certs,
                         cert_file=cert_file,
                     )
