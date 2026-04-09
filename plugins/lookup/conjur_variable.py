@@ -789,6 +789,7 @@ def _fetch_conjur_jwt_token(
         raise AnsibleError(f"Error fetching identity token: {str(error)}") from error
     finally:
         token = None
+        jwt_token = None
 
 def retry(retries, retry_interval):
     """
@@ -1075,7 +1076,7 @@ class LookupModule(LookupBase):
             cert_file = _get_certificate_file(cert_content, cert_file)
 
         if authn_type in ("aws", "azure", "jwt") and service_id is None:
-            raise AnsibleError("[WARNING]: Please set the conjur_authn_service_id for AWS or Azure authenticator")
+            raise AnsibleError("[WARNING]: Please set the conjur_authn_service_id for AWS, Azure or JWT. authenticator")
 
         if not account:
             display.vvv("No conjur account provided. Defaulting to 'conjur'.")
