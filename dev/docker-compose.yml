@@ -16,6 +16,8 @@ services:
       CONJUR_AUTHN_TYPE: ${CONJUR_AUTHN_TYPE}
       CONJUR_AUTHN_SERVICE_ID: ${CONJUR_AUTHN_SERVICE_ID}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      CONJUR_CLIENT_CERT_FILE: ${CONJUR_CLIENT_CERT_FILE}
+      CONJUR_CLIENT_KEY_FILE: ${CONJUR_CLIENT_KEY_FILE}
       IS_CLOUD: false
       # NOTE: Explicitly setting the ANSIBLE_CONFIG envvar avoids Ansible ignoring
       # the configuration because it is in a world-writable working directory,
@@ -55,6 +57,7 @@ services:
       CONJUR_APPLIANCE_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: "W0BuL8iTr/7QvtjIluJbrb5LDAnmXzmcpxkqihO3dXA="
+      CONJUR_FEATURE_AUTHENTICATOR_SERVICE_ENABLED: "true"
       CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp
     depends_on:
       - pg
@@ -64,7 +67,7 @@ services:
       - pg
 
   conjur_cli:
-    image: cyberark/conjur-cli:8
+    image: cyberark/conjur-cli:9
     entrypoint: []
     command: sleep infinity
     environment:

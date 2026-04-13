@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.11] - 2026-04-03
+
+### Added
+- Added support for Conjur certificate authenticator (`authn-cert`) in the `conjur_variable` lookup plugin. 
+
 ## [1.3.10] - 2025-12-05
 
 ### Added
@@ -163,8 +168,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.9...HEAD
-[1.3.9]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.8...v1.3.9
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.11...HEAD
+[1.3.11]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.10...v1.3.11
+[1.3.10]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.9...v1.3.10
 [1.3.8]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.7...v1.3.8
 [1.3.7]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.6...v1.3.7
 [1.3.6]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.3...v1.3.6

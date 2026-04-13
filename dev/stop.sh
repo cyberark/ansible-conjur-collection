@@ -25,4 +25,8 @@ clean_submodules
 rm -rf inventory.tmp \
        conjur.pem \
        access_token \
-       cyberark-conjur-*tar.gz
+       cyberark-conjur-*tar.gz \
+       ca.pem \
+       ca.key \
+       client.pem \
+       client.key

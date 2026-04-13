@@ -113,7 +113,15 @@ pipeline {
           unstash 'junit-xml'
           unstash 'coverage-xml'
           junit 'tests/output/junit/*.xml'
-          cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'tests/output/reports/coverage=units.xml', conditionalCoverageTargets: '30, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '30, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '30, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+          recordCoverage(
+            tools: [[parser: 'COBERTURA', pattern: 'tests/output/reports/coverage=units.xml']],
+            sourceCodeEncoding: 'ASCII',
+            qualityGates: [
+              [threshold: 30.0, metric: 'LINE',   baseline: 'PROJECT', unstable: true],
+              [threshold: 30.0, metric: 'BRANCH', baseline: 'PROJECT', unstable: true],
+              [threshold: 30.0, metric: 'METHOD', baseline: 'PROJECT', unstable: true]
+            ]
+          )
           codacy action: 'reportCoverage', filePath: "tests/output/reports/coverage=units.xml"
         }
       }
@@ -226,6 +234,39 @@ pipeline {
                     },
                     "Ansible 12": {
                       runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                    }
+            )
+          }
+        }
+      }
+    }
+    stage('Authn Cert Integration Tests') {
+      stages {
+        // authn-cert for Conjur Open Source has not yet been shipped in the public cyberark/conjur Docker image
+        // (latest: v1.24.0, released Nov 2025). The public OSS repo (cyberark/conjur) has no authn-cert route
+        // Until a new OSS image is published with authn-cert support, tests can only run against Enterprise.
+
+//         stage('Run Authn Cert Integration Tests with Conjur OSS') {
+//           steps {
+//             parallel(
+//                     "Ansible 11": {
+//                       runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+//                     },
+//                     "Ansible 12": {
+//                       runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+//                     }
+//             )
+//           }
+//         }
+
+        stage('Run Authn Cert Integration Tests with Conjur Enterprise') {
+          steps {
+            parallel(
+                    "Ansible 11": {
+                      runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                    },
+                    "Ansible 12": {
+                      runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
                     }
             )
           }
@@ -636,6 +677,11 @@ static def runApiKeyIntegrationTests(executorAgent, ansibleVersion, conjurFlavou
 static def runIamIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
   executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a iam  -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u iam -d -t conjur_variable'
+}
+
+static def runAuthnCertIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+  executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a authn-cert -v ${ansibleVersion} -p ${pythonVersion}"
+  executorAgent.agentSh './ci/test.sh -u authn-cert -d -t conjur_variable'
 }
 
 static def runAzureIntegrationTests(azureExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion) {

@@ -21,7 +21,7 @@ Conjur Ansible Collection :: Dev Environment
 $0 [options]
 
 -f <flavour>   Specify flavour: oss, enterprise, cloud, edge (Default: oss)
--a <type>    Specify authentication type: iam, azure, gcp, api_key (Default: api_key)
+-a <type>    Specify authentication type: iam, azure, gcp, api_key, authn-cert (Default: api_key)
 -h, --help             Print usage information.
 -p <version>           Run the Ansible service with the desired Python version (Default: 3.11).
 -v <version>           Run the Ansible service with the desired Ansible Community Package version.
@@ -47,10 +47,10 @@ while true ; do
 done
 
 case "$AUTHN_TYPE" in
-  "iam" | "azure" | "gcp" | "api_key")
+  "iam" | "azure" | "gcp" | "api_key" | "authn-cert")
     ;;
   *)
-    echo "Invalid authentication type: $AUTHN_TYPE. Valid options are: iam, azure, gcp, api_key."
+    echo "Invalid authentication type: $AUTHN_TYPE. Valid options are: iam, azure, gcp, api_key, authn-cert."
     exit 1
     ;;
 esac
@@ -83,6 +83,13 @@ function set_authentication_variables {
       AUTHN_URL="https://localhost:443/authn-gcp/${CONJUR_ACCOUNT}/authenticate"
       curl -k -d "jwt=${GCP_TOKEN}" "$AUTHN_URL" > "$(dev_dir)/access_token"
       export CONJUR_AUTHN_TOKEN_FILE="/cyberark/dev/access_token"
+      ;;
+    "authn-cert")
+      export CONJUR_AUTHN_TYPE="authn-cert"
+      export CONJUR_AUTHN_LOGIN="host/ansible/ansible-cert-host"
+      export CONJUR_AUTHN_SERVICE_ID="x509-service"
+      export CONJUR_CLIENT_CERT_FILE="/cyberark/dev/client.pem"
+      export CONJUR_CLIENT_KEY_FILE="/cyberark/dev/client.key"
       ;;
     *)
       echo "Unknown authentication type: $AUTHN_TYPE"
@@ -225,6 +232,22 @@ function setup_conjur_resources {
         conjur list
       "
       ;;
+    "authn-cert")
+      # Copy generated CA files into the policy directory so the CLI container can read them
+      cp -f "$(dev_dir)/ca.pem" "$(dev_dir)/policy/oss_ent/authn-cert/ca.pem"
+      cp -f "$(dev_dir)/ca.key" "$(dev_dir)/policy/oss_ent/authn-cert/ca.key"
+      docker exec "$(cli_cid)" /bin/sh -c "
+        conjur policy load -b root -f $policy_path/oss_ent/authn-cert/authn-cert.yml
+        conjur policy load -b root -f $policy_path/oss_ent/authn-cert/authn-cert-host.yml
+        conjur variable set -i conjur/authn-cert/x509-service/ca-cert -v \"\$(cat $policy_path/oss_ent/authn-cert/ca.pem)\"
+        conjur authenticator enable --id authn-cert/x509-service
+        conjur variable set -i ansible/target-password -v target_secret_password
+        conjur variable set -i ansible/test-secret -v test_secret_password
+        conjur variable set -i ansible/test-secret-in-file -v test_secret_in_file_password
+        conjur variable set -i 'ansible/var with spaces' -v var_with_spaces_secret_password
+        conjur list
+      "
+     ;;
     *)
       echo "Unknown authentication type: $AUTHN_TYPE"
       exit 1
@@ -233,9 +256,44 @@ function setup_conjur_resources {
 }
 
 
+function generate_authn_cert_certificates {
+  local cert_dir
+  cert_dir="$(dev_dir)"
+
+  echo "---- generating authn-cert certificates ----"
+
+  # CA private key and self-signed certificate
+  openssl genrsa -out "$cert_dir/ca.key" 4096
+  openssl req -x509 -new -nodes \
+    -key "$cert_dir/ca.key" \
+    -sha256 -days 3650 \
+    -subj "/CN=ansible-ca" \
+    -out "$cert_dir/ca.pem"
+
+  # Client private key and CSR (CN must match the Conjur host annotation)
+  openssl genrsa -out "$cert_dir/client.key" 4096
+  openssl req -new \
+    -key "$cert_dir/client.key" \
+    -subj "/CN=ansible-cert-host" \
+    -out "$cert_dir/client.csr"
+
+  # Sign the client certificate with our CA
+  openssl x509 -req \
+    -in "$cert_dir/client.csr" \
+    -CA "$cert_dir/ca.pem" \
+    -CAkey "$cert_dir/ca.key" \
+    -CAcreateserial \
+    -out "$cert_dir/client.pem" \
+    -days 365 -sha256
+
+  # Clean up ephemeral artefacts
+  rm -f "$cert_dir/client.csr" "$cert_dir/ca.srl"
+
+  echo "---- authn-cert certificates generated ----"
+}
+
 function deploy_conjur_open_source() {
   echo "---- deploying Conjur Open Source ----"
-
   # start conjur server
   docker compose up -d --build conjur conjur-proxy-nginx
   set_conjur_cid "$(docker compose ps -q conjur)"
@@ -258,7 +316,7 @@ function deploy_conjur_enterprise {
   ensure_submodules
 
   pushd ./conjur-intro
-    export CONJUR_AUTHENTICATORS="authn,authn-iam/prod,authn-azure/AzureAnsible,authn-gcp"
+    export CONJUR_AUTHENTICATORS="authn,authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-cert/x509-service"
     # start conjur leader and follower
     ./bin/dap --provision-master
     ./bin/dap --provision-follower
@@ -376,7 +434,14 @@ function main() {
     archive_name=$(find $repo_dir -name "cyberark-conjur-*tar.gz")
   fi
   test -f "$archive_name" && cp "$archive_name" "$(dev_dir)"
-  
+
+  # Generate client certificates for authn-cert authentication type
+  if [[ "$AUTHN_TYPE" == "authn-cert" ]]; then
+    generate_authn_cert_certificates
+    cp -f "$(dev_dir)/ca.pem" "$(dev_dir)/policy/oss_ent/authn-cert/ca.pem"
+    cp -f "$(dev_dir)/ca.key" "$(dev_dir)/policy/oss_ent/authn-cert/ca.key"
+  fi
+
   replaceTemplates
 
   case "$FLAVOUR" in

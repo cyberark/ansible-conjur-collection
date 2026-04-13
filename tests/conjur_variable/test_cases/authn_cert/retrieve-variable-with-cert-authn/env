@@ -1,0 +1,5 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+export CONJUR_AUTHN_TYPE=authn-cert
+export CONJUR_AUTHN_SERVICE_ID=x509-service
+export CONJUR_CLIENT_CERT_FILE=/cyberark/dev/client.pem
+export CONJUR_CLIENT_KEY_FILE=/cyberark/dev/client.key

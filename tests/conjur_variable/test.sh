@@ -12,8 +12,10 @@ elif [ "$AUTHN_TYPE" == "azure" ]; then
   TEST_DIR="test_cases/azure"
 elif [ "$AUTHN_TYPE" == "gcp" ]; then
   TEST_DIR="test_cases/gcp"
+elif [ "$AUTHN_TYPE" == "authn-cert" ]; then
+  TEST_DIR="test_cases/authn_cert"
 else
-  echo "ERROR: Unsupported authn_type '$AUTHN_TYPE'. Supported types are: api_key, iam, azure, gcp." 1>&2
+  echo "ERROR: Unsupported authn_type '$AUTHN_TYPE'. Supported types are: api_key, iam, azure, gcp, authn-cert." 1>&2
   exit 1
 fi
 

@@ -17,7 +17,7 @@ from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _
     _get_metadata_token, _get_iam_role_metadata, _create_canonical_request, \
     _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token, \
     InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token, \
-    _fetch_conjur_gcp_identity_token
+    _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token
 
 
 class MockMergeDictionaries(MagicMock):
@@ -792,3 +792,321 @@ class TestConjurLookup(TestCase):
                 cert_file, validate_certs
             )
         self.assertIn("Something went wrong", str(context.exception))
+
+
+class TestFetchConjurCertToken(TestCase):
+    """Unit tests for _fetch_conjur_cert_token (authn-x509 / authn-cert)."""
+
+    # ------------------------------------------------------------------ helpers
+    def _call(self, **overrides):
+        defaults = dict(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='fake-service',
+            host_id='host/ansible/ansible-fake',
+            client_cert_file='/tmp/fake_client.pem',
+            client_key_file='/tmp/fake_client.key',
+            ca_cert_file='/tmp/fake_ca.pem',
+            validate_certs=True,
+        )
+        defaults.update(overrides)
+        return _fetch_conjur_cert_token(**defaults)
+
+    # --------------------------------------------------------- success scenario
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_fetch_conjur_cert_token_success(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'conjur-access-token'
+        mock_open_url.return_value = mock_response
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            result = self._call()
+
+        import urllib.parse
+        expected_encoded_cert = urllib.parse.quote(fake_pem, safe='')
+
+        self.assertEqual(result, b'conjur-access-token')
+        mock_open_url.assert_called_once()
+        call_args = mock_open_url.call_args
+        # URL must use /authn-cert/ (not /authn-x509/)
+        self.assertIn('/authn-cert/fake-service/fakeaccount/', call_args[0][0])
+        self.assertNotIn('authn-x509', call_args[0][0])
+        # Accept-Encoding: base64 must NOT be sent – _fetch_conjur_variable always
+        # does b64encode(token) itself, so sending this header would cause double-encoding.
+        self.assertNotIn('Accept-Encoding', call_args[1]['headers'])
+        # Certificate is sent as X-SSL-Client-Certificate header (percent-encoded PEM).
+        # client_cert / client_key are also passed so that a TLS-terminating proxy
+        # (nginx with ssl_verify_client optional[_no_ca]) can extract the cert from
+        # the mTLS handshake and forward it as the authoritative header value.
+        self.assertEqual(call_args[1]['headers']['X-SSL-Client-Certificate'], expected_encoded_cert)
+        self.assertEqual(call_args[1]['client_cert'], '/tmp/fake_client.pem')
+        self.assertEqual(call_args[1]['client_key'], '/tmp/fake_client.key')
+        self.assertEqual(call_args[1]['ca_path'], '/tmp/fake_ca.pem')
+        self.assertTrue(call_args[1]['validate_certs'])
+
+    # -------------------------------------------- URL path uses authn-cert (not authn-x509)
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_url_uses_authn_cert_path(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'token'
+        mock_open_url.return_value = mock_response
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            self._call()
+
+        url_used = mock_open_url.call_args[0][0]
+        self.assertTrue(url_used.startswith('https://conjur-fake/authn-cert/'))
+        self.assertNotIn('authn-x509', url_used)
+
+    # -------------------------------------------- Accept-Encoding: base64 must NOT be present
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_no_accept_encoding_base64_header(self, mock_exists, mock_open_url, mock_telemetry_header):
+        """Accept-Encoding: base64 must NOT be sent.
+        _fetch_conjur_variable always calls b64encode(token) on whatever bytes the
+        authenticate endpoint returns.  If we also request base64 from Conjur,
+        the token gets double-encoded and the subsequent secrets fetch returns 401."""
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'token'
+        mock_open_url.return_value = mock_response
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            self._call()
+
+        headers = mock_open_url.call_args[1]['headers']
+        self.assertNotIn('Accept-Encoding', headers)
+
+    # -------------------------------------------- X-SSL-Client-Certificate header present (percent-encoded PEM)
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_ssl_client_cert_header_present(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'token'
+        mock_open_url.return_value = mock_response
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        import urllib.parse
+        expected_encoded = urllib.parse.quote(fake_pem, safe='')
+
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            self._call()
+
+        headers = mock_open_url.call_args[1]['headers']
+        self.assertIn('X-SSL-Client-Certificate', headers)
+        self.assertEqual(headers['X-SSL-Client-Certificate'], expected_encoded)
+        # mTLS kwargs must be present so a TLS-terminating proxy can extract
+        # the cert from the handshake and set the authoritative header value
+        self.assertIn('client_cert', mock_open_url.call_args[1])
+        self.assertIn('client_key', mock_open_url.call_args[1])
+
+    # -------------------------------------------------- host_id URL-encoding (request mode)
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_host_id_is_url_encoded(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'token'
+        mock_open_url.return_value = mock_response
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            self._call(host_id='host/vm-workloads/vm-01')
+
+        url_used = mock_open_url.call_args[0][0]
+        # slashes inside host_id must be percent-encoded
+        self.assertIn('host%2Fvm-workloads%2Fvm-01', url_used)
+
+    # -------------------------------------------- SPIFFE mode: no host_id in URL
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_spiffe_mode_no_host_id_in_url(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'token'
+        mock_open_url.return_value = mock_response
+
+        # SPIFFE mode: host_id=None → URL must end with /authenticate (no workload segment)
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            self._call(host_id=None)
+
+        url_used = mock_open_url.call_args[0][0]
+        self.assertEqual(
+            url_used,
+            'https://conjur-fake/authn-cert/fake-service/fakeaccount/authenticate'
+        )
+
+    # -------------------------------------------------- 401 Unauthorized
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_401_raises_ansible_error(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_open_url.side_effect = Exception('HTTP Error 401: Unauthorized')
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            with self.assertRaises(AnsibleError) as ctx:
+                self._call()
+
+        self.assertIn('401', ctx.exception.message)
+
+    # -------------------------------------------------- non-200/non-401 error
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_non200_raises_ansible_error(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_open_url.side_effect = Exception('HTTP Error 500: Internal Server Error')
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            with self.assertRaises(AnsibleError) as ctx:
+                self._call()
+
+        self.assertIn('500', ctx.exception.message)
+
+    # -------------------------------------------------- missing client cert
+    @patch('os.path.exists', return_value=False)
+    def test_cert_token_missing_client_cert_raises(self, mock_exists):
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call(client_cert_file='/nonexistent/client.pem')
+
+        self.assertIn('client certificate file', ctx.exception.message.lower())
+
+    # -------------------------------------------------- missing client key
+    @patch('os.path.exists')
+    def test_cert_token_missing_client_key_raises(self, mock_exists):
+        # cert file exists, key file does not
+        mock_exists.side_effect = lambda path: path == '/tmp/fake_client.pem'
+
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call()
+
+        self.assertIn('client key file', ctx.exception.message.lower())
+
+    # -------------------------------------------------- network exception
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    @patch('os.path.exists', return_value=True)
+    def test_cert_token_network_error_raises(self, mock_exists, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_open_url.side_effect = Exception('Connection refused')
+
+        fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
+        with patch('builtins.open', mock_open(read_data=fake_pem)):
+            with self.assertRaises(AnsibleError) as ctx:
+                self._call()
+
+        self.assertIn('Connection refused', ctx.exception.message)
+
+    # -------------------------------------------------- run() integration with authn-cert (request mode)
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_cert_token')
+    def test_run_with_authn_cert(self, mock_fetch_cert_token, mock_fetch_variable, mock_get_certificate_file):
+        mock_get_certificate_file.return_value = './conjur.pem'
+        mock_fetch_cert_token.return_value = b'conjur-access-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_type': 'authn-cert',
+            'conjur_authn_service_id': 'x509-service',
+            'conjur_client_cert_file': '/tmp/client.pem',
+            'conjur_client_key_file': '/tmp/client.key',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+        self.assertEqual(result, ['super_secret_value'])
+        mock_fetch_cert_token.assert_called_once_with(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='x509-service',
+            host_id='host/ansible/ansible-fake',
+            client_cert_file='/tmp/client.pem',
+            client_key_file='/tmp/client.key',
+            ca_cert_file='./conjur.pem',
+            validate_certs=True,
+        )
+
+    # ------------------------------------------ run() with authn-cert SPIFFE mode
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_cert_token')
+    def test_run_with_authn_cert_spiffe_mode(self, mock_fetch_cert_token, mock_fetch_variable, mock_get_certificate_file):
+        mock_get_certificate_file.return_value = './conjur.pem'
+        mock_fetch_cert_token.return_value = b'conjur-access-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            # No conjur_authn_login — SPIFFE mode derives identity from certificate
+            'conjur_authn_type': 'authn-cert',
+            'conjur_authn_service_id': 'x509-service',
+            'conjur_authn_cert_mode': 'spiffe',
+            'conjur_client_cert_file': '/tmp/client.pem',
+            'conjur_client_key_file': '/tmp/client.key',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+        self.assertEqual(result, ['super_secret_value'])
+        # In SPIFFE mode host_id must be None so it is absent from the URL
+        mock_fetch_cert_token.assert_called_once_with(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='x509-service',
+            host_id=None,
+            client_cert_file='/tmp/client.pem',
+            client_key_file='/tmp/client.key',
+            ca_cert_file='./conjur.pem',
+            validate_certs=True,
+        )
+
+    # ------------------------------------------ run(): missing service_id for authn-cert
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    def test_run_authn_cert_missing_service_id_raises(self, mock_get_cert_file):
+        mock_get_cert_file.return_value = './conjur.pem'
+
+        lookup = lookup_loader.get('conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_type': 'authn-cert',
+            # conjur_authn_service_id intentionally omitted
+            'conjur_client_cert_file': '/tmp/client.pem',
+            'conjur_client_key_file': '/tmp/client.key',
+        }
+        with self.assertRaises(AnsibleError) as ctx:
+            lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertIn('service_id', ctx.exception.message.lower())
