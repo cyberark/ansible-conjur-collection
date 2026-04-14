@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [1.3.11] - 2026-04-03
+## [1.3.11] - 2026-04-14
 
 ### Added
 - Added support for Conjur certificate authenticator (`authn-cert`) in the `conjur_variable` lookup plugin. 
+- Added support for JWT authentication in the `conjur_variable` lookup plugin.
 
 ## [1.3.10] - 2025-12-05
 

@@ -17,7 +17,7 @@ from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _
     _get_metadata_token, _get_iam_role_metadata, _create_canonical_request, \
     _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token, \
     InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token, \
-    _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token
+    _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token
 
 
 class MockMergeDictionaries(MagicMock):
@@ -792,6 +792,128 @@ class TestConjurLookup(TestCase):
                 cert_file, validate_certs
             )
         self.assertIn("Something went wrong", str(context.exception))
+
+
+class TestFetchConjurJwtToken(TestCase):
+    """Unit tests for _fetch_conjur_jwt_token (authn-jwt)."""
+
+    def _call(self, **overrides):
+        defaults = dict(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='jwt-service',
+            host_id='host/ansible/ansible-fake',
+            jwt_token='signed-jwt-payload',
+            cert_file='/path/fake-ca.pem',
+            validate_certs=True,
+        )
+        defaults.update(overrides)
+        return _fetch_conjur_jwt_token(**defaults)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_fetch_conjur_jwt_token_success(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'fake_telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'conjur-session-token'
+        mock_open_url.return_value = mock_response
+
+        import urllib.parse
+        expected_host = urllib.parse.quote('host/ansible/ansible-fake', safe='')
+        expected_url = (
+            f'https://conjur-fake/authn-jwt/jwt-service/fakeaccount/'
+            f'{expected_host}/authenticate'
+        )
+
+        result = self._call()
+
+        self.assertEqual(result, b'conjur-session-token')
+        mock_open_url.assert_called_once_with(
+            expected_url,
+            method='POST',
+            data='jwt=signed-jwt-payload',
+            headers={'x-cybr-telemetry': 'fake_telemetry'},
+            validate_certs=True,
+            ca_path='/path/fake-ca.pem',
+            timeout=10,
+        )
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_appliance_url_strips_trailing_slash(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 't'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'ok'
+        mock_open_url.return_value = mock_response
+
+        self._call(appliance_url='https://conjur-fake/')
+
+        url_used = mock_open_url.call_args[0][0]
+        self.assertTrue(url_used.startswith('https://conjur-fake/authn-jwt/'))
+        self.assertNotIn('conjur-fake//authn-jwt', url_used)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_host_id_is_url_encoded(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 't'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'ok'
+        mock_open_url.return_value = mock_response
+
+        self._call(host_id='host/vm-workloads/vm-01')
+
+        url_used = mock_open_url.call_args[0][0]
+        self.assertIn('host%2Fvm-workloads%2Fvm-01', url_used)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_non200_raises_ansible_error(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 't'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 401
+        mock_open_url.return_value = mock_response
+
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call()
+
+        self.assertIn('HTTP 401', str(ctx.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_url_error(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 't'
+        mock_open_url.side_effect = urllib_error.URLError('connection refused')
+
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call()
+
+        self.assertIn('URL error occurred', str(ctx.exception))
+        self.assertIn('connection refused', str(ctx.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_runtime_error(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 't'
+        mock_open_url.side_effect = RuntimeError('tls handshake failed')
+
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call()
+
+        self.assertIn('tls handshake failed', str(ctx.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_generic_exception(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 't'
+        mock_open_url.side_effect = ValueError('bad response')
+
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call()
+
+        self.assertIn('bad response', str(ctx.exception))
 
 
 class TestFetchConjurCertToken(TestCase):
