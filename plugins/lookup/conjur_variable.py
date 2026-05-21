@@ -272,6 +272,7 @@ from netrc import netrc
 from time import sleep
 from stat import S_IRUSR, S_IWUSR
 from tempfile import gettempdir, NamedTemporaryFile
+import atexit
 import datetime
 import hashlib
 import hmac
@@ -955,6 +956,7 @@ def _store_secret_in_file(value):
         list: Path to the temporary file as a single-item list.
     """
     secrets_file = NamedTemporaryFile(mode='w', dir=_default_tmp_path(), delete=False)  # pylint: disable=consider-using-with
+    atexit.register(lambda p=secrets_file.name: os.path.exists(p) and os.unlink(p))
     os.chmod(secrets_file.name, S_IRUSR | S_IWUSR)
     secrets_file.write(value[0])
     return [secrets_file.name]
