@@ -91,6 +91,15 @@ pipeline {
       }
     }
 
+    // Refreshes Ansible Automation Hub token to prevent 30-day inactivity expiration
+    stage('Refresh Automation Hub Token') {
+      steps {
+        script {
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentSh 'summon -e publish ./ci/token_refresh.sh'
+            }
+          }
+        }
+
     stage('Build artifacts') {
       steps {
         script {
