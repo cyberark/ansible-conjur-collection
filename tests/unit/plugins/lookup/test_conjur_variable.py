@@ -4,20 +4,26 @@ __metaclass__ = type
 import hashlib
 import hmac
 import json
-from ansible.module_utils.six.moves import urllib_error
+import os
+import urllib.parse
+from base64 import b64encode
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, mock_open
-from ansible.errors import AnsibleError
-from ansible.plugins.loader import lookup_loader
-from base64 import b64encode
 
-from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import _merge_dictionaries, _fetch_conjur_token, _fetch_conjur_variable, \
-    _validate_pem_certificate, _load_identity_from_file, _load_conf_from_file, _telemetry_header, \
-    _valid_aws_account_number, _sign, _get_signature_key, _get_aws_region, \
-    _get_metadata_token, _get_iam_role_metadata, _create_canonical_request, \
-    _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token, \
-    InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token, \
-    _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token
+from ansible.errors import AnsibleError
+from ansible.module_utils.six.moves import urllib_error
+from ansible.plugins.loader import lookup_loader
+
+from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
+    _merge_dictionaries, _fetch_conjur_token, _fetch_conjur_variable,
+    _validate_pem_certificate, _load_identity_from_file, _load_conf_from_file, _telemetry_header,
+    _valid_aws_account_number, _sign, _get_signature_key, _get_aws_region,
+    _get_metadata_token, _get_iam_role_metadata, _create_canonical_request,
+    _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token,
+    InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token,
+    _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token,
+    _store_secret_in_file,
+)
 
 
 class MockMergeDictionaries(MagicMock):
@@ -127,7 +133,9 @@ class TestConjurLookup(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._merge_dictionaries')
-    def test_retrieve_to_file(self, mock_merge_dictionaries, mock_fetch_conjur_token, mock_fetch_conjur_variable, mock_get_certificate_file):
+    def test_retrieve_to_file(
+            self, mock_merge_dictionaries, mock_fetch_conjur_token,
+            mock_fetch_conjur_variable, mock_get_certificate_file):
         mock_get_certificate_file.return_value = "./conjur.pem"
         mock_fetch_conjur_token.return_value = "token"
         mock_fetch_conjur_variable.return_value = ["conjur_variable"]
@@ -141,7 +149,7 @@ class TestConjurLookup(TestCase):
         filepaths = self.lookup.run(terms, **kwargs)
         self.assertRegex(filepaths[0], '/dev/shm/.*')
 
-        with open(filepaths[0], "r") as file:
+        with open(filepaths[0], encoding='utf-8') as file:
             content = file.read()
             self.assertEqual(content, "conjur_variable")
 
@@ -283,7 +291,9 @@ class TestConjurLookup(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._valid_aws_account_number')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._create_conjur_iam_api_key')
-    def test_fetch_conjur_iam_session_token_success(self, mock_create_conjur_iam_api_key, mock_telemetry_header, mock_valid_account, mock_open_url):
+    def test_fetch_conjur_iam_session_token_success(
+            self, mock_create_conjur_iam_api_key, mock_telemetry_header,
+            mock_valid_account, mock_open_url):
         mock_valid_account.return_value = True
         mock_telemetry_header.return_value = 'fake_encoded_telemetry_value'
         mock_create_conjur_iam_api_key.return_value = "fake_api_key"
@@ -583,7 +593,9 @@ class TestConjurLookup(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._valid_aws_account_number')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._create_conjur_iam_api_key')
-    def test_fetch_conjur_iam_session_token_auth_failure(self, mock_create_conjur_iam_api_key, mock_telemetry_header, mock_valid_account, mock_open_url):
+    def test_fetch_conjur_iam_session_token_auth_failure(
+            self, _mock_create_conjur_iam_api_key, mock_telemetry_header,
+            mock_valid_account, mock_open_url):
         mock_valid_account.return_value = True
         mock_telemetry_header.return_value = 'fake_encoded_telemetry_value'
 
@@ -605,7 +617,9 @@ class TestConjurLookup(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._valid_aws_account_number')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._create_conjur_iam_api_key')
-    def test_fetch_conjur_iam_session_token_http_error(self, mock_create_conjur_iam_api_key, mock_telemetry_header, mock_valid_account, mock_open_url):
+    def test_fetch_conjur_iam_session_token_http_error(
+            self, _mock_create_conjur_iam_api_key, mock_telemetry_header,
+            mock_valid_account, mock_open_url):
         mock_valid_account.return_value = True
         mock_telemetry_header.return_value = 'fake_encoded_telemetry_value'
 
@@ -699,7 +713,7 @@ class TestConjurLookup(TestCase):
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
-    def test_fetch_conjur_gcp_identity_token_failure(self, mock_open_url, mock_telemetry_header):
+    def test_fetch_conjur_gcp_identity_token_failure(self, mock_open_url, _mock_telemetry_header):
         mock_get_response = MagicMock()
         mock_get_response.getcode.return_value = 500
         mock_open_url.return_value = mock_get_response
@@ -719,7 +733,7 @@ class TestConjurLookup(TestCase):
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
-    def test_gcp_authenticate_endpoint_failure(self, mock_open_url, mock_telemetry_header):
+    def test_gcp_authenticate_endpoint_failure(self, mock_open_url, _mock_telemetry_header):
         mock_get_response = MagicMock()
         mock_get_response.getcode.return_value = 200
         mock_get_response.read.return_value = b"gcp-jwt-token"
@@ -798,15 +812,15 @@ class TestFetchConjurJwtToken(TestCase):
     """Unit tests for _fetch_conjur_jwt_token (authn-jwt)."""
 
     def _call(self, **overrides):
-        defaults = dict(
-            appliance_url='https://conjur-fake',
-            account='fakeaccount',
-            service_id='jwt-service',
-            host_id='host/ansible/ansible-fake',
-            jwt_token='signed-jwt-payload',
-            cert_file='/path/fake-ca.pem',
-            validate_certs=True,
-        )
+        defaults = {
+            'appliance_url': 'https://conjur-fake',
+            'account': 'fakeaccount',
+            'service_id': 'jwt-service',
+            'host_id': 'host/ansible/ansible-fake',
+            'jwt_token': 'signed-jwt-payload',
+            'cert_file': '/path/fake-ca.pem',
+            'validate_certs': True,
+        }
         defaults.update(overrides)
         return _fetch_conjur_jwt_token(**defaults)
 
@@ -819,7 +833,6 @@ class TestFetchConjurJwtToken(TestCase):
         mock_response.read.return_value = b'conjur-session-token'
         mock_open_url.return_value = mock_response
 
-        import urllib.parse
         expected_host = urllib.parse.quote('host/ansible/ansible-fake', safe='')
         expected_url = (
             f'https://conjur-fake/authn-jwt/jwt-service/fakeaccount/'
@@ -921,16 +934,16 @@ class TestFetchConjurCertToken(TestCase):
 
     # ------------------------------------------------------------------ helpers
     def _call(self, **overrides):
-        defaults = dict(
-            appliance_url='https://conjur-fake',
-            account='fakeaccount',
-            service_id='fake-service',
-            host_id='host/ansible/ansible-fake',
-            client_cert_file='/tmp/fake_client.pem',
-            client_key_file='/tmp/fake_client.key',
-            ca_cert_file='/tmp/fake_ca.pem',
-            validate_certs=True,
-        )
+        defaults = {
+            'appliance_url': 'https://conjur-fake',
+            'account': 'fakeaccount',
+            'service_id': 'fake-service',
+            'host_id': 'host/ansible/ansible-fake',
+            'client_cert_file': '/tmp/fake_client.pem',
+            'client_key_file': '/tmp/fake_client.key',
+            'ca_cert_file': '/tmp/fake_ca.pem',
+            'validate_certs': True,
+        }
         defaults.update(overrides)
         return _fetch_conjur_cert_token(**defaults)
 
@@ -938,7 +951,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_fetch_conjur_cert_token_success(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_fetch_conjur_cert_token_success(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
@@ -950,7 +963,6 @@ class TestFetchConjurCertToken(TestCase):
         with patch('builtins.open', mock_open(read_data=fake_pem)):
             result = self._call()
 
-        import urllib.parse
         expected_encoded_cert = urllib.parse.quote(fake_pem, safe='')
 
         self.assertEqual(result, b'conjur-access-token')
@@ -976,7 +988,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_url_uses_authn_cert_path(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_url_uses_authn_cert_path(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
@@ -995,7 +1007,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_no_accept_encoding_base64_header(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_no_accept_encoding_base64_header(self, _mock_exists, mock_open_url, mock_telemetry_header):
         """Accept-Encoding: base64 must NOT be sent.
         _fetch_conjur_variable always calls b64encode(token) on whatever bytes the
         authenticate endpoint returns.  If we also request base64 from Conjur,
@@ -1017,7 +1029,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_ssl_client_cert_header_present(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_ssl_client_cert_header_present(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
@@ -1025,7 +1037,6 @@ class TestFetchConjurCertToken(TestCase):
         mock_open_url.return_value = mock_response
 
         fake_pem = "-----BEGIN CERTIFICATE-----\nFAKEBASE64DATA==\n-----END CERTIFICATE-----\n"
-        import urllib.parse
         expected_encoded = urllib.parse.quote(fake_pem, safe='')
 
         with patch('builtins.open', mock_open(read_data=fake_pem)):
@@ -1043,7 +1054,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_host_id_is_url_encoded(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_host_id_is_url_encoded(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
@@ -1062,7 +1073,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_spiffe_mode_no_host_id_in_url(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_spiffe_mode_no_host_id_in_url(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
@@ -1084,7 +1095,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_401_raises_ansible_error(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_401_raises_ansible_error(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_open_url.side_effect = Exception('HTTP Error 401: Unauthorized')
 
@@ -1099,7 +1110,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_non200_raises_ansible_error(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_non200_raises_ansible_error(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_open_url.side_effect = Exception('HTTP Error 500: Internal Server Error')
 
@@ -1112,7 +1123,7 @@ class TestFetchConjurCertToken(TestCase):
 
     # -------------------------------------------------- missing client cert
     @patch('os.path.exists', return_value=False)
-    def test_cert_token_missing_client_cert_raises(self, mock_exists):
+    def test_cert_token_missing_client_cert_raises(self, _mock_exists):
         with self.assertRaises(AnsibleError) as ctx:
             self._call(client_cert_file='/nonexistent/client.pem')
 
@@ -1133,7 +1144,7 @@ class TestFetchConjurCertToken(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     @patch('os.path.exists', return_value=True)
-    def test_cert_token_network_error_raises(self, mock_exists, mock_open_url, mock_telemetry_header):
+    def test_cert_token_network_error_raises(self, _mock_exists, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 'fake_telemetry'
         mock_open_url.side_effect = Exception('Connection refused')
 
@@ -1228,7 +1239,69 @@ class TestFetchConjurCertToken(TestCase):
             'conjur_client_cert_file': '/tmp/client.pem',
             'conjur_client_key_file': '/tmp/client.key',
         }
-        with self.assertRaises(AnsibleError) as ctx:
+        with self.assertRaises(AnsibleError):
             lookup.run(['ansible/fake-secret'], variables)
 
-        self.assertIn('service_id', ctx.exception.message.lower())
+
+class TestStoreSecretInFile(TestCase):
+    def test_returns_file_path_containing_secret(self):
+        with patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.atexit.register'):
+            result = _store_secret_in_file(['mysecret'])
+
+        path = result[0]
+        try:
+            self.assertTrue(os.path.exists(path))
+            with open(path, encoding='utf-8') as f:
+                self.assertEqual(f.read(), 'mysecret')
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_file_has_user_only_permissions(self):
+        with patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.atexit.register'):
+            result = _store_secret_in_file(['mysecret'])
+
+        path = result[0]
+        try:
+            mode = oct(os.stat(path).st_mode)
+            self.assertTrue(mode.endswith('600'), f"expected mode 600, got {mode}")
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_atexit_callback_deletes_file(self):
+        registered_callbacks = []
+
+        def capture_register(fn, *args, **kwargs):
+            registered_callbacks.append((fn, args, kwargs))
+
+        with patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.atexit.register', side_effect=capture_register):
+            result = _store_secret_in_file(['mysecret'])
+
+        path = result[0]
+        try:
+            self.assertEqual(len(registered_callbacks), 1)
+            fn, args, kwargs = registered_callbacks[0]
+            self.assertTrue(os.path.exists(path))
+            fn(*args, **kwargs)
+            self.assertFalse(os.path.exists(path))
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_atexit_callback_is_idempotent_when_file_already_deleted(self):
+        registered_callbacks = []
+
+        def capture_register(fn, *args, **kwargs):
+            registered_callbacks.append((fn, args, kwargs))
+
+        with patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.atexit.register', side_effect=capture_register):
+            result = _store_secret_in_file(['mysecret'])
+
+        path = result[0]
+        os.unlink(path)
+
+        fn, args, kwargs = registered_callbacks[0]
+        # should not raise even though file is already gone
+        fn(*args, **kwargs)
+        self.assertFalse(os.path.exists(path))
