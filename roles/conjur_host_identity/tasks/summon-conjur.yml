@@ -11,3 +11,7 @@
     dest: /usr/local/lib/summon
     remote_src: true
     creates: /usr/local/lib/summon/summon-conjur
+  retries: 5
+  delay: 10
+  register: result
+  until: result is not failed

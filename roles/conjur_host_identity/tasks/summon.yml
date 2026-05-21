@@ -5,3 +5,7 @@
     dest: /usr/local/bin
     remote_src: true
     creates: /usr/local/bin/summon
+  retries: 5
+  delay: 10
+  register: result
+  until: result is not failed

@@ -319,9 +319,17 @@ function deploy_conjur_enterprise {
     export CONJUR_AUTHENTICATORS="authn,authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-cert/x509-service"
     # start conjur leader and follower
     ./bin/dap --provision-master
-    ./bin/dap --provision-follower
-    set_conjur_cid "$(docker compose ps -q conjur-master.mycompany.local)"
+    ./bin/dap --import-custom-certificates
 
+    rm -rf ./system/haproxy/certs
+    mkdir -p ./system/haproxy/certs
+    docker cp "$(docker compose ps -q conjur-master-1.mycompany.local)":/opt/conjur/etc/ssl/. ./system/haproxy/certs
+
+    docker compose restart conjur-master.mycompany.local
+
+    ./bin/dap --provision-follower
+
+    set_conjur_cid "$(docker compose ps -q conjur-master.mycompany.local)"
     fetch_conjur_cert "$(conjur_cid)" "/etc/ssl/certs/ca.pem"
 
     # Run 'sleep infinity' in the CLI container so it stays alive
