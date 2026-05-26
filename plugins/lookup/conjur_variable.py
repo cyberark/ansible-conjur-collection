@@ -167,6 +167,21 @@ DOCUMENTATION = """
           - name: conjur_authn_jwt_token
         env:
           - name: CONJUR_AUTHN_JWT_TOKEN
+      conjur_authn_jwt_token_file:
+        description: >
+          Path to a file containing the JWT token used for authn-jwt authentication.
+          The file must be readable only by the owner (permissions 0600 or stricter).
+          Takes precedence over conjur_authn_jwt_token when both are set.
+          The file is not deleted by the plugin after use.
+        type: path
+        required: False
+        ini:
+          - section: conjur,
+            key: authn_jwt_token_file
+        vars:
+          - name: conjur_authn_jwt_token_file
+        env:
+          - name: CONJUR_AUTHN_JWT_TOKEN_FILE
       conjur_authn_service_id:
         description: Service ID for cloud-based authenticators
         type: string
@@ -235,6 +250,26 @@ DOCUMENTATION = """
           - name: conjur_authn_cert_mode
         env:
           - name: CONJUR_AUTHN_CERT_MODE
+      conjur_authn_jwt_mode:
+        description: >
+          Identity resolution mode for authn-jwt authentication. Valid values are
+          'url' (default) and 'token-app-property'.
+          In 'url' mode the workload identity (conjur_authn_login) is included in
+          the authentication URL path. CyberArk documentation states this mode
+          should not be used in production environments.
+          In 'token-app-property' mode the workload identity is derived solely from
+          a claim inside the JWT token as configured by the token-app-property
+          annotation in the Conjur policy; conjur_authn_login is not required.
+        type: str
+        required: False
+        default: url
+        ini:
+          - section: conjur,
+            key: authn_jwt_mode
+        vars:
+          - name: conjur_authn_jwt_mode
+        env:
+          - name: CONJUR_AUTHN_JWT_MODE
       retry_interval:
         description: Time in seconds to wait between retry attempts (default 10)
         type: int
@@ -804,6 +839,28 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
     return response.read()
 
 
+def _read_jwt_token_file(token_file):
+    """Read a JWT token from a file, validating that the file has owner-only permissions."""
+    if not os.path.exists(token_file):
+        raise AnsibleError(
+            f"JWT token file '{token_file}' does not exist. "
+            "It is required when conjur_authn_jwt_token_file is set."
+        )
+    file_mode = os.stat(token_file).st_mode & 0o777
+    if file_mode & 0o177:
+        display.warning(
+            f"JWT token file '{token_file}' has insecure permissions ({oct(file_mode)}). "
+            "The file should be readable only by the owner (chmod 600)."
+        )
+    try:
+        with open(token_file, 'r', encoding='utf-8') as fh:
+            return fh.read().strip()
+    except OSError as err:
+        raise AnsibleError(
+            f"Failed to read JWT token file '{token_file}': {err}"
+        ) from err
+
+
 def _fetch_conjur_jwt_token(
     appliance_url, account, service_id,
     host_id, jwt_token, cert_file, validate_certs
@@ -818,10 +875,18 @@ def _fetch_conjur_jwt_token(
 
     try:
         appliance_url = appliance_url.rstrip("/")
-        url = (
-            f"{appliance_url}/authn-jwt/{service_id}/{account}/"
-            f"{urllib.parse.quote(host_id, safe='')}/authenticate"
-        )
+        encoded_service_id = urllib.parse.quote(service_id, safe='')
+        encoded_account = urllib.parse.quote(account, safe='')
+        # token-app-property mode: host_id is None — identity comes from JWT claim mapping
+        # url mode: host_id is included in the path
+        if host_id:
+            url = (
+                f"{appliance_url}/authn-jwt/{encoded_service_id}/"
+                f"{encoded_account}/"
+                f"{urllib.parse.quote(host_id, safe='')}/authenticate"
+            )
+        else:
+            url = f"{appliance_url}/authn-jwt/{encoded_service_id}/{encoded_account}/authenticate"
 
         token = f"jwt={jwt_token}"
 
@@ -975,22 +1040,12 @@ def _validate_authn_cert_files(client_cert_file, client_key_file):
             f"Client key file '{client_key_file}' is missing or does not exist. "
             "It is required for authn-cert authentication."
         )
-
-
-def _http_error_detail(error):
-    """Return a diagnostic string for a URLError/HTTPError."""
-    detail = str(error)
-    if not hasattr(error, 'read'):
-        return detail
-    try:
-        body = error.read()
-        if isinstance(body, bytes):
-            body = body.decode('utf-8', errors='replace')
-        if body:
-            return f"{error} — server response: {body[:500]}"
-    except OSError:
-        pass
-    return detail
+    key_mode = os.stat(client_key_file).st_mode & 0o777
+    if key_mode & 0o177:
+        display.warning(
+            f"Client key file '{client_key_file}' has insecure permissions ({oct(key_mode)}). "
+            "The file should be readable only by the owner (chmod 600)."
+        )
 
 
 def _fetch_conjur_cert_token(
@@ -1046,22 +1101,24 @@ def _fetch_conjur_cert_token(
 
     encoded_cert = urllib.parse.quote(client_cert_pem, safe='')
     appliance_url = appliance_url.rstrip("/")
+    encoded_service_id = urllib.parse.quote(service_id, safe='')
+    encoded_account = urllib.parse.quote(account, safe='')
 
     # host_id is required for 'request' mode (default) and absent for 'spiffe' mode.
     # Per API docs: POST {url}/authn-cert/{service_id}/{account}[/{workload_id}]/authenticate
     if host_id:
         url = (
-            f"{appliance_url}/authn-cert/{service_id}/{account}/"
+            f"{appliance_url}/authn-cert/{encoded_service_id}/{encoded_account}/"
             f"{urllib.parse.quote(host_id, safe='')}/authenticate"
         )
     else:
-        url = f"{appliance_url}/authn-cert/{service_id}/{account}/authenticate"
+        url = f"{appliance_url}/authn-cert/{encoded_service_id}/{encoded_account}/authenticate"
 
     headers = {
         'X-SSL-Client-Certificate': encoded_cert,
         'x-cybr-telemetry': _telemetry_header()
     }
-    display.warning(
+    display.vvv(
         f'authn-cert: POST {url} '
         f'[cert={client_cert_file}, key={client_key_file}, ca={ca_cert_file}]'
     )
@@ -1086,7 +1143,7 @@ def _fetch_conjur_cert_token(
         raise
     except urllib_error.URLError as error:
         raise AnsibleError(
-            f"Error during authn-cert authentication: {_http_error_detail(error)}"
+            f"Error during authn-cert authentication: {error}"
         ) from error
     except ssl.SSLError as error:
         raise AnsibleError(
@@ -1270,9 +1327,11 @@ class LookupModule(LookupBase):
         service_id = self.get_var_value("conjur_authn_service_id")
         azure_client_id = self.get_var_value("azure_client_id")
         jwt_token = self.get_var_value("conjur_authn_jwt_token")
+        jwt_token_file = self.get_var_value("conjur_authn_jwt_token_file")
         client_cert_file = self.get_var_value("conjur_client_cert_file")
         client_key_file = self.get_var_value("conjur_client_key_file")
         cert_mode = self.get_var_value("conjur_authn_cert_mode") or "request"
+        jwt_mode = self.get_var_value("conjur_authn_jwt_mode") or "url"
         retry_interval = self.get_option('retry_interval')
 
         validate_certs = self.get_option('validate_certs')
@@ -1335,7 +1394,11 @@ class LookupModule(LookupBase):
             if 'id' not in identity:
                 # For authn-cert SPIFFE mode the workload identity is derived
                 # from the SPIFFE URI in the client certificate; no login needed.
+                # For authn-jwt token-app-property mode the workload identity is
+                # derived from a JWT claim configured in the Conjur policy; no login needed.
                 if authn_type == 'authn-cert' and cert_mode == 'spiffe':
+                    pass
+                elif authn_type == 'jwt' and jwt_mode == 'token-app-property':
                     pass
                 else:
                     raise AnsibleError(
@@ -1383,11 +1446,15 @@ class LookupModule(LookupBase):
                         cert_file=cert_file,
                     )
                 elif authn_type == "jwt":
+                    if jwt_token_file and not jwt_token:
+                        jwt_token = _read_jwt_token_file(jwt_token_file)
                     token = _fetch_conjur_jwt_token(
                         appliance_url=conf['appliance_url'],
                         account=conf['account'],
                         service_id=service_id,
-                        host_id=identity['id'],
+                        # token-app-property mode: omit host_id from URL; identity
+                        # is resolved from the JWT claim mapping in Conjur policy.
+                        host_id=identity.get('id') if jwt_mode != 'token-app-property' else None,
                         jwt_token=jwt_token,
                         validate_certs=validate_certs,
                         cert_file=cert_file,
@@ -1433,6 +1500,7 @@ class LookupModule(LookupBase):
                 token = b"\x00" * len(token)
             else:
                 token = None
+            jwt_token = None
 
             if temp_cert_file:
                 try:

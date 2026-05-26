@@ -932,6 +932,28 @@ class TestFetchConjurJwtToken(TestCase):
 class TestFetchConjurCertToken(TestCase):
     """Unit tests for _fetch_conjur_cert_token (authn-x509 / authn-cert)."""
 
+    # Fake file paths used across all _fetch_conjur_cert_token tests.
+    _FAKE_CERT = '/tmp/fake_client.pem'
+    _FAKE_KEY = '/tmp/fake_client.key'
+    _FAKE_CA = '/tmp/fake_ca.pem'
+
+    def setUp(self):
+        # _validate_authn_cert_files now calls os.stat to check key-file permissions
+        import os as _real_os
+        _real_stat = _real_os.stat
+        _fake_paths = {self._FAKE_CERT, self._FAKE_KEY, self._FAKE_CA}
+
+        def _stat_side_effect(path, *args, **kwargs):
+            if str(path) in _fake_paths:
+                result = MagicMock()
+                result.st_mode = 0o100600
+                return result
+            return _real_stat(path, *args, **kwargs)
+
+        stat_patcher = patch('os.stat', side_effect=_stat_side_effect)
+        stat_patcher.start()
+        self.addCleanup(stat_patcher.stop)
+
     # ------------------------------------------------------------------ helpers
     def _call(self, **overrides):
         defaults = {
