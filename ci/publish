@@ -26,7 +26,7 @@ pushd "$TOP_LEVEL_DIR" >/dev/null
   docker run --rm -t \
     -e ANSIBLE_GALAXY_SERVER_LIST=galaxy,automation_hub \
     -e ANSIBLE_GALAXY_SERVER_GALAXY_URL=https://galaxy.ansible.com/ \
-    -e ANSIBLE_GALAXY_SERVER_GALAXY_API_KEY="$GALAXY_API_KEY" \
+    -e ANSIBLE_GALAXY_SERVER_GALAXY_TOKEN="$GALAXY_API_KEY" \
     -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_URL=https://console.redhat.com/api/automation-hub/ \
     -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_AUTH_URL=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token \
     -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN="$AUTOMATION_HUB_TOKEN" \
