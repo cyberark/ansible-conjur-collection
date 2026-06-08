@@ -21,7 +21,7 @@ Conjur Ansible Collection :: Dev Environment
 $0 [options]
 
 -f <flavour>   Specify flavour: oss, enterprise, cloud, edge (Default: oss)
--a <type>    Specify authentication type: iam, azure, gcp, api_key, authn-cert (Default: api_key)
+-a <type>    Specify authentication type: iam, azure, gcp, api_key, authn-cert, jwt-oidc (Default: api_key)
 -h, --help             Print usage information.
 -p <version>           Run the Ansible service with the desired Python version (Default: 3.11).
 -v <version>           Run the Ansible service with the desired Ansible Community Package version.
@@ -47,10 +47,10 @@ while true ; do
 done
 
 case "$AUTHN_TYPE" in
-  "iam" | "azure" | "gcp" | "api_key" | "authn-cert")
+  "iam" | "azure" | "gcp" | "api_key" | "authn-cert" | "jwt-oidc")
     ;;
   *)
-    echo "Invalid authentication type: $AUTHN_TYPE. Valid options are: iam, azure, gcp, api_key, authn-cert."
+    echo "Invalid authentication type: $AUTHN_TYPE. Valid options are: iam, azure, gcp, api_key, authn-cert, jwt-oidc."
     exit 1
     ;;
 esac
@@ -90,6 +90,22 @@ function set_authentication_variables {
       export CONJUR_AUTHN_SERVICE_ID="x509-service"
       export CONJUR_CLIENT_CERT_FILE="/cyberark/dev/client.pem"
       export CONJUR_CLIENT_KEY_FILE="/cyberark/dev/client.key"
+      ;;
+    "jwt-oidc")
+      export CONJUR_AUTHN_TYPE="jwt"
+      export CONJUR_AUTHN_SERVICE_ID="oidc-provider"
+      export CONJUR_AUTHN_LOGIN="host/ansible/ansible-oidc-host"
+      # Request a signed JWT from the embedded OIDC provider (exposed on localhost:8080)
+      wait_for_oidc_provider
+      CONJUR_AUTHN_JWT_TOKEN=$(curl -sf -X POST http://localhost:8080/token \
+        -H 'Content-Type: application/json' \
+        -d '{"claims":{"sub":"ansible-oidc-test","email":"ansible@oidc-test.local"}}' \
+        | jq -r '.token')
+      if [[ -z "${CONJUR_AUTHN_JWT_TOKEN:-}" ]]; then
+        echo "ERROR: Failed to obtain JWT token from embedded OIDC provider"
+        exit 1
+      fi
+      export CONJUR_AUTHN_JWT_TOKEN
       ;;
     *)
       echo "Unknown authentication type: $AUTHN_TYPE"
@@ -248,6 +264,21 @@ function setup_conjur_resources {
         conjur list
       "
      ;;
+    "jwt-oidc")
+      docker exec "$(cli_cid)" bash -ec "
+        conjur policy load -b root -f $policy_path/oss_ent/jwt/authn-jwt-oidc-provider.yml
+        conjur policy load -b root -f $policy_path/oss_ent/jwt/authn-jwt-oidc-provider-host.yml
+        conjur variable set -i conjur/authn-jwt/oidc-provider/jwks-uri \
+          -v 'http://oidc-provider:8080/.well-known/jwks.json'
+        conjur variable set -i conjur/authn-jwt/oidc-provider/issuer \
+          -v 'http://oidc-provider:8080'
+        conjur variable set -i ansible/target-password -v target_secret_password
+        conjur variable set -i ansible/test-secret -v test_secret_password
+        conjur variable set -i ansible/test-secret-in-file -v test_secret_in_file_password
+        conjur variable set -i 'ansible/var with spaces' -v var_with_spaces_secret_password
+        conjur list
+      "
+      ;;
     *)
       echo "Unknown authentication type: $AUTHN_TYPE"
       exit 1
@@ -255,6 +286,21 @@ function setup_conjur_resources {
   esac
 }
 
+
+function wait_for_oidc_provider {
+  echo "---- waiting for embedded OIDC provider ----"
+  local max_attempts=30
+  for i in $(seq 1 $max_attempts); do
+    if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+      echo "---- OIDC provider ready ----"
+      return 0
+    fi
+    echo "  attempt $i/$max_attempts — not ready yet, retrying..."
+    sleep 2
+  done
+  echo "ERROR: Embedded OIDC provider did not become ready after $((max_attempts * 2)) seconds" >&2
+  exit 1
+}
 
 function generate_authn_cert_certificates {
   local cert_dir
@@ -294,8 +340,10 @@ function generate_authn_cert_certificates {
 
 function deploy_conjur_open_source() {
   echo "---- deploying Conjur Open Source ----"
-  # start conjur server
-  docker compose up -d --build conjur conjur-proxy-nginx
+  # Start the embedded OIDC provider alongside Conjur when jwt-oidc auth is requested
+  local extra_services=""
+  [[ "$AUTHN_TYPE" == "jwt-oidc" ]] && extra_services="oidc-provider"
+  docker compose up -d --build conjur conjur-proxy-nginx $extra_services
   set_conjur_cid "$(docker compose ps -q conjur)"
   wait_for_conjur
 
@@ -316,7 +364,7 @@ function deploy_conjur_enterprise {
   ensure_submodules
 
   pushd ./conjur-intro
-    export CONJUR_AUTHENTICATORS="authn,authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-cert/x509-service"
+    export CONJUR_AUTHENTICATORS="authn,authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-cert/x509-service,authn-jwt/oidc-provider"
     # start conjur leader and follower
     ./bin/dap --provision-master
     ./bin/dap --import-custom-certificates
@@ -458,6 +506,10 @@ function main() {
       export CONJUR_ACCOUNT='demo'
       DOCKER_NETWORK='dap_net'
       deploy_conjur_enterprise
+      if [[ "$AUTHN_TYPE" == "jwt-oidc" ]]; then
+        docker compose up -d --build oidc-provider
+        docker network connect --alias oidc-provider dap_net "$(docker compose ps -q oidc-provider)"
+      fi
       set_authentication_variables
       deploy_ansible "$DOCKER_NETWORK"
       set_ansible_cid "$(docker compose ps -q ansible)"

@@ -28,7 +28,7 @@ Conjur Ansible Collection :: Test runner
 $0 [options]
 
 -a            Run all test files in default test directories.
--u <auth_type>  Specify the authentication type(e.g., api_key, azure, iam, gcp, authn-cert).
+-u <auth_type>  Specify the authentication type(e.g., api_key, azure, iam, gcp, authn-cert, jwt-oidc).
 -d            Run tests against the existing development environment. This option
               overrides -e, -p and -v in favor of existing services.
 -e            Deploy Conjur Enterprise. (Default: Conjur Open Source)

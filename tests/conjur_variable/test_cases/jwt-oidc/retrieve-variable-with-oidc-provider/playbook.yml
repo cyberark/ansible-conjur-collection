@@ -1,0 +1,27 @@
+---
+# Integration test: successful secret retrieval using authn-jwt with the
+# embedded OIDC provider (jwks-uri mode).
+#
+# Prerequisites (handled by start.sh and docker-compose):
+#   - oidc-provider container is running alongside Conjur in Docker Compose
+#   - Conjur is configured with conjur/authn-jwt/oidc-provider/jwks-uri and
+#     conjur/authn-jwt/oidc-provider/issuer pointing to the oidc-provider container
+#   - CONJUR_AUTHN_JWT_TOKEN holds a JWT signed by the embedded OIDC provider
+#     with claim email=ansible@oidc-test.local, matching the host annotation
+- name: Retrieve Conjur variable using authn-jwt with embedded OIDC provider
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact path
+      file:
+        state: absent
+        path: /conjur_secrets.txt
+
+    - name: Retrieve Conjur variable via authn-jwt (embedded OIDC provider, URL mode)
+      vars:
+        super_secret_key: >-
+          {{ lookup('conjur_variable', 'ansible/test-secret',
+               conjur_authn_type='jwt',
+               conjur_authn_service_id=lookup('env', 'CONJUR_AUTHN_SERVICE_ID'),
+               conjur_authn_jwt_token=lookup('env', 'CONJUR_AUTHN_JWT_TOKEN')) }}
+      shell: echo "{{ super_secret_key }}" > /conjur_secrets.txt

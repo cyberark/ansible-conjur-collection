@@ -1,0 +1,5 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+export CONJUR_AUTHN_TYPE=jwt
+export CONJUR_AUTHN_SERVICE_ID=oidc-provider
+# CONJUR_AUTHN_JWT_TOKEN is injected by docker-compose from the embedded OIDC provider
+# (fetched by start.sh via POST http://localhost:8080/token before starting Ansible)

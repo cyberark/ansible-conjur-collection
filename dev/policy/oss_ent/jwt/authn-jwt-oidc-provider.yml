@@ -1,0 +1,25 @@
+---
+# JWT authenticator policy using the embedded OIDC provider.
+#
+# Conjur fetches the JWKS from the oidc-provider container running in the same
+# Docker network — no internet access required.
+#
+# Required variables (set by start.sh):
+#   conjur/authn-jwt/oidc-provider/jwks-uri  → http://oidc-provider:8080/.well-known/jwks.json
+#   conjur/authn-jwt/oidc-provider/issuer    → http://oidc-provider:8080
+- !policy
+  id: conjur/authn-jwt/oidc-provider
+  body:
+    - !webservice
+      annotations:
+        description: JWT authenticator backed by the embedded OIDC provider
+
+    - !variable jwks-uri
+    - !variable issuer
+
+    - !group apps
+
+    - !permit
+      role: !group apps
+      privilege: [ read, authenticate ]
+      resource: !webservice
