@@ -283,6 +283,36 @@ pipeline {
       }
     }
 
+    stage('JWT Integration Tests') {
+      stages {
+        stage('Run JWT Integration Tests with Conjur OSS') {
+          steps {
+            parallel(
+                    "Ansible 11": {
+                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                    },
+                    "Ansible 12": {
+                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                    }
+            )
+          }
+        }
+
+        stage('Run JWT Integration Tests with Conjur Enterprise') {
+          steps {
+            parallel(
+                    "Ansible 11": {
+                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                    },
+                    "Ansible 12": {
+                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                    }
+            )
+          }
+        }
+      }
+    }
+
     stage('Azure Integration Tests') {
       stages {
         stage('Run Azure Integration Tests with Conjur OSS') {
@@ -691,6 +721,11 @@ static def runIamIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, 
 static def runAuthnCertIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
   executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a authn-cert -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u authn-cert -d -t conjur_variable'
+}
+
+static def runJwtOidcIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+  executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a jwt-oidc -v ${ansibleVersion} -p ${pythonVersion}"
+  executorAgent.agentSh './ci/test.sh -u jwt-oidc -d -t conjur_variable'
 }
 
 static def runAzureIntegrationTests(azureExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion) {

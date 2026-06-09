@@ -870,7 +870,8 @@ def _fetch_conjur_jwt_token(
 
     # Prepare headers
     headers = {
-        'x-cybr-telemetry': encoded_telemetry
+        'x-cybr-telemetry': encoded_telemetry,
+        'Content-Type': 'application/x-www-form-urlencoded',
     }
 
     try:
@@ -902,6 +903,9 @@ def _fetch_conjur_jwt_token(
         if response.getcode() != 200:
             raise AnsibleError(f"Error authenticating with Conjur: HTTP {str(response.getcode())}")
         return response.read()
+
+    except urllib_error.HTTPError as error:
+        raise AnsibleError(f"Error fetching identity token: HTTP {error.code} {error.reason}") from error
 
     except urllib_error.URLError as error:
         raise AnsibleError(f"Error fetching identity token: URL error occurred - {str(error)}") from error

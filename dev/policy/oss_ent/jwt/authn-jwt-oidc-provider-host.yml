@@ -1,0 +1,31 @@
+---
+# Host policy for the embedded OIDC provider integration tests.
+#
+# Annotation check: Conjur verifies that the JWT's 'email' claim matches the
+# annotation value below — only tokens carrying this exact email are accepted.
+# The OIDC provider is configured in start.sh to include this claim.
+- !policy
+  id: ansible
+  annotations:
+    description: Policy for Ansible hosts using JWT + embedded OIDC provider
+  body:
+    - &variables
+      - !variable target-password
+      - !variable test-secret
+      - !variable test-secret-in-file
+      - !variable "var with spaces"
+
+    - !host
+      id: ansible-oidc-host
+      annotations:
+        description: Ansible host authenticated via embedded OIDC provider
+        authn-jwt/oidc-provider/email: ansible@oidc-test.local
+
+    - !permit
+      role: !host ansible-oidc-host
+      privileges: [ read, execute ]
+      resource: *variables
+
+- !grant
+  role: !group conjur/authn-jwt/oidc-provider/apps
+  member: !host ansible/ansible-oidc-host

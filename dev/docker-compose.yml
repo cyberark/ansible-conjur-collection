@@ -18,6 +18,7 @@ services:
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
       CONJUR_CLIENT_CERT_FILE: ${CONJUR_CLIENT_CERT_FILE}
       CONJUR_CLIENT_KEY_FILE: ${CONJUR_CLIENT_KEY_FILE}
+      CONJUR_AUTHN_JWT_TOKEN: ${CONJUR_AUTHN_JWT_TOKEN:-}
       IS_CLOUD: false
       # NOTE: Explicitly setting the ANSIBLE_CONFIG envvar avoids Ansible ignoring
       # the configuration because it is in a world-writable working directory,
@@ -58,7 +59,7 @@ services:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: "W0BuL8iTr/7QvtjIluJbrb5LDAnmXzmcpxkqihO3dXA="
       CONJUR_FEATURE_AUTHENTICATOR_SERVICE_ENABLED: "true"
-      CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp
+      CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-jwt/oidc-provider
     depends_on:
       - pg
     networks:
@@ -107,6 +108,17 @@ services:
       - "443:443"
     depends_on:
       - conjur
+
+  oidc-provider:
+    build:
+      context: ./oidc-provider
+    environment:
+      OIDC_ISSUER: http://oidc-provider:8080
+      PORT: "8080"
+    ports:
+      - "8080:8080"
+    networks:
+      - default
 
 networks:
   dap_net:

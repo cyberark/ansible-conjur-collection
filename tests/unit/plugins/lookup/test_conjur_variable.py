@@ -5,6 +5,8 @@ import hashlib
 import hmac
 import json
 import os
+import re
+import tempfile
 import urllib.parse
 from base64 import b64encode
 from unittest import TestCase
@@ -22,7 +24,7 @@ from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
     _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token,
     InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token,
     _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token,
-    _store_secret_in_file,
+    _read_jwt_token_file, _store_secret_in_file,
 )
 
 
@@ -147,7 +149,8 @@ class TestConjurLookup(TestCase):
         terms = ['ansible/fake-secret']
         kwargs = {'as_file': True, 'conf_file': 'conf_file', 'validate_certs': False}
         filepaths = self.lookup.run(terms, **kwargs)
-        self.assertRegex(filepaths[0], '/dev/shm/.*')
+        expected_dir = "/dev/shm" if os.access("/dev/shm", os.W_OK) else tempfile.gettempdir()
+        self.assertRegex(filepaths[0], re.escape(expected_dir) + r'/.*')
 
         with open(filepaths[0], encoding='utf-8') as file:
             content = file.read()
@@ -191,7 +194,8 @@ class TestConjurLookup(TestCase):
         self.assertEqual(output, ["conjur_variable"])
 
     def test_run_telemetry_header(self):
-        with patch('os.path.isfile', return_value=True), \
+        with patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.telemetry_header', new=None), \
+             patch('os.path.isfile', return_value=True), \
              patch('builtins.open', mock_open(read_data='1.0.0')), \
              patch('os.path.abspath', return_value='/fake/path/to/collection'), \
              patch('os.path.dirname', return_value='/fake/path/to/plugin'):
@@ -544,11 +548,24 @@ class TestConjurLookup(TestCase):
         self.assertIn("Invalid Certificate format.", str(context.exception))
 
     def test_certificate_parsing_error(self):
+        # Patch load_pem_x509_certificate to raise ValueError regardless of whether
+        # the cryptography library is installed in the test environment.
         cert_content = """-----BEGIN CERTIFICATE-----
         FakeCertificate
         -----END CERTIFICATE-----"""
-        with self.assertRaises(AnsibleError) as context:
-            _validate_pem_certificate(cert_content)
+        # Both symbols may be absent when the cryptography package is not
+        # installed in the test environment; create=True adds them temporarily.
+        with patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.default_backend',
+            return_value=None,
+            create=True,
+        ), patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.load_pem_x509_certificate',
+            side_effect=ValueError('Could not deserialize key data'),
+            create=True,
+        ):
+            with self.assertRaises(AnsibleError) as context:
+                _validate_pem_certificate(cert_content)
 
         self.assertIn("Invalid certificate content provided", str(context.exception))
 
@@ -846,7 +863,10 @@ class TestFetchConjurJwtToken(TestCase):
             expected_url,
             method='POST',
             data='jwt=signed-jwt-payload',
-            headers={'x-cybr-telemetry': 'fake_telemetry'},
+            headers={
+                'x-cybr-telemetry': 'fake_telemetry',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
             validate_certs=True,
             ca_path='/path/fake-ca.pem',
             timeout=10,
@@ -908,6 +928,27 @@ class TestFetchConjurJwtToken(TestCase):
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_http_error_raises_ansible_error(self, mock_open_url, mock_telemetry_header):
+        """HTTPError from open_url should raise AnsibleError with HTTP status code."""
+        mock_telemetry_header.return_value = 't'
+        http_error = urllib_error.HTTPError(
+            url='https://conjur/authn-jwt/svc/acc/host/authenticate',
+            code=401,
+            msg='Unauthorized',
+            hdrs={},
+            fp=None,
+        )
+        mock_open_url.side_effect = http_error
+
+        with self.assertRaises(AnsibleError) as ctx:
+            self._call()
+
+        error_msg = str(ctx.exception)
+        self.assertIn('401', error_msg)
+        self.assertNotIn('CONJ', error_msg)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
     def test_jwt_token_runtime_error(self, mock_open_url, mock_telemetry_header):
         mock_telemetry_header.return_value = 't'
         mock_open_url.side_effect = RuntimeError('tls handshake failed')
@@ -927,6 +968,207 @@ class TestFetchConjurJwtToken(TestCase):
             self._call()
 
         self.assertIn('bad response', str(ctx.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_jwt_token_app_property_mode_url_excludes_host_id(self, mock_open_url, mock_telemetry_header):
+        """When host_id is None (token-app-property mode) the URL must NOT contain a host segment."""
+        mock_telemetry_header.return_value = 't'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'conjur-token'
+        mock_open_url.return_value = mock_response
+
+        self._call(host_id=None)
+
+        url_used = mock_open_url.call_args[0][0]
+        # Must end with /{account}/authenticate, no extra path segment for host
+        self.assertTrue(url_used.endswith('fakeaccount/authenticate'), url_used)
+        self.assertNotIn('ansible', url_used)
+
+
+class TestReadJwtTokenFile(TestCase):
+    """Unit tests for _read_jwt_token_file."""
+
+    FAKE_TOKEN_FILE = '/tmp/fake_jwt_token_test'
+
+    @patch('os.stat')
+    @patch('os.path.exists', return_value=True)
+    def test_read_jwt_token_file_success(self, _mock_exists, mock_stat):
+        """Returns stripped token content when file exists and has secure permissions."""
+        mock_stat_result = MagicMock()
+        mock_stat_result.st_mode = 0o100600
+        mock_stat.return_value = mock_stat_result
+
+        with patch('builtins.open', mock_open(read_data='my-signed-jwt-token\n')):
+            result = _read_jwt_token_file(self.FAKE_TOKEN_FILE)
+
+        self.assertEqual(result, 'my-signed-jwt-token')
+
+    @patch('os.path.exists', return_value=False)
+    def test_read_jwt_token_file_not_found_raises(self, _mock_exists):
+        """Raises AnsibleError when the token file does not exist."""
+        with self.assertRaises(AnsibleError) as ctx:
+            _read_jwt_token_file(self.FAKE_TOKEN_FILE)
+
+        self.assertIn('does not exist', str(ctx.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.display')
+    @patch('os.stat')
+    @patch('os.path.exists', return_value=True)
+    def test_read_jwt_token_file_insecure_permissions_warns(self, _mock_exists, mock_stat, mock_display):
+        """Issues a warning but still returns the token when permissions are too open."""
+        mock_stat_result = MagicMock()
+        mock_stat_result.st_mode = 0o100644  # group/other readable — insecure
+        mock_stat.return_value = mock_stat_result
+
+        with patch('builtins.open', mock_open(read_data='token-data')):
+            result = _read_jwt_token_file(self.FAKE_TOKEN_FILE)
+
+        self.assertEqual(result, 'token-data')
+        mock_display.warning.assert_called_once()
+        self.assertIn('insecure permissions', mock_display.warning.call_args[0][0])
+
+    @patch('os.stat')
+    @patch('os.path.exists', return_value=True)
+    def test_read_jwt_token_file_os_error_raises(self, _mock_exists, mock_stat):
+        """Raises AnsibleError wrapping the OSError when the file cannot be read."""
+        mock_stat_result = MagicMock()
+        mock_stat_result.st_mode = 0o100600
+        mock_stat.return_value = mock_stat_result
+
+        with patch('builtins.open', side_effect=OSError('permission denied')):
+            with self.assertRaises(AnsibleError) as ctx:
+                _read_jwt_token_file(self.FAKE_TOKEN_FILE)
+
+        self.assertIn('Failed to read', str(ctx.exception))
+        self.assertIn('permission denied', str(ctx.exception))
+
+
+class TestLookupModuleJwt(TestCase):
+    """run() integration tests for the authn-jwt authentication path."""
+
+    _BASE_VARS = {
+        'conjur_account': 'fakeaccount',
+        'conjur_appliance_url': 'https://conjur-fake',
+        'conjur_cert_file': './conjur.pem',
+        'conjur_authn_login': 'host/ansible/ansible-jwt-host',
+        'conjur_authn_type': 'jwt',
+        'conjur_authn_service_id': 'jwt-service',
+        'conjur_authn_jwt_token': 'signed-jwt-payload',
+    }
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_jwt_token')
+    def test_run_jwt_url_mode(self, mock_fetch_jwt_token, mock_fetch_variable, mock_get_cert_file):
+        """Default URL mode: host_id is included in the _fetch_conjur_jwt_token call."""
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_fetch_jwt_token.return_value = b'conjur-session-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('conjur_variable')
+        result = lookup.run(['ansible/fake-secret'], dict(self._BASE_VARS))
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_fetch_jwt_token.assert_called_once_with(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='jwt-service',
+            host_id='host/ansible/ansible-jwt-host',
+            jwt_token='signed-jwt-payload',
+            validate_certs=True,
+            cert_file='./conjur.pem',
+        )
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_jwt_token')
+    def test_run_jwt_token_app_property_mode(self, mock_fetch_jwt_token, mock_fetch_variable, mock_get_cert_file):
+        """token-app-property mode: no login required; host_id passed as None."""
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_fetch_jwt_token.return_value = b'conjur-session-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            # No conjur_authn_login — identity comes from JWT claim mapping
+            'conjur_authn_type': 'jwt',
+            'conjur_authn_service_id': 'jwt-service',
+            'conjur_authn_jwt_token': 'signed-jwt-payload',
+            'conjur_authn_jwt_mode': 'token-app-property',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_fetch_jwt_token.assert_called_once_with(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='jwt-service',
+            host_id=None,
+            jwt_token='signed-jwt-payload',
+            validate_certs=True,
+            cert_file='./conjur.pem',
+        )
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_jwt_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._read_jwt_token_file')
+    def test_run_jwt_with_token_file(
+        self, mock_read_jwt_file, mock_fetch_jwt_token, mock_fetch_variable, mock_get_cert_file
+    ):
+        """When jwt_token_file is set and jwt_token is absent, _read_jwt_token_file is called."""
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_read_jwt_file.return_value = 'token-from-file'
+        mock_fetch_jwt_token.return_value = b'conjur-session-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/ansible/ansible-jwt-host',
+            'conjur_authn_type': 'jwt',
+            'conjur_authn_service_id': 'jwt-service',
+            'conjur_authn_jwt_token_file': '/run/secrets/jwt_token',
+            # conjur_authn_jwt_token intentionally absent — plugin must read from file
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_read_jwt_file.assert_called_once_with('/run/secrets/jwt_token')
+        mock_fetch_jwt_token.assert_called_once_with(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='jwt-service',
+            host_id='host/ansible/ansible-jwt-host',
+            jwt_token='token-from-file',
+            validate_certs=True,
+            cert_file='./conjur.pem',
+        )
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    def test_run_jwt_missing_service_id_raises(self, mock_get_cert_file):
+        """AnsibleError is raised when conjur_authn_service_id is absent for authn-jwt."""
+        mock_get_cert_file.return_value = './conjur.pem'
+
+        lookup = lookup_loader.get('conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/ansible/ansible-jwt-host',
+            'conjur_authn_type': 'jwt',
+            # conjur_authn_service_id intentionally absent
+            'conjur_authn_jwt_token': 'signed-jwt-payload',
+        }
+        with self.assertRaises(AnsibleError):
+            lookup.run(['ansible/fake-secret'], variables)
 
 
 class TestFetchConjurCertToken(TestCase):
