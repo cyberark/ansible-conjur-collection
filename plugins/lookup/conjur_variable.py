@@ -277,6 +277,22 @@ DOCUMENTATION = """
         default: 10
         vars:
           - name: conjur_retry_interval
+      conjur_http_proxy:
+        description: >
+          URL of an HTTP or HTTPS proxy to use for all Conjur requests
+          (authentication and secret retrieval). Cloud provider metadata
+          endpoint calls (AWS IMDS, Azure IMDS, GCP metadata) are not
+          routed through this proxy.
+          Accepts standard proxy URL format: http://[user:pass@]host:port
+        type: string
+        required: False
+        ini:
+          - section: conjur,
+            key: http_proxy
+        vars:
+          - name: conjur_http_proxy
+        env:
+          - name: CONJUR_HTTP_PROXY
 """
 
 EXAMPLES = """
@@ -302,6 +318,7 @@ import traceback
 import ssl
 import re
 import shutil
+import contextlib
 from base64 import b64encode
 from netrc import netrc
 from time import sleep
@@ -331,6 +348,27 @@ else:
 display = Display()
 temp_cert_file = None
 telemetry_header = None
+
+
+@contextlib.contextmanager
+def _conjur_proxy_env(proxy_url):
+    """Temporarily set HTTP/HTTPS proxy env vars for Conjur-bound requests."""
+    if not proxy_url:
+        yield
+        return
+
+    env_keys = ('HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy')
+    saved = {k: os.environ.get(k) for k in env_keys}
+    try:
+        for k in env_keys:
+            os.environ[k] = proxy_url
+        yield
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
 
 
 # ************* REQUEST VALUES *************
@@ -575,7 +613,7 @@ def _create_conjur_iam_api_key(iam_role_name=None, access_key=None, secret_key=N
 
 def _fetch_conjur_iam_session_token(
     appliance_url, account, service_id, host_id, cert_file, validate_certs,
-    iam_role_name=None, access_key=None, secret_key=None, token=None
+    iam_role_name=None, access_key=None, secret_key=None, token=None, proxy_url=None
 ):
     """
     Retrieves the Conjur IAM session token for the provided service and IAM role credentials.
@@ -600,14 +638,15 @@ def _fetch_conjur_iam_session_token(
     iam_api_key = _create_conjur_iam_api_key(iam_role_name, access_key, secret_key, token)
 
     try:
-        res = open_url(
-            url,
-            data=iam_api_key,
-            method='POST',
-            validate_certs=validate_certs,
-            ca_path=cert_file,
-            headers=headers
-        )
+        with _conjur_proxy_env(proxy_url):
+            res = open_url(
+                url,
+                data=iam_api_key,
+                method='POST',
+                validate_certs=validate_certs,
+                ca_path=cert_file,
+                headers=headers
+            )
         res_body = res.read()
         if res.getcode() == 401:
             raise ConjurIAMAuthnException()
@@ -814,7 +853,7 @@ def _telemetry_header():
 
 
 # Use credentials to retrieve temporary authorization token
-def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file):  # pylint: disable=too-many-arguments
+def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, cert_file, proxy_url=None):  # pylint: disable=too-many-arguments
     conjur_url = f'{conjur_url}/authn/{account}/{_encode_str(username)}/authenticate'
     display.vvvv(f'Authentication request to Conjur at: {conjur_url}, with user: {_encode_str(username)}')
 
@@ -826,12 +865,13 @@ def _fetch_conjur_token(conjur_url, account, username, api_key, validate_certs, 
         'x-cybr-telemetry': encoded_telemetry
     }
 
-    response = open_url(conjur_url,
-                        data=api_key,
-                        method='POST',
-                        validate_certs=validate_certs,
-                        ca_path=cert_file,
-                        headers=headers)
+    with _conjur_proxy_env(proxy_url):
+        response = open_url(conjur_url,
+                            data=api_key,
+                            method='POST',
+                            validate_certs=validate_certs,
+                            ca_path=cert_file,
+                            headers=headers)
     code = response.getcode()
     if code != 200:
         raise AnsibleError(f'Failed to authenticate as \'{username}\' (got {code} response)')
@@ -863,7 +903,7 @@ def _read_jwt_token_file(token_file):
 
 def _fetch_conjur_jwt_token(
     appliance_url, account, service_id,
-    host_id, jwt_token, cert_file, validate_certs
+    host_id, jwt_token, cert_file, validate_certs, proxy_url=None
 ):
     # Get the telemetry header
     encoded_telemetry = _telemetry_header()
@@ -890,15 +930,16 @@ def _fetch_conjur_jwt_token(
 
         token = f"jwt={jwt_token}"
 
-        response = open_url(
-            url,
-            method='POST',
-            data=token,
-            headers=headers,
-            validate_certs=validate_certs,
-            ca_path=cert_file,
-            timeout=10
-        )
+        with _conjur_proxy_env(proxy_url):
+            response = open_url(
+                url,
+                method='POST',
+                data=token,
+                headers=headers,
+                validate_certs=validate_certs,
+                ca_path=cert_file,
+                timeout=10
+            )
         if response.getcode() != 200:
             raise AnsibleError(f"Error authenticating with Conjur: HTTP {str(response.getcode())}")
         return response.read()
@@ -944,25 +985,27 @@ def retry(retries, retry_interval):
     return parameters_wrapper
 
 
-def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None, retry_interval=10):
+def _repeat_open_url(url, headers=None, method=None, validate_certs=True, ca_path=None, retry_interval=10, proxy_url=None):
     """
     Wrapper for open_url with retry logic
 
     Args:
         retry_interval: Time in seconds between retry attempts (default: 10)
+        proxy_url: Optional proxy URL for Conjur requests
     """
     @retry(retries=5, retry_interval=retry_interval)
     def _do_request():
-        return open_url(url,
-                        headers=headers,
-                        method=method,
-                        validate_certs=validate_certs,
-                        ca_path=ca_path)
+        with _conjur_proxy_env(proxy_url):
+            return open_url(url,
+                            headers=headers,
+                            method=method,
+                            validate_certs=validate_certs,
+                            ca_path=ca_path)
     return _do_request()
 
 
 # Retrieve Conjur variable using the temporary token
-def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file, retry_interval=10):  # pylint: disable=too-many-arguments
+def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate_certs, cert_file, retry_interval=10, proxy_url=None):  # pylint: disable=too-many-arguments
     token = b64encode(token)
     # Get the telemetry header
     encoded_telemetry = _telemetry_header()
@@ -980,7 +1023,8 @@ def _fetch_conjur_variable(conjur_variable, token, conjur_url, account, validate
                                 method='GET',
                                 validate_certs=validate_certs,
                                 ca_path=cert_file,
-                                retry_interval=retry_interval)
+                                retry_interval=retry_interval,
+                                proxy_url=proxy_url)
 
     if response.getcode() == 200:
         display.vvvv(f'Conjur variable {conjur_variable} was successfully retrieved')
@@ -1051,7 +1095,7 @@ def _validate_authn_cert_files(client_cert_file, client_key_file):
 def _fetch_conjur_cert_token(
     appliance_url, account, service_id, host_id,
     client_cert_file, client_key_file,
-    ca_cert_file, validate_certs
+    ca_cert_file, validate_certs, proxy_url=None
 ):
     """
     Authenticates to Conjur using the authn-cert certificate authenticator.
@@ -1124,16 +1168,17 @@ def _fetch_conjur_cert_token(
     )
 
     try:
-        res = open_url(
-            url,
-            data=b'',
-            method='POST',
-            headers=headers,
-            validate_certs=validate_certs,
-            ca_path=ca_cert_file,
-            client_cert=client_cert_file,
-            client_key=client_key_file,
-        )
+        with _conjur_proxy_env(proxy_url):
+            res = open_url(
+                url,
+                data=b'',
+                method='POST',
+                headers=headers,
+                validate_certs=validate_certs,
+                ca_path=ca_cert_file,
+                client_cert=client_cert_file,
+                client_key=client_key_file,
+            )
         if res.getcode() != 200:
             raise AnsibleError(
                 f'Failed to authenticate with certificate (got {str(res.getcode())} response)'
@@ -1162,7 +1207,7 @@ def _fetch_conjur_cert_token(
 # Fetch token from aure vm, func, app and authn with conjur for access token
 def _fetch_conjur_azure_token(
     appliance_url, account, service_id,
-    host_id, cert_file, validate_certs, client_id=""
+    host_id, cert_file, validate_certs, client_id="", proxy_url=None
 ):
     try:
         params = {
@@ -1207,15 +1252,16 @@ def _fetch_conjur_azure_token(
         headers = {
             'x-cybr-telemetry': encoded_telemetry
         }
-        response = open_url(
-            url,
-            method='POST',
-            data=token.encode('utf-8'),
-            headers=headers,
-            validate_certs=validate_certs,
-            ca_path=cert_file,
-            timeout=10
-        )
+        with _conjur_proxy_env(proxy_url):
+            response = open_url(
+                url,
+                method='POST',
+                data=token.encode('utf-8'),
+                headers=headers,
+                validate_certs=validate_certs,
+                ca_path=cert_file,
+                timeout=10
+            )
         if response.getcode() != 200:
             raise AnsibleError(f"Error authenticating with Conjur: HTTP {str(response.getcode())}")
         return response.read()
@@ -1235,7 +1281,7 @@ def _fetch_conjur_azure_token(
 
 
 def _fetch_conjur_gcp_identity_token(
-    appliance_url, account, host_id, cert_file, validate_certs
+    appliance_url, account, host_id, cert_file, validate_certs, proxy_url=None
 ):
     try:
         params = {
@@ -1270,15 +1316,16 @@ def _fetch_conjur_gcp_identity_token(
         headers = {
             'x-cybr-telemetry': encoded_telemetry
         }
-        response = open_url(
-            url,
-            method='POST',
-            data=token.encode('utf-8'),
-            headers=headers,
-            validate_certs=validate_certs,
-            ca_path=cert_file,
-            timeout=10
-        )
+        with _conjur_proxy_env(proxy_url):
+            response = open_url(
+                url,
+                method='POST',
+                data=token.encode('utf-8'),
+                headers=headers,
+                validate_certs=validate_certs,
+                ca_path=cert_file,
+                timeout=10
+            )
         if response.getcode() != 200:
             raise AnsibleError(f"Error: Received status code {str(response.getcode())}")
 
@@ -1333,6 +1380,7 @@ class LookupModule(LookupBase):
         cert_mode = self.get_var_value("conjur_authn_cert_mode") or "request"
         jwt_mode = self.get_var_value("conjur_authn_jwt_mode") or "url"
         retry_interval = self.get_option('retry_interval')
+        proxy_url = self.get_var_value("conjur_http_proxy")
 
         validate_certs = self.get_option('validate_certs')
         conf_file = self.get_option('config_file')
@@ -1425,7 +1473,8 @@ class LookupModule(LookupBase):
                         host_id=identity['id'],
                         service_id=service_id,
                         validate_certs=validate_certs,
-                        cert_file=cert_file
+                        cert_file=cert_file,
+                        proxy_url=proxy_url
                     )
                 elif authn_type == "azure":
                     token = _fetch_conjur_azure_token(
@@ -1435,7 +1484,8 @@ class LookupModule(LookupBase):
                         service_id=service_id,
                         validate_certs=validate_certs,
                         cert_file=cert_file,
-                        client_id=azure_client_id
+                        client_id=azure_client_id,
+                        proxy_url=proxy_url
                     )
                 elif authn_type == "gcp":
                     token = _fetch_conjur_gcp_identity_token(
@@ -1444,6 +1494,7 @@ class LookupModule(LookupBase):
                         host_id=identity['id'],
                         validate_certs=validate_certs,
                         cert_file=cert_file,
+                        proxy_url=proxy_url
                     )
                 elif authn_type == "jwt":
                     if jwt_token_file and not jwt_token:
@@ -1458,6 +1509,7 @@ class LookupModule(LookupBase):
                         jwt_token=jwt_token,
                         validate_certs=validate_certs,
                         cert_file=cert_file,
+                        proxy_url=proxy_url
                     )
                 elif authn_type == "authn-cert":
                     token = _fetch_conjur_cert_token(
@@ -1469,7 +1521,8 @@ class LookupModule(LookupBase):
                         client_cert_file=client_cert_file,
                         client_key_file=client_key_file,
                         ca_cert_file=cert_file,
-                        validate_certs=validate_certs
+                        validate_certs=validate_certs,
+                        proxy_url=proxy_url
                     )
                 else:
                     token = _fetch_conjur_token(
@@ -1478,7 +1531,8 @@ class LookupModule(LookupBase):
                         identity['id'],
                         identity['api_key'],
                         validate_certs,
-                        cert_file
+                        cert_file,
+                        proxy_url
                     )
             else:
                 if not os.path.exists(conf['authn_token_file']):
@@ -1493,7 +1547,8 @@ class LookupModule(LookupBase):
                 conf['account'],
                 validate_certs,
                 cert_file,
-                retry_interval
+                retry_interval,
+                proxy_url
             )
         finally:
             if isinstance(token, bytes):
