@@ -22,7 +22,7 @@ from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
     _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token,
     InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token,
     _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token,
-    _store_secret_in_file,
+    _store_secret_in_file, _conjur_proxy_env,
 )
 
 
@@ -1327,3 +1327,78 @@ class TestStoreSecretInFile(TestCase):
         # should not raise even though file is already gone
         fn(*args, **kwargs)
         self.assertFalse(os.path.exists(path))
+
+
+class TestConjurProxyEnv(TestCase):
+    """Tests for the _conjur_proxy_env context manager."""
+
+    def setUp(self):
+        self._env_keys = ('HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy')
+        self._saved = {k: os.environ.pop(k, None) for k in self._env_keys}
+
+    def tearDown(self):
+        for k in self._env_keys:
+            os.environ.pop(k, None)
+        for k, v in self._saved.items():
+            if v is not None:
+                os.environ[k] = v
+
+    def test_proxy_url_sets_all_env_vars(self):
+        with _conjur_proxy_env('http://proxy.example.com:3128'):
+            for k in self._env_keys:
+                self.assertEqual(os.environ.get(k), 'http://proxy.example.com:3128')
+
+    def test_env_vars_restored_after_context(self):
+        with _conjur_proxy_env('http://proxy.example.com:3128'):
+            pass
+        for k in self._env_keys:
+            self.assertNotIn(k, os.environ)
+
+    def test_existing_env_vars_restored_after_context(self):
+        os.environ['HTTP_PROXY'] = 'http://old-proxy.example.com:8080'
+        with _conjur_proxy_env('http://new-proxy.example.com:3128'):
+            self.assertEqual(os.environ['HTTP_PROXY'], 'http://new-proxy.example.com:3128')
+        self.assertEqual(os.environ['HTTP_PROXY'], 'http://old-proxy.example.com:8080')
+
+    def test_no_proxy_url_is_noop(self):
+        with _conjur_proxy_env(None):
+            for k in self._env_keys:
+                self.assertNotIn(k, os.environ)
+
+    def test_env_vars_restored_on_exception(self):
+        try:
+            with _conjur_proxy_env('http://proxy.example.com:3128'):
+                raise RuntimeError("simulated error")
+        except RuntimeError:
+            pass
+        for k in self._env_keys:
+            self.assertNotIn(k, os.environ)
+
+
+class TestProxyPassedToFetchFunctions(TestCase):
+    """Verify proxy_url is threaded through fetch functions into open_url calls."""
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_fetch_conjur_token_sets_proxy(self, mock_open_url, mock_telemetry_header):
+        mock_telemetry_header.return_value = 'telemetry'
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b'token'
+        mock_open_url.return_value = mock_response
+
+        env_keys = ('HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy')
+        captured = {}
+
+        def capture_env(*args, **kwargs):
+            captured.update({k: os.environ.get(k) for k in env_keys})
+            return mock_response
+
+        mock_open_url.side_effect = capture_env
+
+        _fetch_conjur_token('https://conjur-fake', 'account', 'user', 'key', True, None,
+                            proxy_url='http://proxy.example.com:3128')
+
+        for k in env_keys:
+            self.assertEqual(captured.get(k), 'http://proxy.example.com:3128')
+

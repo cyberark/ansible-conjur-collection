@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Added HTTP proxy support to the `conjur_variable` lookup plugin via `conjur_http_proxy` option
+  (env: `CONJUR_HTTP_PROXY`, Ansible var: `conjur_http_proxy`, ini: `[conjur] http_proxy`).
+  Cloud provider metadata endpoint calls (AWS IMDS, Azure IMDS, GCP metadata) are not proxied.
+  ([#235](https://github.com/cyberark/ansible-conjur-collection/pull/235))
+
 ## [1.3.12] - 2026-05-26
 
 ### Security
