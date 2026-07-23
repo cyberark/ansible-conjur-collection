@@ -221,6 +221,8 @@ This is the default method for authenticating with Secrets Manager using an API 
 
 - `conjur_authn_token_file / CONJUR_AUTHN_TOKEN_FILE`: Path to a file containing a valid Secrets Manager auth token.
 
+- `conjur_http_proxy / CONJUR_HTTP_PROXY`: URL of an HTTP or HTTPS proxy to use for all Conjur requests (e.g., `http://proxy.example.com:3128`). Cloud provider metadata endpoint calls (AWS IMDS, Azure IMDS, GCP metadata) are not routed through this proxy.
+
 #### API Key Authentication
 
 The lookup plugin authenticates the workload using the API key and retrieves the secrets.
@@ -244,6 +246,8 @@ This method uses AWS IAM roles and Instance Metadata Service (IMDS) tokens for a
 - `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
 
 - `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
+
+- `conjur_http_proxy / CONJUR_HTTP_PROXY`: URL of an HTTP or HTTPS proxy to use for Conjur requests. AWS IMDS calls are not proxied.
 
 #### How AWS Authentication Works
 
@@ -273,6 +277,8 @@ This method uses Azure Managed Identity to authenticate with Secrets Manager.
 
 - `azure_client_id / AZURE_CLIENT_ID`: The Azure client ID for User Assigned Managed Identity (optional).
 
+- `conjur_http_proxy / CONJUR_HTTP_PROXY`: URL of an HTTP or HTTPS proxy to use for Conjur requests. Azure IMDS calls are not proxied.
+
 #### How Azure Authentication Works
 
 For Azure Authentication, the plugin uses Azure Instance Metadata Service (IMDS) to retrieve authentication tokens for Azure Managed Identity. This allows the plugin to authenticate workloads running in Azure dynamically, fetching the necessary secrets from Secrets Manager without needing static credentials.
@@ -298,6 +304,8 @@ This method allows you to authenticate using a Google Cloud Platform (GCP) Servi
 
 - `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
 
+- `conjur_http_proxy / CONJUR_HTTP_PROXY`: URL of an HTTP or HTTPS proxy to use for Conjur requests. GCP metadata calls are not proxied.
+
 #### How GCP Authentication Works
 
 For GCP Authentication, the plugin uses Google Cloud Instance Metadata Service (IMDS) to authenticate the workload by retrieving a JWT token. The token is used to authenticate against Secrets Manager, allowing the plugin to fetch the requested secrets securely.
@@ -320,6 +328,8 @@ This method uses jwt tokens for authentication.
 - `conjur_cert_content / CONJUR_CERT_CONTENT`: Content of the Secrets Manager certificate (PEM format).
 
 - `conjur_cert_file / CONJUR_CERT_FILE`: Path to the Secrets Manager certificate file.
+
+- `conjur_http_proxy / CONJUR_HTTP_PROXY`: URL of an HTTP or HTTPS proxy to use for Conjur requests.
 
 
 ### Example Playbooks and Ansible Commands
