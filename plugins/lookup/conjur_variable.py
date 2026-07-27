@@ -629,11 +629,17 @@ def _validate_pem_certificate(cert_content):
     cert_content = re.sub(r'[ \t]+$', '', cert_content, flags=re.M)
     cert_content = re.sub(r'\n+', '\n', cert_content)
 
-    if not re.match(r"^-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----$", cert_content, re.DOTALL):
+    cert_blocks = re.findall(
+        r"-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----",
+        cert_content
+    )
+
+    if not cert_blocks:
         raise AnsibleError("Invalid Certificate format.")
 
     try:
-        load_pem_x509_certificate(cert_content.encode(), default_backend())
+        for cert_block in cert_blocks:
+            load_pem_x509_certificate(cert_block.encode(), default_backend())
         return cert_content
     except ValueError as err:
         raise AnsibleError(

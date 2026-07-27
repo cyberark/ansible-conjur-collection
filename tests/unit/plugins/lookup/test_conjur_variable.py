@@ -577,6 +577,25 @@ class TestConjurLookup(TestCase):
 
         self.assertIn("Invalid Certificate format.", str(context.exception))
 
+    def test_certificate_chain_multiple_blocks_accepted(self):
+        cert_block = (
+            "-----BEGIN CERTIFICATE-----\n"
+            "FakeCertData\n"
+            "-----END CERTIFICATE-----"
+        )
+        chain = cert_block + "\n" + cert_block
+        with patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.default_backend',
+            return_value=None,
+            create=True,
+        ), patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.load_pem_x509_certificate',
+            return_value=None,
+            create=True,
+        ):
+            result = _validate_pem_certificate(chain)
+        self.assertIn("BEGIN CERTIFICATE", result)
+
     def test_valid_aws_account_number_invalid(self):
         self.assertFalse(_valid_aws_account_number("host/ansible/12345678901/test-resource"))
 
