@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [1.3.13] - 2026-07-27
+## [1.3.13] - 2026-07-28
 
 ### Fixed
 - Fixed `conjur_variable` lookup plugin failing when using CA bundle files. The validator now extracts and validates each PEM certificate block individually.
+- Allow validate_certs=true without explicit cert when CA is in system trust store
 
 ## [1.3.12] - 2026-05-26
 
@@ -179,7 +180,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.12...HEAD
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.13...HEAD
+[1.3.13]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.12...v1.3.13
 [1.3.12]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.11...v1.3.12
 [1.3.11]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.10...v1.3.11
 [1.3.10]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.9...v1.3.10

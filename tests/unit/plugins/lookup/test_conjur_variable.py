@@ -38,7 +38,7 @@ class MockFileload(MagicMock):
 
 class TestConjurLookup(TestCase):
     def setUp(self):
-        self.lookup = lookup_loader.get("conjur_variable")
+        self.lookup = lookup_loader.get("cyberark.conjur.conjur_variable")
 
     def test_merge_dictionaries(self):
         functionOutput = _merge_dictionaries(
@@ -492,7 +492,7 @@ class TestConjurLookup(TestCase):
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
     def test_run_missing_certificate(self, mock_fetch_conjur_token, mock_fetch_conjur_variable):
-        mock_fetch_conjur_token.return_value = "token"
+        mock_fetch_conjur_token.return_value = b"token"
         mock_fetch_conjur_variable.return_value = ["conjur_variable"]
 
         variables = {'conjur_account': 'fakeaccount',
@@ -501,13 +501,14 @@ class TestConjurLookup(TestCase):
                      'conjur_authn_api_key': 'fakekey'}
         terms = ['ansible/fake-secret']
 
-        with self.assertRaises(AnsibleError) as context:
-            self.lookup.run(terms, variables)
+        # No certificate provided – should succeed using the system trust store
+        result = self.lookup.run(terms, variables)
+        self.assertEqual(result, ["conjur_variable"])
 
-        self.assertIn(
-            "Both certificate content and certificate file are invalid or missing. Please provide a valid certificate.",
-            context.exception.message
-        )
+        # Confirm that _fetch_conjur_token was called with ca_path=None,
+        # meaning the system CA trust store is used.
+        args, kwargs = mock_fetch_conjur_token.call_args
+        self.assertIsNone(kwargs.get('cert_file') or (args[5] if len(args) > 5 else None))
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
@@ -1086,7 +1087,7 @@ class TestLookupModuleJwt(TestCase):
         mock_fetch_jwt_token.return_value = b'conjur-session-token'
         mock_fetch_variable.return_value = ['super_secret_value']
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         result = lookup.run(['ansible/fake-secret'], dict(self._BASE_VARS))
 
         self.assertEqual(result, ['super_secret_value'])
@@ -1109,7 +1110,7 @@ class TestLookupModuleJwt(TestCase):
         mock_fetch_jwt_token.return_value = b'conjur-session-token'
         mock_fetch_variable.return_value = ['super_secret_value']
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         variables = {
             'conjur_account': 'fakeaccount',
             'conjur_appliance_url': 'https://conjur-fake',
@@ -1146,7 +1147,7 @@ class TestLookupModuleJwt(TestCase):
         mock_fetch_jwt_token.return_value = b'conjur-session-token'
         mock_fetch_variable.return_value = ['super_secret_value']
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         variables = {
             'conjur_account': 'fakeaccount',
             'conjur_appliance_url': 'https://conjur-fake',
@@ -1176,7 +1177,7 @@ class TestLookupModuleJwt(TestCase):
         """AnsibleError is raised when conjur_authn_service_id is absent for authn-jwt."""
         mock_get_cert_file.return_value = './conjur.pem'
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         variables = {
             'conjur_account': 'fakeaccount',
             'conjur_appliance_url': 'https://conjur-fake',
@@ -1447,7 +1448,7 @@ class TestFetchConjurCertToken(TestCase):
         mock_fetch_cert_token.return_value = b'conjur-access-token'
         mock_fetch_variable.return_value = ['super_secret_value']
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         variables = {
             'conjur_account': 'fakeaccount',
             'conjur_appliance_url': 'https://conjur-fake',
@@ -1480,7 +1481,7 @@ class TestFetchConjurCertToken(TestCase):
         mock_fetch_cert_token.return_value = b'conjur-access-token'
         mock_fetch_variable.return_value = ['super_secret_value']
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         variables = {
             'conjur_account': 'fakeaccount',
             'conjur_appliance_url': 'https://conjur-fake',
@@ -1511,7 +1512,7 @@ class TestFetchConjurCertToken(TestCase):
     def test_run_authn_cert_missing_service_id_raises(self, mock_get_cert_file):
         mock_get_cert_file.return_value = './conjur.pem'
 
-        lookup = lookup_loader.get('conjur_variable')
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
         variables = {
             'conjur_account': 'fakeaccount',
             'conjur_appliance_url': 'https://conjur-fake',
