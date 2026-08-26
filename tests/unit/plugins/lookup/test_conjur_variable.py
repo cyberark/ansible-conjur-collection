@@ -6,6 +6,8 @@ import hmac
 import json
 import os
 import re
+import socket
+import ssl
 import tempfile
 import urllib.parse
 from base64 import b64encode
@@ -16,6 +18,7 @@ from ansible.errors import AnsibleError
 from ansible.module_utils.six.moves import urllib_error
 from ansible.plugins.loader import lookup_loader
 
+from ansible_collections.cyberark.conjur.plugins.lookup import conjur_variable as conjur_variable_module
 from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
     _merge_dictionaries, _fetch_conjur_token, _fetch_conjur_variable,
     _validate_pem_certificate, _load_identity_from_file, _load_conf_from_file, _telemetry_header,
@@ -24,7 +27,8 @@ from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
     _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token,
     InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token,
     _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token,
-    _read_jwt_token_file, _store_secret_in_file,
+    _read_jwt_token_file, _store_secret_in_file, retry, _repeat_open_url,
+    _get_valid_certificate, _get_certificate_file,
 )
 
 
@@ -1589,3 +1593,368 @@ class TestStoreSecretInFile(TestCase):
         # should not raise even though file is already gone
         fn(*args, **kwargs)
         self.assertFalse(os.path.exists(path))
+
+
+class TestRetryDecorator(TestCase):
+    """Unit tests for the retry() decorator."""
+
+    def test_retry_succeeds_without_retry(self):
+        target = MagicMock(return_value="ok")
+        wrapped = retry(retries=3, retry_interval=0)(target)
+
+        self.assertEqual(wrapped(), "ok")
+        self.assertEqual(target.call_count, 1)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.sleep')
+    def test_retry_recovers_after_socket_timeout(self, mock_sleep):
+        target = MagicMock(side_effect=[socket.timeout("timed out"), socket.timeout("timed out"), "ok"])
+        wrapped = retry(retries=5, retry_interval=7)(target)
+
+        result = wrapped()
+
+        self.assertEqual(result, "ok")
+        self.assertEqual(target.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
+        mock_sleep.assert_called_with(7)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.sleep')
+    def test_retry_recovers_after_url_error(self, mock_sleep):
+        target = MagicMock(side_effect=[urllib_error.URLError("boom"), "ok"])
+        wrapped = retry(retries=5, retry_interval=0)(target)
+
+        result = wrapped()
+
+        self.assertEqual(result, "ok")
+        self.assertEqual(target.call_count, 2)
+        mock_sleep.assert_called_once_with(0)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.sleep')
+    def test_retry_raises_after_exhausting_attempts(self, mock_sleep):
+        target = MagicMock(side_effect=socket.timeout("still timing out"))
+        wrapped = retry(retries=3, retry_interval=0)(target)
+
+        with self.assertRaises(socket.timeout):
+            wrapped()
+
+        self.assertEqual(target.call_count, 3)
+        # Only retried twice - no sleep after the final, non-retried failure.
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    def test_retry_does_not_retry_non_network_errors(self):
+        target = MagicMock(side_effect=ValueError("not retryable"))
+        wrapped = retry(retries=5, retry_interval=0)(target)
+
+        with self.assertRaises(ValueError):
+            wrapped()
+
+        self.assertEqual(target.call_count, 1)
+
+
+class TestRepeatOpenUrl(TestCase):
+    """Unit tests for _repeat_open_url()."""
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_repeat_open_url_success_no_retry(self, mock_open_url):
+        mock_response = MagicMock()
+        mock_open_url.return_value = mock_response
+
+        result = _repeat_open_url("https://conjur-fake/x", retry_interval=0)
+
+        self.assertIs(result, mock_response)
+        self.assertEqual(mock_open_url.call_count, 1)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.sleep')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_repeat_open_url_retries_on_socket_timeout_then_succeeds(self, mock_open_url, mock_sleep):
+        mock_response = MagicMock()
+        mock_open_url.side_effect = [socket.timeout("timed out"), mock_response]
+
+        result = _repeat_open_url("https://conjur-fake/x", retry_interval=5)
+
+        self.assertIs(result, mock_response)
+        self.assertEqual(mock_open_url.call_count, 2)
+        mock_sleep.assert_called_once_with(5)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.sleep')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_repeat_open_url_retries_on_url_error_then_succeeds(self, mock_open_url, mock_sleep):
+        mock_response = MagicMock()
+        mock_open_url.side_effect = [urllib_error.URLError("conn refused"), mock_response]
+
+        result = _repeat_open_url("https://conjur-fake/x", retry_interval=0)
+
+        self.assertIs(result, mock_response)
+        self.assertEqual(mock_open_url.call_count, 2)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.sleep')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_repeat_open_url_reraises_after_exhausting_retries(self, mock_open_url, mock_sleep):
+        mock_open_url.side_effect = socket.timeout("still timing out")
+
+        with self.assertRaises(socket.timeout):
+            _repeat_open_url("https://conjur-fake/x", retry_interval=0)
+
+        # _repeat_open_url hard-codes retries=5
+        self.assertEqual(mock_open_url.call_count, 5)
+        self.assertEqual(mock_sleep.call_count, 4)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_repeat_open_url_does_not_retry_other_exceptions(self, mock_open_url):
+        mock_open_url.side_effect = ValueError("boom")
+
+        with self.assertRaises(ValueError):
+            _repeat_open_url("https://conjur-fake/x", retry_interval=0)
+
+        self.assertEqual(mock_open_url.call_count, 1)
+
+
+class TestValidatePemCertificateAdditionalBranches(TestCase):
+    """Covers CRLF-only normalization and the ssl.SSLError / generic-exception handlers
+    of _validate_pem_certificate(), which aren't exercised by the pre-existing tests."""
+
+    @staticmethod
+    def _patch_loader(**kwargs):
+        loader_patch = patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.load_pem_x509_certificate',
+            create=True, **kwargs
+        )
+        backend_patch = patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.default_backend',
+            return_value=None, create=True,
+        )
+        return loader_patch, backend_patch
+
+    def test_bare_cr_line_endings_are_normalized(self):
+        cert_block = (
+            "-----BEGIN CERTIFICATE-----\r"
+            "FakeCertData\r"
+            "-----END CERTIFICATE-----"
+        )
+        loader_patch, backend_patch = self._patch_loader(return_value=None)
+        with loader_patch, backend_patch:
+            result = _validate_pem_certificate(cert_block)
+
+        self.assertNotIn('\r', result)
+        self.assertIn('-----BEGIN CERTIFICATE-----', result)
+
+    def test_crlf_line_endings_are_normalized(self):
+        cert_block = (
+            "-----BEGIN CERTIFICATE-----\r\n"
+            "FakeCertData\r\n"
+            "-----END CERTIFICATE-----"
+        )
+        loader_patch, backend_patch = self._patch_loader(return_value=None)
+        with loader_patch, backend_patch:
+            result = _validate_pem_certificate(cert_block)
+
+        self.assertNotIn('\r', result)
+        self.assertIn('-----BEGIN CERTIFICATE-----', result)
+
+    def test_ssl_error_is_wrapped(self):
+        cert_block = (
+            "-----BEGIN CERTIFICATE-----\n"
+            "FakeCertData\n"
+            "-----END CERTIFICATE-----"
+        )
+        loader_patch, backend_patch = self._patch_loader(side_effect=ssl.SSLError("bad handshake data"))
+        with loader_patch, backend_patch:
+            with self.assertRaises(AnsibleError) as ctx:
+                _validate_pem_certificate(cert_block)
+
+        self.assertIn("SSL error while validating the certificate", str(ctx.exception))
+
+    def test_generic_exception_is_wrapped(self):
+        cert_block = (
+            "-----BEGIN CERTIFICATE-----\n"
+            "FakeCertData\n"
+            "-----END CERTIFICATE-----"
+        )
+        loader_patch, backend_patch = self._patch_loader(side_effect=RuntimeError("unexpected"))
+        with loader_patch, backend_patch:
+            with self.assertRaises(AnsibleError) as ctx:
+                _validate_pem_certificate(cert_block)
+
+        self.assertIn("An error occurred while validating the certificate", str(ctx.exception))
+
+
+class TestGetValidCertificate(TestCase):
+    """Unit tests for _get_valid_certificate()."""
+
+    @staticmethod
+    def _patch_loader(**kwargs):
+        loader_patch = patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.load_pem_x509_certificate',
+            create=True, **kwargs
+        )
+        backend_patch = patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.default_backend',
+            return_value=None, create=True,
+        )
+        return loader_patch, backend_patch
+
+    def test_returns_none_when_neither_provided(self):
+        self.assertIsNone(_get_valid_certificate(None, None))
+
+    def test_returns_validated_content_when_content_is_valid(self):
+        cert_content = "-----BEGIN CERTIFICATE-----\nFakeCertData\n-----END CERTIFICATE-----"
+        loader_patch, backend_patch = self._patch_loader(return_value=None)
+        with loader_patch, backend_patch:
+            result = _get_valid_certificate(cert_content, None)
+
+        self.assertIn("BEGIN CERTIFICATE", result)
+
+    def test_falls_back_to_cert_file_when_content_invalid(self):
+        cert_file_content = "-----BEGIN CERTIFICATE-----\nFileCertData\n-----END CERTIFICATE-----"
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fh:
+            fh.write(cert_file_content)
+            cert_file_path = fh.name
+
+        try:
+            loader_patch, backend_patch = self._patch_loader(return_value=None)
+            with loader_patch, backend_patch:
+                result = _get_valid_certificate("not a real cert", cert_file_path)
+
+            self.assertIn("FileCertData", result)
+        finally:
+            os.unlink(cert_file_path)
+
+    def test_raises_when_cert_file_does_not_exist(self):
+        with self.assertRaises(AnsibleError) as ctx:
+            _get_valid_certificate(None, "/nonexistent/path/to/cert.pem")
+
+        self.assertIn("does not exist", str(ctx.exception))
+
+    def test_raises_when_both_content_and_file_invalid(self):
+        with self.assertRaises(AnsibleError) as ctx:
+            _get_valid_certificate("not a real cert", None)
+
+        self.assertIn(
+            "Both certificate content and certificate file are invalid or missing",
+            str(ctx.exception),
+        )
+
+    def test_raises_when_cert_file_read_fails(self):
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fh:
+            fh.write("-----BEGIN CERTIFICATE-----\nX\n-----END CERTIFICATE-----")
+            cert_file_path = fh.name
+
+        try:
+            with patch('builtins.open', side_effect=OSError("permission denied")):
+                with self.assertRaises(AnsibleError) as ctx:
+                    _get_valid_certificate(None, cert_file_path)
+
+            self.assertIn("Failed to load or validate certificate file", str(ctx.exception))
+        finally:
+            os.unlink(cert_file_path)
+
+
+class TestGetCertificateFile(TestCase):
+    """Unit tests for _get_certificate_file()."""
+
+    @staticmethod
+    def _patch_loader(**kwargs):
+        loader_patch = patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.load_pem_x509_certificate',
+            create=True, **kwargs
+        )
+        backend_patch = patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.default_backend',
+            return_value=None, create=True,
+        )
+        return loader_patch, backend_patch
+
+    def setUp(self):
+        conjur_variable_module.temp_cert_file = None
+
+    def tearDown(self):
+        temp_file = conjur_variable_module.temp_cert_file
+        if temp_file is not None and os.path.exists(temp_file.name):
+            os.unlink(temp_file.name)
+        conjur_variable_module.temp_cert_file = None
+
+    def test_returns_none_cert_file_when_no_cert_provided(self):
+        self.assertIsNone(_get_certificate_file(None, None))
+
+    def test_builds_bundle_with_real_system_ca_and_custom_cert(self):
+        cert_content = "-----BEGIN CERTIFICATE-----\nCustomCertData\n-----END CERTIFICATE-----"
+        system_ca_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        system_ca_file.write("-----BEGIN CERTIFICATE-----\nSystemCaData\n-----END CERTIFICATE-----\n")
+        system_ca_file.close()
+
+        try:
+            fake_paths = MagicMock(cafile=system_ca_file.name)
+            loader_patch, backend_patch = self._patch_loader(return_value=None)
+            with loader_patch, backend_patch, patch(
+                'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.ssl.get_default_verify_paths',
+                return_value=fake_paths,
+            ):
+                result_path = _get_certificate_file(cert_content, None)
+
+            self.assertIsNotNone(result_path)
+            with open(result_path, encoding='utf-8') as f:
+                bundle_contents = f.read()
+            self.assertIn("SystemCaData", bundle_contents)
+            self.assertIn("CustomCertData", bundle_contents)
+        finally:
+            os.unlink(system_ca_file.name)
+
+    def test_warns_and_uses_only_custom_cert_when_no_system_bundle(self):
+        cert_content = "-----BEGIN CERTIFICATE-----\nCustomCertData\n-----END CERTIFICATE-----"
+        fake_paths = MagicMock(cafile=None)
+
+        loader_patch, backend_patch = self._patch_loader(return_value=None)
+        with loader_patch, backend_patch, patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.ssl.get_default_verify_paths',
+            return_value=fake_paths,
+        ), patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.display'
+        ) as mock_display:
+            result_path = _get_certificate_file(cert_content, None)
+
+        with open(result_path, encoding='utf-8') as f:
+            bundle_contents = f.read()
+        self.assertIn("CustomCertData", bundle_contents)
+        mock_display.warning.assert_called_once()
+        self.assertIn("System CA bundle not found", mock_display.warning.call_args[0][0])
+
+    def test_falls_back_to_cert_file_content_and_builds_bundle(self):
+        cert_file_content = "-----BEGIN CERTIFICATE-----\nFileCertData\n-----END CERTIFICATE-----"
+        cert_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        cert_file.write(cert_file_content)
+        cert_file.close()
+        fake_paths = MagicMock(cafile=None)
+
+        try:
+            loader_patch, backend_patch = self._patch_loader(return_value=None)
+            with loader_patch, backend_patch, patch(
+                'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.ssl.get_default_verify_paths',
+                return_value=fake_paths,
+            ):
+                result_path = _get_certificate_file("not a real cert", cert_file.name)
+
+            self.assertNotEqual(result_path, cert_file.name)
+            with open(result_path, encoding='utf-8') as f:
+                self.assertIn("FileCertData", f.read())
+        finally:
+            os.unlink(cert_file.name)
+
+    def test_both_content_and_file_invalid_raises(self):
+        with self.assertRaises(AnsibleError) as ctx:
+            _get_certificate_file("not a real cert", None)
+
+        self.assertIn(
+            "Both certificate content and certificate file are invalid or missing",
+            str(ctx.exception),
+        )
+
+    def test_raises_when_bundle_creation_fails(self):
+        cert_content = "-----BEGIN CERTIFICATE-----\nCustomCertData\n-----END CERTIFICATE-----"
+        loader_patch, backend_patch = self._patch_loader(return_value=None)
+        with loader_patch, backend_patch, patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.NamedTemporaryFile',
+            side_effect=OSError("disk full"),
+        ):
+            with self.assertRaises(AnsibleError) as ctx:
+                _get_certificate_file(cert_content, None)
+
+        self.assertIn("Failed to create temporary CA bundle", str(ctx.exception))
