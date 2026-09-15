@@ -486,7 +486,14 @@ pipeline {
         stage('Ansible v12 for API Key - latest') {
           stages {
             stage('Run tests for API Key') {
-              parallel {
+              // NOTE: These two stages must run sequentially, not in parallel.
+              // They share the same InfraPool agent/workspace and the same
+              // docker-compose project ("dev"), including the same "ansible"
+              // container. Running them concurrently lets one stage's
+              // docker-compose operations interfere with the other's containers,
+              // causing flaky failures (e.g. retrieve-variable-into-file losing
+              // its /dev/shm secret file).
+              stages {
                 stage('Testing conjur_variable lookup plugin for API Key') {
                   steps {
                     script {

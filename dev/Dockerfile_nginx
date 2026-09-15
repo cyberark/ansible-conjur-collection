@@ -2,8 +2,13 @@ FROM nginx:1.29-alpine-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apk update && \
-    apk add --no-cache iputils procps openssl && \
+RUN n=0; \
+    until apk update && apk add --no-cache iputils procps openssl; do \
+      n=$((n+1)); \
+      if [ "$n" -ge 5 ]; then echo "apk failed after $n attempts" >&2; exit 1; fi; \
+      echo "apk failed (attempt $n), retrying..." >&2; \
+      sleep 5; \
+    done && \
     rm -rf /var/cache/apk/*
 
 WORKDIR /etc/nginx/

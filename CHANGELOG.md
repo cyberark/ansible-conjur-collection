@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed `conjur_variable` lookup plugin ignoring `conjur_authn_jwt_token_file` when `conjur_authn_jwt_token` was also set (including via the `CONJUR_AUTHN_JWT_TOKEN` environment fallback). The token file now takes precedence as documented.
+
 ## [1.3.14] - 2026-08-05
 
 ### Added

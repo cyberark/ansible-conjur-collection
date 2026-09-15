@@ -1,0 +1,7 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+export CONJUR_AUTHN_TYPE=jwt
+export CONJUR_AUTHN_SERVICE_ID=oidc-provider-tap
+export CONJUR_AUTHN_JWT_MODE=token-app-property
+# token-app-property mode derives identity from the decoded token, not the URL;
+# conjur_authn_login must not be set (or the plugin would try to also put it in the URL).
+unset CONJUR_AUTHN_LOGIN

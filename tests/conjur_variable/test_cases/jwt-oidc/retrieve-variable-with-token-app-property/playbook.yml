@@ -1,0 +1,45 @@
+---
+# Integration test: successful secret retrieval using authn-jwt in
+# token-app-property mode - identity is derived purely from a claim in the
+# decoded JWT ('sub'), with no host_id in the authentication URL.
+#
+# This uses a separate authenticator service (oidc-provider-tap) from the
+# primary url-mode 'oidc-provider' service: Conjur's authn-jwt identity
+# provider selection is mutually exclusive between URL-based and
+# token-claim-based resolution for a single service (see
+# dev/policy/oss_ent/jwt/authn-jwt-oidc-provider-tap.yml for details).
+#
+# conjur/authn-jwt/oidc-provider-tap/token-app-property = "sub"
+# conjur/authn-jwt/oidc-provider-tap/identity-path      = "ansible"
+# => Conjur resolves identity as host/ansible/<sub claim value>, so the JWT
+#    requested below carries sub=ansible-oidc-host to match the existing
+#    'ansible-oidc-host' Conjur host.
+- name: Retrieve Conjur variable using authn-jwt token-app-property mode
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact path
+      file:
+        state: absent
+        path: /conjur_secrets.txt
+
+    - name: Request a JWT from the embedded OIDC provider with sub=ansible-oidc-host
+      uri:
+        url: http://oidc-provider:8080/token
+        method: POST
+        body_format: json
+        body:
+          claims:
+            sub: ansible-oidc-host
+        return_content: true
+      register: token_response
+
+    - name: Retrieve Conjur variable via authn-jwt (token-app-property mode)
+      vars:
+        super_secret_key: >-
+          {{ lookup('conjur_variable', 'ansible/test-secret',
+               conjur_authn_type='jwt',
+               conjur_authn_service_id=lookup('env', 'CONJUR_AUTHN_SERVICE_ID'),
+               conjur_authn_jwt_mode='token-app-property',
+               conjur_authn_jwt_token=token_response.json.token) }}
+      shell: echo "{{ super_secret_key }}" > /conjur_secrets.txt

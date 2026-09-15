@@ -1,0 +1,39 @@
+---
+# Second JWT authenticator service used solely to exercise token-app-property
+# identity resolution end-to-end.
+#
+# Conjur's authn-jwt identity provider selection is mutually exclusive: a
+# service cannot resolve identity from both the URL (host_id in the request
+# path) and a decoded token claim (token-app-property) at the same time -
+# doing so raises IdentityMisconfigured. The primary 'oidc-provider' service
+# is used by the existing url-mode E2E test, so token-app-property mode is
+# exercised here via an isolated second service instead of mutating the
+# shared one.
+#
+# Required variables (set by start.sh):
+#   conjur/authn-jwt/oidc-provider-tap/jwks-uri          → http://oidc-provider:8080/.well-known/jwks.json
+#   conjur/authn-jwt/oidc-provider-tap/issuer             → http://oidc-provider:8080
+#   conjur/authn-jwt/oidc-provider-tap/token-app-property → sub
+#   conjur/authn-jwt/oidc-provider-tap/identity-path      → ansible
+- !policy
+  id: conjur/authn-jwt/oidc-provider-tap
+  body:
+    - !webservice
+      annotations:
+        description: JWT authenticator (token-app-property mode) backed by the embedded OIDC provider
+
+    - !variable jwks-uri
+    - !variable issuer
+    - !variable token-app-property
+    - !variable identity-path
+
+    - !group apps
+
+    - !permit
+      role: !group apps
+      privilege: [ read, authenticate ]
+      resource: !webservice
+
+- !grant
+  role: !group conjur/authn-jwt/oidc-provider-tap/apps
+  member: !host ansible/ansible-oidc-host

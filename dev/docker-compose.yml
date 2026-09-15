@@ -59,7 +59,7 @@ services:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: "W0BuL8iTr/7QvtjIluJbrb5LDAnmXzmcpxkqihO3dXA="
       CONJUR_FEATURE_AUTHENTICATOR_SERVICE_ENABLED: "true"
-      CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-jwt/oidc-provider
+      CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-jwt/oidc-provider,authn-jwt/oidc-provider-tap
     depends_on:
       - pg
     networks:
@@ -116,7 +116,7 @@ services:
       OIDC_ISSUER: http://oidc-provider:8080
       PORT: "8080"
     ports:
-      - "8080:8080"
+      - "8090:8080"
     networks:
       - default
 
