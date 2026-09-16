@@ -20,10 +20,31 @@
       annotations:
         description: Ansible host authenticated via embedded OIDC provider
         authn-jwt/oidc-provider/email: ansible@oidc-test.local
+        # Conjur requires at least one relevant restriction annotation per
+        # service even in token-app-property mode (identity is derived from
+        # the 'sub' claim, but this annotation is still enforced as a
+        # restriction check against the decoded token).
+        authn-jwt/oidc-provider-tap/sub: ansible-oidc-host
+
+    - !layer &remote_hosts_layer
+      id: remote_hosts
+      annotations:
+        description: Layer for Ansible remote hosts
+
+    - !host-factory
+      id: ansible-factory
+      annotations:
+        description: Factory to create new hosts for Ansible
+      layer: [ *remote_hosts_layer ]
 
     - !permit
       role: !host ansible-oidc-host
       privileges: [ read, execute ]
+      resource: *variables
+
+    - !permit
+      role: *remote_hosts_layer
+      privileges: [ execute ]
       resource: *variables
 
 - !grant

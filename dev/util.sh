@@ -112,6 +112,24 @@ function refresh_access_token {
   " > "$(dev_dir)/access_token"
 }
 
+# Re-authenticates as the ansible host to obtain a fresh access token,
+# reusing the API key already baked into the ansible container's environment
+# at deploy time (does not rotate it, which would break other test cases that
+# rely on that same key via CONJUR_AUTHN_API_KEY).
+#
+# The "edge" flavour (dev/start.sh -f edge) skips setup_conjur_identities, so
+# CONJUR_AUTHN_API_KEY is never baked into the ansible container there; skip
+# the refresh in that case instead of failing the whole test run.
+function refresh_ansible_access_token {
+  local api_key
+  api_key="$(docker exec "$(ansible_cid)" printenv CONJUR_AUTHN_API_KEY || true)"
+  if [ -z "$api_key" ]; then
+    echo "CONJUR_AUTHN_API_KEY not set on the ansible container; skipping access token refresh." 1>&2
+    return 0
+  fi
+  refresh_access_token "host/ansible/ansible-master" "$api_key"
+}
+
 function teardown_and_setup_inventory {
   pushd "$(dev_dir)"
     # shellcheck disable=SC2155

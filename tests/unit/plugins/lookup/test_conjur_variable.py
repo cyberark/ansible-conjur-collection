@@ -27,8 +27,8 @@ from ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable import (
     _create_conjur_iam_api_key, _get_iam_role_name, _fetch_conjur_iam_session_token,
     InvalidAwsAccountIdException, ConjurIAMAuthnException, _fetch_conjur_azure_token,
     _fetch_conjur_gcp_identity_token, _fetch_conjur_cert_token, _fetch_conjur_jwt_token,
-    _read_jwt_token_file, _store_secret_in_file, retry, _repeat_open_url,
-    _get_valid_certificate, _get_certificate_file,
+    _read_jwt_token_file, _store_secret_in_file, _get_certificate_file, _get_valid_certificate,
+    retry, _repeat_open_url, _validate_authn_cert_files,
 )
 
 
@@ -1177,6 +1177,45 @@ class TestLookupModuleJwt(TestCase):
         )
 
     @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_jwt_token')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._read_jwt_token_file')
+    def test_run_jwt_token_file_takes_precedence_over_token(
+        self, mock_read_jwt_file, mock_fetch_jwt_token, mock_fetch_variable, mock_get_cert_file
+    ):
+        """When both are set, conjur_authn_jwt_token_file must win over conjur_authn_jwt_token
+        (including when the latter is only populated via the CONJUR_AUTHN_JWT_TOKEN env fallback)."""
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_read_jwt_file.return_value = 'token-from-file'
+        mock_fetch_jwt_token.return_value = b'conjur-session-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/ansible/ansible-jwt-host',
+            'conjur_authn_type': 'jwt',
+            'conjur_authn_service_id': 'jwt-service',
+            'conjur_authn_jwt_token': 'ambient-token',
+            'conjur_authn_jwt_token_file': '/run/secrets/jwt_token',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_read_jwt_file.assert_called_once_with('/run/secrets/jwt_token')
+        mock_fetch_jwt_token.assert_called_once_with(
+            appliance_url='https://conjur-fake',
+            account='fakeaccount',
+            service_id='jwt-service',
+            host_id='host/ansible/ansible-jwt-host',
+            jwt_token='token-from-file',
+            validate_certs=True,
+            cert_file='./conjur.pem',
+        )
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
     def test_run_jwt_missing_service_id_raises(self, mock_get_cert_file):
         """AnsibleError is raised when conjur_authn_service_id is absent for authn-jwt."""
         mock_get_cert_file.return_value = './conjur.pem'
@@ -1958,3 +1997,392 @@ class TestGetCertificateFile(TestCase):
                 _get_certificate_file(cert_content, None)
 
         self.assertIn("Failed to create temporary CA bundle", str(ctx.exception))
+
+
+class TestLoadFromFileRealPaths(TestCase):
+    """Unit tests exercising the real file-reading branches of _load_conf_from_file()
+    and _load_identity_from_file() (CONJ-101), which other tests only reach via the
+    'file does not exist' early-return branch."""
+
+    def test_load_conf_from_file_reads_real_yaml(self):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as conf_file:
+            conf_file.write("account: fakeaccount\nappliance_url: https://conjur-fake\n")
+            conf_path = conf_file.name
+        try:
+            result = _load_conf_from_file(conf_path)
+            self.assertEqual(result, {'account': 'fakeaccount', 'appliance_url': 'https://conjur-fake'})
+        finally:
+            os.unlink(conf_path)
+
+    def test_load_identity_from_file_reads_real_netrc_entry(self):
+        appliance_url = 'https://conjur-fake'
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.identity', delete=False) as identity_file:
+            identity_file.write(
+                f"machine {appliance_url}/authn\n"
+                "  login host/ansible/ansible-fake\n"
+                "  password fakekey\n"
+            )
+            identity_path = identity_file.name
+        try:
+            result = _load_identity_from_file(identity_path, appliance_url)
+            self.assertEqual(result, {'id': 'host/ansible/ansible-fake', 'api_key': 'fakekey'})
+        finally:
+            os.unlink(identity_path)
+
+    def test_load_identity_from_file_missing_entry_raises(self):
+        appliance_url = 'https://conjur-fake'
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.identity', delete=False) as identity_file:
+            identity_file.write(
+                "machine https://some-other-host/authn\n"
+                "  login host/ansible/other\n"
+                "  password otherkey\n"
+            )
+            identity_path = identity_file.name
+        try:
+            with self.assertRaises(AnsibleError) as context:
+                _load_identity_from_file(identity_path, appliance_url)
+            self.assertIn("does not contain an entry for", str(context.exception))
+        finally:
+            os.unlink(identity_path)
+
+
+class TestAwsMetadataBranches(TestCase):
+    """Unit tests for AWS IMDS helper error branches not exercised elsewhere (CONJ-101)."""
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_get_metadata_token_non_200_returns_none(self, mock_open_url):
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 400
+        mock_response.read.return_value = b''
+        mock_open_url.return_value = mock_response
+
+        self.assertIsNone(_get_metadata_token())
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_get_iam_role_metadata_404_raises(self, mock_open_url):
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 404
+        mock_open_url.return_value = mock_response
+
+        with self.assertRaises(AnsibleError) as context:
+            _get_iam_role_metadata("role_name")
+        self.assertIn("Error retrieving IAM role metadata", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_get_iam_role_metadata_non_200_raises(self, mock_open_url):
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 500
+        mock_open_url.return_value = mock_response
+
+        with self.assertRaises(AnsibleError) as context:
+            _get_iam_role_metadata("role_name")
+        self.assertIn("Error retrieving IAM role metadata", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_iam_role_metadata')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_metadata_token')
+    def test_create_conjur_iam_api_key_no_access_key_raises(self, mock_get_metadata_token, mock_get_iam_role_metadata):
+        mock_get_metadata_token.return_value = 'fake-token'
+        mock_get_iam_role_metadata.return_value = (None, None, None)
+
+        with self.assertRaises(AnsibleError) as context:
+            _create_conjur_iam_api_key(iam_role_name='fake-role')
+        self.assertIn("No access key is available", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_metadata_token')
+    def test_create_conjur_iam_api_key_uses_provided_role_name(self, mock_get_metadata_token):
+        mock_get_metadata_token.return_value = 'fake-token'
+
+        result = _create_conjur_iam_api_key(
+            iam_role_name='fake-role', access_key='AKIA...', secret_key='secret', token='session-token'
+        )
+        self.assertIn('"authorization"', result)
+
+
+class TestFetchConjurVariableErrorCodes(TestCase):
+    """Unit tests for _fetch_conjur_variable() non-200 response branches (CONJ-102)."""
+
+    def _mock_response(self, code):
+        response = MagicMock()
+        response.getcode.return_value = code
+        return response
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header', return_value='telemetry')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
+    def test_401_raises_ansible_error(self, mock_repeat_open_url, _mock_telemetry_header):
+        mock_repeat_open_url.return_value = self._mock_response(401)
+
+        with self.assertRaises(AnsibleError) as context:
+            _fetch_conjur_variable('fake-var', b'token', 'https://conjur-fake', 'fakeaccount', True, None)
+        self.assertIn("invalid authorization credentials", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header', return_value='telemetry')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
+    def test_403_raises_ansible_error(self, mock_repeat_open_url, _mock_telemetry_header):
+        mock_repeat_open_url.return_value = self._mock_response(403)
+
+        with self.assertRaises(AnsibleError) as context:
+            _fetch_conjur_variable('fake-var', b'token', 'https://conjur-fake', 'fakeaccount', True, None)
+        self.assertIn("does not have authorization to retrieve", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header', return_value='telemetry')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
+    def test_404_raises_ansible_error(self, mock_repeat_open_url, _mock_telemetry_header):
+        mock_repeat_open_url.return_value = self._mock_response(404)
+
+        with self.assertRaises(AnsibleError) as context:
+            _fetch_conjur_variable('fake-var', b'token', 'https://conjur-fake', 'fakeaccount', True, None)
+        self.assertIn("does not exist", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header', return_value='telemetry')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._repeat_open_url')
+    def test_unexpected_code_returns_empty_dict(self, mock_repeat_open_url, _mock_telemetry_header):
+        mock_repeat_open_url.return_value = self._mock_response(500)
+
+        result = _fetch_conjur_variable('fake-var', b'token', 'https://conjur-fake', 'fakeaccount', True, None)
+        self.assertEqual(result, {})
+
+
+class TestFetchConjurTokenErrorCodes(TestCase):
+    """Unit test for _fetch_conjur_token() non-200 response branch (CONJ-102)."""
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._telemetry_header', return_value='telemetry')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.open_url')
+    def test_non_200_raises_ansible_error(self, mock_open_url, _mock_telemetry_header):
+        response = MagicMock()
+        response.getcode.return_value = 401
+        mock_open_url.return_value = response
+
+        with self.assertRaises(AnsibleError) as context:
+            _fetch_conjur_token('https://conjur-fake', 'fakeaccount', 'host/fake', 'fakekey', True, None)
+        self.assertIn("Failed to authenticate as 'host/fake'", str(context.exception))
+
+
+class TestLookupModuleAwsAzureGcp(TestCase):
+    """End-to-end LookupModule.run() dispatch tests for aws/azure/gcp authenticators (CONJ-102)."""
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_iam_session_token')
+    def test_run_with_aws_authenticator(self, mock_fetch_iam_token, mock_fetch_variable, mock_get_cert_file):
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_fetch_iam_token.return_value = b'conjur-access-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/aws/12345678901/ansible-fake',
+            'conjur_authn_type': 'aws',
+            'conjur_authn_service_id': 'aws-service',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_fetch_iam_token.assert_called_once()
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_azure_token')
+    def test_run_with_azure_authenticator(self, mock_fetch_azure_token, mock_fetch_variable, mock_get_cert_file):
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_fetch_azure_token.return_value = b'conjur-access-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/azure/ansible-fake',
+            'conjur_authn_type': 'azure',
+            'conjur_authn_service_id': 'azure-service',
+            'azure_client_id': 'fake-client-id',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_fetch_azure_token.assert_called_once()
+        self.assertEqual(mock_fetch_azure_token.call_args.kwargs.get('client_id'), 'fake-client-id')
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_gcp_identity_token')
+    def test_run_with_gcp_authenticator(self, mock_fetch_gcp_token, mock_fetch_variable, mock_get_cert_file):
+        mock_get_cert_file.return_value = './conjur.pem'
+        mock_fetch_gcp_token.return_value = b'conjur-access-token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_cert_file': './conjur.pem',
+            'conjur_authn_login': 'host/gcp/ansible-fake',
+            'conjur_authn_type': 'gcp',
+        }
+        result = lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        mock_fetch_gcp_token.assert_called_once()
+
+
+class TestLookupModuleValidation(TestCase):
+    """Unit tests for LookupModule.run() input validation and misc branches (CONJ-103)."""
+
+    def setUp(self):
+        self.lookup = lookup_loader.get('cyberark.conjur.conjur_variable')
+
+    def test_insecure_http_url_raises(self):
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'http://conjur-fake',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey',
+        }
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run(['ansible/fake-secret'], variables)
+        self.assertIn("insecure connection", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    def test_missing_account_defaults_to_conjur(self, mock_fetch_token, mock_fetch_variable, mock_get_cert_file):
+        mock_get_cert_file.return_value = None
+        mock_fetch_token.return_value = b'token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        variables = {
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_authn_login': 'host/ansible/ansible-fake',
+            'conjur_authn_api_key': 'fakekey',
+        }
+        result = self.lookup.run(['ansible/fake-secret'], variables)
+
+        self.assertEqual(result, ['super_secret_value'])
+        self.assertEqual(mock_fetch_token.call_args[0][1], 'conjur')
+
+    def test_missing_service_id_for_aws_raises(self):
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_authn_login': 'host/aws/12345678901/ansible-fake',
+            'conjur_authn_type': 'aws',
+        }
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run(['ansible/fake-secret'], variables)
+        self.assertIn("conjur_authn_service_id", str(context.exception))
+
+    def test_missing_service_id_for_azure_raises(self):
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_authn_login': 'host/azure/ansible-fake',
+            'conjur_authn_type': 'azure',
+        }
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run(['ansible/fake-secret'], variables)
+        self.assertIn("conjur_authn_service_id", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._get_certificate_file')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    def test_run_reads_token_from_authn_token_file(self, mock_fetch_variable, mock_get_cert_file):
+        mock_get_cert_file.return_value = None
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as token_file:
+            token_file.write(b'fake-conjur-token')
+            token_path = token_file.name
+
+        try:
+            variables = {
+                'conjur_account': 'fakeaccount',
+                'conjur_appliance_url': 'https://conjur-fake',
+                'conjur_authn_token_file': token_path,
+            }
+            result = self.lookup.run(['ansible/fake-secret'], variables)
+
+            self.assertEqual(result, ['super_secret_value'])
+            self.assertEqual(mock_fetch_variable.call_args[0][1], b'fake-conjur-token')
+        finally:
+            os.unlink(token_path)
+
+    def test_run_missing_authn_token_file_raises(self):
+        variables = {
+            'conjur_account': 'fakeaccount',
+            'conjur_appliance_url': 'https://conjur-fake',
+            'conjur_authn_token_file': '/nonexistent/token/file',
+        }
+        with self.assertRaises(AnsibleError) as context:
+            self.lookup.run(['ansible/fake-secret'], variables)
+        self.assertIn("was not found on the host", str(context.exception))
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_variable')
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable._fetch_conjur_token')
+    def test_temp_cert_file_is_removed_after_run(self, mock_fetch_token, mock_fetch_variable):
+        mock_fetch_token.return_value = b'token'
+        mock_fetch_variable.return_value = ['super_secret_value']
+
+        cert_content = (
+            "-----BEGIN CERTIFICATE-----\n"
+            "FakeCertData\n"
+            "-----END CERTIFICATE-----"
+        )
+        with patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.default_backend',
+            return_value=None, create=True,
+        ), patch(
+            'ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.load_pem_x509_certificate',
+            return_value=None, create=True,
+        ):
+            variables = {
+                'conjur_account': 'fakeaccount',
+                'conjur_appliance_url': 'https://conjur-fake',
+                'conjur_authn_login': 'host/ansible/ansible-fake',
+                'conjur_authn_api_key': 'fakekey',
+                'conjur_cert_content': cert_content,
+            }
+            self.lookup.run(['ansible/fake-secret'], variables)
+
+        temp_cert_path = mock_fetch_token.call_args[0][5]
+        self.assertIsNotNone(temp_cert_path)
+        self.assertFalse(os.path.exists(temp_cert_path))
+
+    def test_get_var_value_raises_ansible_error_on_unknown_key(self):
+        with self.assertRaises(AnsibleError):
+            self.lookup.get_var_value('not_a_real_option')
+
+
+class TestValidateAuthnCertFiles(TestCase):
+    """Unit tests for _validate_authn_cert_files() (CONJ-103)."""
+
+    def test_missing_client_cert_raises(self):
+        with self.assertRaises(AnsibleError) as context:
+            _validate_authn_cert_files(None, '/tmp/fake_client.key')
+        self.assertIn("Client certificate file", str(context.exception))
+
+    def test_missing_client_key_raises(self):
+        with tempfile.NamedTemporaryFile(delete=False) as cert_file:
+            cert_path = cert_file.name
+        try:
+            with self.assertRaises(AnsibleError) as context:
+                _validate_authn_cert_files(cert_path, '/nonexistent/client.key')
+            self.assertIn("Client key file", str(context.exception))
+        finally:
+            os.unlink(cert_path)
+
+    @patch('ansible_collections.cyberark.conjur.plugins.lookup.conjur_variable.display')
+    def test_insecure_client_key_permissions_warns(self, mock_display):
+        with tempfile.NamedTemporaryFile(delete=False) as cert_file:
+            cert_path = cert_file.name
+        with tempfile.NamedTemporaryFile(delete=False) as key_file:
+            key_path = key_file.name
+        try:
+            os.chmod(key_path, 0o644)
+            _validate_authn_cert_files(cert_path, key_path)
+            mock_display.warning.assert_called_once()
+            self.assertIn("insecure permissions", mock_display.warning.call_args[0][0])
+        finally:
+            os.unlink(cert_path)
+            os.unlink(key_path)

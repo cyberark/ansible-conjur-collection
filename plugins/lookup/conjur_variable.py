@@ -359,17 +359,6 @@ class ConjurIAMAuthnException(Exception):
         )
 
 
-class IAMRoleNotAvailableException(Exception):
-    """
-    Raised when the IAM Role is not available or incorrectly configured.
-    """
-    def __init__(self):
-        Exception.__init__(
-            self,
-            "Most likely the ec2 instance is configured with no or an incorrect iam role"
-        )
-
-
 class InvalidAwsAccountIdException(Exception):
     """
     Raised when the AWS Account ID is invalid
@@ -1464,7 +1453,7 @@ class LookupModule(LookupBase):
                         cert_file=cert_file,
                     )
                 elif authn_type == "jwt":
-                    if jwt_token_file and not jwt_token:
+                    if jwt_token_file:
                         jwt_token = _read_jwt_token_file(jwt_token_file)
                     token = _fetch_conjur_jwt_token(
                         appliance_url=conf['appliance_url'],

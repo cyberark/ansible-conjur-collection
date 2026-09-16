@@ -6,7 +6,12 @@
     - name: Clean artifact path
       file:
         state: absent
-        path: /conjur_secret_path.txt
+        path: "{{ item }}"
+      loop:
+        - /conjur_secret_path.txt
+        - /lookup_output.txt
+        - /conjur_secret_content.txt
+        - /conjur_secret_mode.txt
 
     - name: Determine lookup path based on CONJUR flavour
       set_fact:
@@ -18,4 +23,11 @@
     - name: Retrieve Conjur variable into file using as_file option
       vars:
         secret_path: "{{ lookup('conjur_variable', lookup_path + '/test-secret-in-file', as_file=true) }}"
-      shell: echo -n "{{ secret_path }}" > /lookup_output.txt
+      # The secret file's lifetime past this task is not guaranteed (the lookup plugin
+      # registers a best-effort atexit cleanup for it, which can fire as soon as the very
+      # next task starts), so record its path and capture its mode/content here, in the
+      # same task/process that created it.
+      shell: |
+        echo -n "{{ secret_path }}" > /lookup_output.txt
+        stat -c '%a' "{{ secret_path }}" > /conjur_secret_mode.txt
+        cp "{{ secret_path }}" /conjur_secret_content.txt
