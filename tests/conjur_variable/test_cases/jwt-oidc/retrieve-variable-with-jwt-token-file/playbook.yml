@@ -1,0 +1,29 @@
+---
+# Integration test: successful secret retrieval using authn-jwt with the JWT
+# supplied via conjur_authn_jwt_token_file instead of conjur_authn_jwt_token.
+- name: Retrieve Conjur variable using authn-jwt with a token file
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact paths
+      file:
+        state: absent
+        path: "{{ item }}"
+      loop:
+        - /conjur_secrets.txt
+        - /tmp/jwt_token_file
+
+    - name: Write the JWT to an owner-only-readable file
+      copy:
+        content: "{{ lookup('env', 'CONJUR_AUTHN_JWT_TOKEN') }}"
+        dest: /tmp/jwt_token_file
+        mode: "0600"
+
+    - name: Retrieve Conjur variable via authn-jwt (embedded OIDC provider, token file)
+      vars:
+        super_secret_key: >-
+          {{ lookup('conjur_variable', 'ansible/test-secret',
+               conjur_authn_type='jwt',
+               conjur_authn_service_id=lookup('env', 'CONJUR_AUTHN_SERVICE_ID'),
+               conjur_authn_jwt_token_file='/tmp/jwt_token_file') }}
+      shell: echo "{{ super_secret_key }}" > /conjur_secrets.txt

@@ -1,0 +1,30 @@
+---
+# Integration test: authn-jwt via conjur_authn_jwt_token_file must still
+# succeed (with a warning) when the token file has insecure permissions,
+# since the plugin only warns rather than refusing to read the file.
+- name: Retrieve Conjur variable using authn-jwt with an insecure token file
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clean artifact paths
+      file:
+        state: absent
+        path: "{{ item }}"
+      loop:
+        - /conjur_secrets.txt
+        - /tmp/jwt_token_file_insecure
+
+    - name: Write the JWT to a group/other-readable file
+      copy:
+        content: "{{ lookup('env', 'CONJUR_AUTHN_JWT_TOKEN') }}"
+        dest: /tmp/jwt_token_file_insecure
+        mode: "0644"
+
+    - name: Retrieve Conjur variable via authn-jwt (embedded OIDC provider, insecure token file)
+      vars:
+        super_secret_key: >-
+          {{ lookup('conjur_variable', 'ansible/test-secret',
+               conjur_authn_type='jwt',
+               conjur_authn_service_id=lookup('env', 'CONJUR_AUTHN_SERVICE_ID'),
+               conjur_authn_jwt_token_file='/tmp/jwt_token_file_insecure') }}
+      shell: echo "{{ super_secret_key }}" > /conjur_secrets.txt

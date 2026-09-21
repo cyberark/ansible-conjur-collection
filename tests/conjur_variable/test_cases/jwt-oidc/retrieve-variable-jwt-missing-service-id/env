@@ -1,0 +1,4 @@
+export CONJUR_CERT_FILE=/cyberark/dev/conjur.pem
+export CONJUR_AUTHN_TYPE=jwt
+# CONJUR_AUTHN_SERVICE_ID deliberately unset to trigger the "missing service_id" error
+unset CONJUR_AUTHN_SERVICE_ID

@@ -1,2 +1,2 @@
-cryptography>=41.0
+cryptography>=50.0.0
 PyJWT>=2.8

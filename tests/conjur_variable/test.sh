@@ -36,6 +36,14 @@ function run_test_case {
     exit 1
   fi
 
+  # The access token file used by CONJUR_AUTHN_TOKEN_FILE is generated once at
+  # deploy time and expires (default Conjur access token TTL is 8 minutes).
+  # By the time later test cases run, it may be stale, so refresh it right
+  # before any test case that actually relies on it.
+  if [ "$AUTHN_TYPE" == "api_key" ] && grep -q "CONJUR_AUTHN_TOKEN_FILE" "$TEST_DIR/${test_case}/env" 2>/dev/null; then
+    refresh_ansible_access_token
+  fi
+
   docker exec "$(ansible_cid)" bash -exc "
     cd tests/conjur_variable
 
@@ -47,8 +55,11 @@ function run_test_case {
     # Set environment variables if needed
     export SAMPLE_KEY='set_in_env'
 
-    # Run the Ansible playbook for the test case
-    ansible-playbook --extra-vars 'sample_key=set_in_extravars' '$TEST_DIR/${test_case}/playbook.yml'
+    # Run the Ansible playbook for the test case, capturing its output so
+    # test cases can assert on warnings (e.g. insecure file permissions)
+    # that Ansible only prints to the console rather than to an artifact file.
+    ansible-playbook --extra-vars 'sample_key=set_in_extravars' '$TEST_DIR/${test_case}/playbook.yml' \
+      2>&1 | tee '/tmp/ansible-playbook-${test_case}.log'
 
     # Run the Python tests with JUnit XML output
     py.test --junitxml='./junit/${test_case}' \
