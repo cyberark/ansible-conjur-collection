@@ -1,6 +1,8 @@
 #!/bin/bash -eu
 
-ansible_version="stable-2.17"
+export DOCKER_BUILDKIT=1
+
+ansible_version="2.17"
 python_version="3.12"
 gen_report="false"
 
@@ -12,7 +14,7 @@ Run unit tests for Conjur Variable Lookup plugin.
 
 ./ansibletest.sh [options]
 
--a <version>     Run tests against specified Ansible version (Default: stable-2.17)
+-a <version>     Run tests against specified Ansible version (Default: 2.17)
 -p <version>     Run tests against specified Python version  (Default: 3.12)
 -r               Generate test coverage report
 EOF
@@ -28,6 +30,16 @@ while getopts 'a:p:r' flag; do
    esac
 done
 
+if [[ -n "${PIP_CONF:-}" ]]; then
+  pip_secret="id=pip_conf,env=PIP_CONF"
+elif [[ -f "${HOME}/.pip/pip.conf" ]] && grep -q "jfrog.io" "${HOME}/.pip/pip.conf"; then
+  pip_secret="id=pip_conf,src=${HOME}/.pip/pip.conf"
+else
+  echo "ERROR: Artifactory credentials not available." >&2
+  echo "Either set the PIP_CONF env var or configure ~/.pip/pip.conf with jfrog.io credentials." >&2
+  exit 1
+fi
+
 test_cmd="ansible-test units -v --python $python_version"
 if [[ "$gen_report" == "true" ]]; then
   test_cmd="ansible-test coverage erase;
@@ -37,6 +49,7 @@ if [[ "$gen_report" == "true" ]]; then
 fi
 
 docker build \
+  --secret "${pip_secret}" \
   --build-arg PYTHON_VERSION="${python_version}" \
   --build-arg ANSIBLE_VERSION="${ansible_version}" \
   -t pytest-tools:latest \

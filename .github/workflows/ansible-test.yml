@@ -24,12 +24,42 @@ on:
 jobs:
 
 ###
+# Requirements freshness check
+#
+# Verifies that requirements.txt files are in sync with their requirements.in
+# sources. Fails fast before running any tests if a developer edited
+# requirements.in but forgot to regenerate requirements.txt.
+
+  check-requirements:
+    name: Verify requirements.txt files are up to date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Verify requirements.txt files are up to date
+        run: |
+          pip install pip-tools==7.6.2
+          pip-compile --generate-hashes tests/unit/requirements.in
+          git diff --exit-code tests/unit/requirements.txt || \
+            (echo "tests/unit/requirements.txt is out of date — edit requirements.in and run pip-compile to regenerate" && exit 1)
+          pip-compile --generate-hashes dev/oidc-provider/requirements.in
+          git diff --exit-code dev/oidc-provider/requirements.txt || \
+            (echo "dev/oidc-provider/requirements.txt is out of date — edit requirements.in and run pip-compile to regenerate" && exit 1)
+
+###
 # Sanity tests
 #
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
 
   sanity:
     name: Sanity (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
+    needs: [check-requirements]
     strategy:
       # fail-fast means one failing matrix case will cancel all other
       # still-incomplete cases. As tests against Ansible's devel branch are
@@ -85,6 +115,7 @@ jobs:
 
   units:
     name: Units (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
+    needs: [check-requirements]
     strategy:
       # fail-fast means one failing matrix case will cancel all other
       # still-incomplete cases. As tests against Ansible's devel branch are

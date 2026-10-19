@@ -7,5 +7,8 @@ docker run --rm -v "$(pwd)":/work -w /work pipelinecomponents/ansible-lint
 echo
 
 echo "Running Pylint"
-docker run --rm -v "$(pwd)":/work -w /work python:3 bash -c "pip install pylint && pylint ./plugins/lookup"
+docker run --rm \
+  -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+  -v "$(pwd)":/work -w /work \
+  python:3.12 bash -c "pip install pylint && pylint ./plugins/lookup"
 echo

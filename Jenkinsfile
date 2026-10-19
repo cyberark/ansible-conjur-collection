@@ -38,7 +38,7 @@ pipeline {
 
   environment {
     MODE = release.canonicalizeMode()
-    ANSIBLE_VERSION = 'stable-2.19'
+    ANSIBLE_VERSION = '2.19'
     PYTHON_VERSION = '3.13'
   }
 
@@ -103,8 +103,89 @@ pipeline {
     stage('Build artifacts') {
       steps {
         script {
-          INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './ci/build_release'
+          artifactoryAuth.withCreds(null, "reader") {
+            INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+              trap 'rm -f "${HOME}/.pip/pip.conf"' EXIT
+              mkdir -p "${HOME}/.pip"
+              printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}" > "${HOME}/.pip/pip.conf"
+              chmod 600 "${HOME}/.pip/pip.conf"
+              ./ci/build_release
+            '''
+          }
           INFRAPOOL_EXECUTORV2_AGENT_1.agentArchiveArtifacts artifacts: 'cyberark-conjur-*.tar.gz', fingerprint: true
+        }
+      }
+    }
+
+    stage('Verify requirements.txt files are up to date') {
+      steps {
+        script {
+          artifactoryAuth.withCreds(null, "reader") {
+            INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+              trap 'rm -f "${HOME}/.pip/pip.conf"' EXIT
+              mkdir -p "${HOME}/.pip"
+              printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}" > "${HOME}/.pip/pip.conf"
+              chmod 600 "${HOME}/.pip/pip.conf"
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/tests/unit:/work" python:3.12-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements.txt /work/requirements.in
+              "
+              git diff --exit-code tests/unit/requirements.txt || \
+                (echo "tests/unit/requirements.txt is out of date — edit requirements.in and run pip-compile to regenerate" && exit 1)
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/dev/oidc-provider:/work" python:3.12-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements.txt /work/requirements.in
+              "
+              git diff --exit-code dev/oidc-provider/requirements.txt || \
+                (echo "dev/oidc-provider/requirements.txt is out of date — edit requirements.in and run pip-compile to regenerate" && exit 1)
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/tests:/work" python:3.12-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements-ansible-core-2.17.txt /work/requirements-ansible-core-2.17.in
+              "
+              git diff --exit-code tests/requirements-ansible-core-2.17.txt || \
+                (echo "tests/requirements-ansible-core-2.17.txt is out of date — edit requirements-ansible-core-2.17.in and run pip-compile to regenerate" && exit 1)
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/tests:/work" python:3.13-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements-ansible-core-2.18.txt /work/requirements-ansible-core-2.18.in
+              "
+              git diff --exit-code tests/requirements-ansible-core-2.18.txt || \
+                (echo "tests/requirements-ansible-core-2.18.txt is out of date — edit requirements-ansible-core-2.18.in and run pip-compile to regenerate" && exit 1)
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/tests:/work" python:3.13-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements-ansible-core-2.19.txt /work/requirements-ansible-core-2.19.in
+              "
+              git diff --exit-code tests/requirements-ansible-core-2.19.txt || \
+                (echo "tests/requirements-ansible-core-2.19.txt is out of date — edit requirements-ansible-core-2.19.in and run pip-compile to regenerate" && exit 1)
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/dev:/work" python:3.12-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements-ansible-11.txt /work/requirements-ansible-11.in
+              "
+              git diff --exit-code dev/requirements-ansible-11.txt || \
+                (echo "dev/requirements-ansible-11.txt is out of date — edit requirements-ansible-11.in and run pip-compile to regenerate" && exit 1)
+              docker run --rm \
+                -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+                -v "$(pwd)/dev:/work" python:3.12-slim /bin/sh -c "
+                pip install pip-tools==7.6.2 &&
+                pip-compile --generate-hashes --output-file /work/requirements-ansible-12.txt /work/requirements-ansible-12.in
+              "
+              git diff --exit-code dev/requirements-ansible-12.txt || \
+                (echo "dev/requirements-ansible-12.txt is out of date — edit requirements-ansible-12.in and run pip-compile to regenerate" && exit 1)
+            '''
+          }
         }
       }
     }
@@ -112,7 +193,14 @@ pipeline {
     stage ('Run conjur_variable unit tests') {
       steps {
         script {
-          INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './dev/test_unit.sh -r'
+          artifactoryAuth.withCreds(null, "reader") {
+            INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+              export DOCKER_BUILDKIT=1
+              export PIP_CONF=$(printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}")
+              ./dev/test_unit.sh -r
+            '''
+          }
           INFRAPOOL_EXECUTORV2_AGENT_1.agentStash name: 'junit-xml', includes: 'tests/output/junit/*.xml'
           INFRAPOOL_EXECUTORV2_AGENT_1.agentStash name: 'coverage-xml', includes: 'tests/output/reports/*.xml'
         }
@@ -141,7 +229,17 @@ pipeline {
         stage ('Run ansible-lint') {
           steps {
             script {
-              runAnsibleLint(INFRAPOOL_EXECUTORV2_AGENT_1)
+              // lint.sh uses docker run — needs pip.conf file; artifactoryAuth provides log masking + trap cleanup
+              artifactoryAuth.withCreds(null, "reader") {
+                INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+                  trap 'rm -f "${HOME}/.pip/pip.conf"' EXIT
+                  mkdir -p "${HOME}/.pip"
+                  printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                    "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}" > "${HOME}/.pip/pip.conf"
+                  chmod 600 "${HOME}/.pip/pip.conf"
+                  ./dev/lint.sh
+                '''
+              }
             }
           }
         }
@@ -149,7 +247,15 @@ pipeline {
         stage('conjur_variable sanity tests for Ansible core 2.17') {
           steps {
             script {
-              runSanityTests(INFRAPOOL_EXECUTORV2_AGENT_1, 'stable-2.17', '3.12')
+              // test_sanity.sh uses docker build — PIP_CONF env var → env-var BuildKit secret (no disk write)
+              artifactoryAuth.withCreds(null, "reader") {
+                INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+                  export DOCKER_BUILDKIT=1
+                  export PIP_CONF=$(printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                    "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}")
+                  ./dev/test_sanity.sh -a 2.17 -p 3.12
+                '''
+              }
             }
           }
         }
@@ -157,7 +263,14 @@ pipeline {
         stage('conjur_variable sanity tests for Ansible core 2.18') {
           steps {
             script {
-              runSanityTests(INFRAPOOL_EXECUTORV2_AGENT_1, 'stable-2.18', '3.13')
+              artifactoryAuth.withCreds(null, "reader") {
+                INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+                  export DOCKER_BUILDKIT=1
+                  export PIP_CONF=$(printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                    "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}")
+                  ./dev/test_sanity.sh -a 2.18 -p 3.13
+                '''
+              }
             }
           }
         }
@@ -165,7 +278,16 @@ pipeline {
         stage('conjur_variable sanity tests for Ansible core (2.19) - default') {
           steps {
             script {
-              runSanityTestsDefault(INFRAPOOL_EXECUTORV2_AGENT_1)
+              artifactoryAuth.withCreds(null, "reader") {
+                INFRAPOOL_EXECUTORV2_AGENT_1.agentSh '''
+                  export DOCKER_BUILDKIT=1
+                  export PIP_CONF=$(printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+                    "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}")
+                  ./dev/test_sanity.sh -r
+                '''
+              }
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
+              unstash 'sanity-test-report'
             }
             publishHTML (target : [allowMissing: false,
                                    alwaysLinkToLastBuild: false,
@@ -183,21 +305,26 @@ pipeline {
       stages {
         stage('Run API Key Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
           }
           post {
             always {
               script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_1, 'conjur_variable', 'tests/conjur_variable/junit/*')
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_1, 'conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
-
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_2, 'conjur_variable', 'tests/conjur_variable/junit/*')
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_2, 'conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
               }
@@ -207,14 +334,26 @@ pipeline {
 
         stage('Run API Key Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
       }
@@ -224,27 +363,51 @@ pipeline {
       stages {
         stage('Run IAM Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
 
         stage('Run IAM Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
       }
@@ -270,14 +433,26 @@ pipeline {
 
         stage('Run Authn Cert Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
       }
@@ -287,27 +462,51 @@ pipeline {
       stages {
         stage('Run JWT Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
 
         stage('Run JWT Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
       }
@@ -317,27 +516,51 @@ pipeline {
       stages {
         stage('Run Azure Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1)
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2)
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
 
         stage('Run Azure Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1)
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2)
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
       }
@@ -347,59 +570,64 @@ pipeline {
       stages {
         stage('Run GCP Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_1,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
-                              '11',
-                              'oss',
-                              '3.12',
-                              'cucumber',
-                              'token-out'
-                      )
-                    },
-                    "Ansible 12": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_2,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
-                              LATEST_ANSIBLE_VERSION,
-                              'oss',
-                              '3.12',
-                              'cucumber',
-                              'token-out'
-                      )
-                    }
-            )
+            script {
+              // Only the executor agents run start.sh (docker-compose); GCP agents only fetch tokens
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_1, INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
+                    '11', 'oss', '3.12', 'cucumber', 'token-out'
+                  )
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_2, INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
+                    LATEST_ANSIBLE_VERSION, 'oss', '3.12', 'cucumber', 'token-out'
+                  )
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
 
         stage('Run GCP Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_1,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
-                              '11',
-                              'enterprise',
-                              '3.12',
-                              'demo',
-                              'token-out-enterprise'
-                      )
-                    },
-                    "Ansible 12": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_2,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
-                              LATEST_ANSIBLE_VERSION,
-                              'enterprise',
-                              '3.12',
-                              'demo',
-                              'token-out-enterprise'
-                      )
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_1, INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
+                    '11', 'enterprise', '3.12', 'demo', 'token-out-enterprise'
+                  )
+                },
+                "Ansible 12": {
+                  setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_2, INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
+                    LATEST_ANSIBLE_VERSION, 'enterprise', '3.12', 'demo', 'token-out-enterprise'
+                  )
+                }
+              )
+            }
+          }
+          post {
+            always {
+              script {
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+                teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+              }
+            }
           }
         }
       }
@@ -470,6 +698,15 @@ pipeline {
             }
           }
         }
+        stage('Setup Artifactory credentials for Cloud tests') {
+          steps {
+            script {
+              setupAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+              setupAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1)
+            }
+          }
+        }
+
         stage('Run API Key tests against Cloud Tenant') {
           environment {
             INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
@@ -684,6 +921,14 @@ pipeline {
           }
         }
       }
+      post {
+        always {
+          script {
+            teardownAgentPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+            teardownAgentPipConf(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1)
+          }
+        }
+      }
     }
     stage('Release') {
       when {
@@ -766,4 +1011,29 @@ def handleJunitReports(executorAgent, stashName, testFilesPattern) {
   executorAgent.agentStash name: stashName, includes: testFilesPattern
   unstash stashName
   junit testFilesPattern
+}
+
+// ---------------------------------------------------------------------------
+// Artifactory credential helpers
+// Use these in every stage that calls dev/start.sh (docker-compose needs
+// pip.conf as a file). withCredentials masks ARTIFACTORY_USERNAME /
+// ARTIFACTORY_PASSWORD in all console output.
+// Call setupAgentPipConf() before running tests; call teardownAgentPipConf()
+// in the stage's post { always } block to guarantee cleanup.
+// ---------------------------------------------------------------------------
+
+def setupAgentPipConf(agent) {
+  artifactoryAuth.withCreds(null, "reader") {
+    agent.agentSh '''
+      trap 'rm -f "${HOME}/.pip/pip.conf"' EXIT
+      mkdir -p "${HOME}/.pip"
+      printf '[global]\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\n' \
+        "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_PASSWORD}" "${ARTIFACTORY_HOST}" > "${HOME}/.pip/pip.conf"
+      chmod 600 "${HOME}/.pip/pip.conf"
+    '''
+  }
+}
+
+def teardownAgentPipConf(agent) {
+  agent.agentSh 'rm -f "${HOME}/.pip/pip.conf"'
 }

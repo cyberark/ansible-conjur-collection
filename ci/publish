@@ -30,6 +30,7 @@ pushd "$TOP_LEVEL_DIR" >/dev/null
     -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_URL=https://console.redhat.com/api/automation-hub/ \
     -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_AUTH_URL=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token \
     -e ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN="$AUTOMATION_HUB_TOKEN" \
+    -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
     -v "$TOP_LEVEL_DIR:/collection" \
     python:3.12 /bin/bash -c "
       set -euo pipefail

@@ -6,6 +6,8 @@ services:
       args:
         ANSIBLE_VERSION: ${ANSIBLE_VERSION}
         PYTHON_VERSION: ${PYTHON_VERSION}
+      secrets:
+        - pip_conf
     command: /bin/sleep 1d
     environment:
       COMPOSE_PROJECT_NAME: dev
@@ -112,6 +114,8 @@ services:
   oidc-provider:
     build:
       context: ./oidc-provider
+      secrets:
+        - pip_conf
     environment:
       OIDC_ISSUER: http://oidc-provider:8080
       PORT: "8080"
@@ -124,3 +128,7 @@ networks:
   dap_net:
     name: dap_net
     external: true
+
+secrets:
+  pip_conf:
+    file: ${HOME}/.pip/pip.conf

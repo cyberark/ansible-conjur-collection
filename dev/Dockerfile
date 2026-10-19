@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 ARG PYTHON_VERSION
 FROM python:${PYTHON_VERSION:-3.12}-slim
 
@@ -7,7 +8,9 @@ WORKDIR /cyberark
 
 # Install Ansible and its test tool
 ARG ANSIBLE_VERSION
-RUN pip3 install ansible==${ANSIBLE_VERSION}.* pytest-testinfra --no-cache-dir --pre
+COPY requirements-ansible-11.txt requirements-ansible-12.txt /tmp/
+RUN --mount=type=secret,id=pip_conf,target=/root/.pip/pip.conf,required=true \
+    pip3 install --require-hashes -r /tmp/requirements-ansible-${ANSIBLE_VERSION}.txt --no-cache-dir
 
 # Install Docker dependencies
 RUN apt-get update && \

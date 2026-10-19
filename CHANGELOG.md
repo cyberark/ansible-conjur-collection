@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+- Enforced `--require-hashes` on pip installs for all test and dev dependencies
+- Replaced unpinned dependency lists with hash-locked lockfiles via `pip-compile --generate-hashes`
+- Moved stable `ansible-core` installs from GitHub archive downloads to PyPI
+- Removed `--pre` flag from dev Dockerfile and pinned `pytest-testinfra` to a stable version
+- Added CI freshness gate to verify `requirements.txt` files are in sync with `requirements.in`
+- Extended sanity test matrix to cover ansible-core 2.17, 2.18, and 2.19 with pinned, hash-verified dependencies per version
+
+### Removed
+- Removed GitHub Actions workflows (`ansible-test.yml`, `close-stale.yml`)
+- Removed `devel` Ansible install path from local test scripts
+
 ### Fixed
 - Fixed `conjur_variable` lookup plugin ignoring `conjur_authn_jwt_token_file` when `conjur_authn_jwt_token` was also set (including via the `CONJUR_AUTHN_JWT_TOKEN` environment fallback). The token file now takes precedence as documented.
 

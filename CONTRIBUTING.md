@@ -91,6 +91,58 @@ Your Secrets Manager instance will be configured with the following:
 
 ## Testing
 
+### Prerequisites — Artifactory credentials
+
+All test and dev scripts pull Python packages from CyberArk's internal Artifactory
+registry (`everest-pypi-virtual`). Before running any script, you must have a valid
+`~/.pip/pip.conf` on your machine configured with CyberArk Artifactory credentials.
+Contact your team lead or check the internal developer onboarding docs to obtain the
+correct configuration. This file must never be committed to the repository (it is
+listed in `.gitignore`).
+
+### Updating test dependencies
+
+Test dependencies are managed via [pip-tools](https://pip-tools.readthedocs.io/).
+All `.txt` lockfiles are auto-generated from their corresponding `.in` source files and must not be edited directly.
+
+| `.in` source | Generated `.txt` | Python image | Used by |
+|---|---|---|---|
+| `tests/unit/requirements.in` | `tests/unit/requirements.txt` | `python:3.12-slim` | unit tests |
+| `dev/oidc-provider/requirements.in` | `dev/oidc-provider/requirements.txt` | `python:3.12-slim` | OIDC provider container |
+| `tests/requirements-ansible-core-2.17.in` | `tests/requirements-ansible-core-2.17.txt` | `python:3.12-slim` | sanity tests (ansible-core 2.17) |
+| `tests/requirements-ansible-core-2.18.in` | `tests/requirements-ansible-core-2.18.txt` | `python:3.13-slim` | sanity tests (ansible-core 2.18) |
+| `tests/requirements-ansible-core-2.19.in` | `tests/requirements-ansible-core-2.19.txt` | `python:3.13-slim` | sanity tests (ansible-core 2.19) |
+| `dev/requirements-ansible-11.in` | `dev/requirements-ansible-11.txt` | `python:3.12-slim` | dev environment (Ansible 11) |
+| `dev/requirements-ansible-12.in` | `dev/requirements-ansible-12.txt` | `python:3.12-slim` | dev environment (Ansible 12) |
+
+To add a new dependency or change a constraint, edit the relevant `.in` file and then
+regenerate the `.txt` lockfile by running the following command from the repo root
+(requires `~/.pip/pip.conf` configured as described above):
+
+```sh
+# Example: regenerate tests/unit/requirements.txt
+docker run --rm \
+  -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+  -v "$(pwd)/tests/unit:/work" python:3.12-slim /bin/sh -c "
+  pip install pip-tools==7.6.2 &&
+  pip-compile --generate-hashes --output-file /work/requirements.txt /work/requirements.in
+"
+
+# Example: regenerate tests/requirements-ansible-core-2.18.txt (uses python:3.13-slim)
+docker run --rm \
+  -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+  -v "$(pwd)/tests:/work" python:3.13-slim /bin/sh -c "
+  pip install pip-tools==7.6.2 &&
+  pip-compile --generate-hashes --output-file /work/requirements-ansible-core-2.18.txt /work/requirements-ansible-core-2.18.in
+"
+```
+
+Use the Python image from the table above for each file. To upgrade all packages to their
+latest compatible versions, add `--upgrade` to the `pip-compile` command.
+
+Commit both the `.in` file and the regenerated `.txt`. CI will fail
+if any `.txt` is out of sync with its `.in` source.
+
 ### Unit tests
 
 Unit tests are only available for the Secrets Manager Variable Lookup plugin. To run

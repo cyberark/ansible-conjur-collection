@@ -1,0 +1,12 @@
+# Human-maintained source file for OIDC provider dependencies.
+# Edit this file to add/update packages — do NOT edit requirements.txt directly.
+#
+# To regenerate requirements.txt with pinned versions and hashes, run:
+#
+#   docker run --rm -v "$(pwd)/dev/oidc-provider:/work" python:3.12-slim /bin/sh -c "
+#     pip install pip-tools==7.6.2 &&
+#     pip-compile --generate-hashes --output-file /work/requirements.txt /work/requirements.in
+#   "
+#
+cryptography>=50.0.0
+PyJWT>=2.8

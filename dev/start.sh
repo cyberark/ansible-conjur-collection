@@ -14,6 +14,12 @@ declare -x PYTHON_VERSION='3.13'
 
 source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
+if [[ ! -f "${HOME}/.pip/pip.conf" ]] || ! grep -q "jfrog.io" "${HOME}/.pip/pip.conf"; then
+  echo "ERROR: ~/.pip/pip.conf is missing or does not reference jfrog.io" >&2
+  echo "Set up your Artifactory pip credentials before running this script." >&2
+  exit 1
+fi
+
 function help {
   cat <<EOF
 Conjur Ansible Collection :: Dev Environment

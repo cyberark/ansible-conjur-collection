@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 function dev_dir {
   repo="$(git rev-parse --show-superproject-working-tree)"
   if [[ "$repo" == "" ]]; then

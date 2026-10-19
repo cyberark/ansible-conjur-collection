@@ -1,0 +1,20 @@
+# Human-maintained source file for ansible 11 + pytest-testinfra dependencies.
+# Edit this file to update versions — do NOT edit requirements-ansible-11.txt directly.
+#
+# To regenerate requirements-ansible-11.txt with pinned versions and hashes, run
+# (requires ~/.pip/pip.conf with Artifactory credentials):
+#
+#   docker run --rm \
+#     -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+#     -v "$(pwd)/dev:/work" python:3.12-slim /bin/sh -c "
+#       pip install pip-tools==7.6.2 &&
+#       pip-compile --generate-hashes \
+#         --output-file /work/requirements-ansible-11.txt \
+#         /work/requirements-ansible-11.in
+#     "
+#
+# Note: compiled with python:3.12-slim; abi3/pure-Python wheels make this
+# compatible with both Python 3.12 and 3.13 runtimes.
+#
+ansible==11.*
+pytest-testinfra==10.2.2
