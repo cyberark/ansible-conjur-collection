@@ -1,0 +1,4 @@
+# pip.conf holds Artifactory credentials; pass it via --secret, never COPY it.
+pip.conf
+# Git metadata is large and never needed inside a Docker image.
+.git/

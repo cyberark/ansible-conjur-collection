@@ -30,15 +30,14 @@ while getopts 'a:p:r' flag; do
    esac
 done
 
-if [[ -n "${PIP_CONF:-}" ]]; then
-  pip_secret="id=pip_conf,env=PIP_CONF"
-elif [[ -f "${HOME}/.pip/pip.conf" ]] && grep -q "jfrog.io" "${HOME}/.pip/pip.conf"; then
-  pip_secret="id=pip_conf,src=${HOME}/.pip/pip.conf"
-else
-  echo "ERROR: Artifactory credentials not available." >&2
-  echo "Either set the PIP_CONF env var or configure ~/.pip/pip.conf with jfrog.io credentials." >&2
+if [[ "$ansible_version" == stable-* ]]; then
+  echo "ERROR: Pass the bare version number (e.g. '2.17')." >&2
   exit 1
 fi
+
+source dev/util.sh
+require_pip_conf
+pip_secret="id=pip_conf,src=${PIP_CONF}"
 
 test_cmd="ansible-test units -v --python $python_version"
 if [[ "$gen_report" == "true" ]]; then
@@ -56,6 +55,7 @@ docker build \
   -f tests/unit/Dockerfile .
 docker run --rm \
   -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
+  -v /dev/null:/ansible_collections/cyberark/conjur/pip.conf:ro \
   -w /ansible_collections/cyberark/conjur/tests/unit/ \
   pytest-tools:latest /bin/bash -c "
     git config --global --add safe.directory /ansible_collections/cyberark/conjur

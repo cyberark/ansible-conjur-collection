@@ -36,3 +36,6 @@ build_ignore:
   - "Jenkinsfile"
   - "kics.config"
   - ".ansible"
+  - "pip.conf"
+  - "pip.conf.dist"
+  - ".dockerignore"

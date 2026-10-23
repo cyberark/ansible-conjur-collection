@@ -1,5 +1,6 @@
 services:
   ansible:
+    image: ${ANSIBLE_IMAGE:-ansible-conjur-dev:local}
     build:
       context: .
       dockerfile: Dockerfile
@@ -33,6 +34,7 @@ services:
     volumes:
       - .:/cyberark/dev
       - /cyberark/dev/conjur-intro/
+      - /dev/null:/cyberark/dev/tmp/pip.conf:ro
       - ../roles/conjur_host_identity:/roles/cyberark.conjur.conjur_host_identity/
       - ../roles/conjur_host_identity/tests:/cyberark/tests/conjur_host_identity/
       - ../plugins:/root/.ansible/plugins
@@ -131,4 +133,4 @@ networks:
 
 secrets:
   pip_conf:
-    file: ${HOME}/.pip/pip.conf
+    file: ${PIP_CONF:-./tmp/pip.conf}

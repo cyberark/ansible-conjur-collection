@@ -38,4 +38,5 @@ RUN mkdir -p /cyberark/collections
 COPY cyberark-conjur-*tar.gz /cyberark/collections
 
 RUN FILE_NAME=$(find /cyberark/collections -name "cyberark-conjur-*tar.gz") && \
-    ansible-galaxy collection install "$FILE_NAME" --force
+    ansible-galaxy collection install "$FILE_NAME" --force && \
+    ansible-galaxy collection install community.docker

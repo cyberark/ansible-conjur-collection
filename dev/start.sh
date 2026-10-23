@@ -14,11 +14,7 @@ declare -x PYTHON_VERSION='3.13'
 
 source "$(git rev-parse --show-toplevel)/dev/util.sh"
 
-if [[ ! -f "${HOME}/.pip/pip.conf" ]] || ! grep -q "jfrog.io" "${HOME}/.pip/pip.conf"; then
-  echo "ERROR: ~/.pip/pip.conf is missing or does not reference jfrog.io" >&2
-  echo "Set up your Artifactory pip credentials before running this script." >&2
-  exit 1
-fi
+require_pip_conf
 
 function help {
   cat <<EOF
@@ -491,13 +487,20 @@ function deploy_ansible() {
     ANSIBLE_API_KEY="$(host_api_key 'ansible/ansible-master')"
     refresh_access_token "host/ansible/ansible-master" "$ANSIBLE_API_KEY"
   fi
-  docker compose up -d --build ansible
+  local build_flag="--build"
+  [[ -n "${ANSIBLE_IMAGE:-}" ]] && build_flag="--no-build"
+  docker compose up -d "$build_flag" ansible
 }
 
 function main() {
   # remove previous environment
   clean
   mkdir -p tmp
+  # Buildx Bake >= 0.21 refuses secret files outside the compose project root (dev/).
+  # pip.conf lives at the repo root (../pip.conf relative to dev/), so copy it into
+  # dev/tmp/ — which is within the project root — and re-export PIP_CONF.
+  install -m 600 "${PIP_CONF}" tmp/pip.conf
+  export PIP_CONF="$(pwd)/tmp/pip.conf"
 
   repo_dir=$(git rev-parse --show-toplevel)
   archive_name=$(find $repo_dir -name "cyberark-conjur-*tar.gz")
@@ -544,7 +547,9 @@ function main() {
       set_network "$DOCKER_NETWORK"
       set_cloud_authentication_variables
       set -x
-      docker compose -f docker-compose.cloud.yml up -d --build ansible
+      local build_flag="--build"
+      [[ -n "${ANSIBLE_IMAGE:-}" ]] && build_flag="--no-build"
+      docker compose -f docker-compose.cloud.yml up -d "$build_flag" ansible
       ;;
     "oss")
       export CONJUR_APPLIANCE_URL='https://conjur-proxy-nginx'
@@ -565,7 +570,9 @@ function main() {
       set_network "$DOCKER_NETWORK"
       set_cloud_authentication_variables
       set -x
-      docker compose -f docker-compose.cloud.yml up -d --build ansible
+      local build_flag="--build"
+      [[ -n "${ANSIBLE_IMAGE:-}" ]] && build_flag="--no-build"
+      docker compose -f docker-compose.cloud.yml up -d "$build_flag" ansible
       openssl s_client -connect localhost:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > "$(dev_dir)/conjur.pem"
       # Adding edge to the docker network
       docker network inspect dev_default --format '{{json .Containers}}' | grep -q 'edge-test' || docker network connect dev_default edge-test

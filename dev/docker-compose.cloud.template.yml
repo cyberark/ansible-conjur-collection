@@ -1,11 +1,14 @@
 services:
   ansible:
+    image: ${ANSIBLE_IMAGE:-ansible-conjur-dev:local}
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ANSIBLE_VERSION: ${ANSIBLE_VERSION}
         PYTHON_VERSION: ${PYTHON_VERSION}
+      secrets:
+        - pip_conf
     command: /bin/sleep 1d
     environment:
       COMPOSE_PROJECT_NAME: dev
@@ -28,8 +31,13 @@ services:
     volumes:
       - .:/cyberark/dev
       - /cyberark/dev/conjur-intro/
+      - /dev/null:/cyberark/dev/tmp/pip.conf:ro
       - ../roles/conjur_host_identity:/roles/cyberark.conjur.conjur_host_identity/
       - ../roles/conjur_host_identity/tests:/cyberark/tests/conjur_host_identity/
       - ../plugins:/root/.ansible/plugins
       - ../tests/conjur_variable:/cyberark/tests/conjur_variable
       - /var/run/docker.sock:/var/run/docker.sock
+
+secrets:
+  pip_conf:
+    file: ${PIP_CONF:-./tmp/pip.conf}

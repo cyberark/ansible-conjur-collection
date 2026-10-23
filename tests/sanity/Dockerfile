@@ -14,7 +14,3 @@ COPY tests/requirements-ansible-core-2.17.txt \
 RUN --mount=type=secret,id=pip_conf,target=/root/.pip/pip.conf,required=true \
     pip install --require-hashes -r /tmp/requirements-ansible-core-${ANSIBLE_VERSION}.txt \
     --disable-pip-version-check --no-cache-dir
-
-COPY tests/unit/requirements.txt /tmp/requirements.txt
-RUN --mount=type=secret,id=pip_conf,target=/root/.pip/pip.conf,required=true \
-    pip install --require-hashes -r /tmp/requirements.txt --no-cache-dir

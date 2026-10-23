@@ -10,6 +10,42 @@ function dev_dir {
   echo "$repo/dev"
 }
 
+# Exports PIP_CONF pointing at the repo-root pip.conf, or exits if it is missing.
+# When running in Jenkins, requires the file to point at Artifactory unless
+# CI_REQUIRE_ARTIFACTORY=false is set explicitly.
+function require_pip_conf {
+  local conf
+  conf="$(dirname "$(dev_dir)")/pip.conf"
+  if [[ ! -f "$conf" ]]; then
+    echo "ERROR: pip.conf not found in the repo root ($conf)." >&2
+    echo "  Run: cp pip.conf.dist pip.conf" >&2
+    echo "  Internal: update index-url in pip.conf to point to your Artifactory instance." >&2
+    exit 1
+  fi
+  # When running in Jenkins, require Artifactory unless explicitly disabled.
+  local enforce="${CI_REQUIRE_ARTIFACTORY:-}"
+  if [[ -z "$enforce" && -n "${JENKINS_HOME:-}" ]]; then
+    enforce="true"
+  fi
+  if [[ "$enforce" == "true" ]]; then
+    # Read the index-url value. Accepts both index-url and index_url (pip treats them the same).
+    local index_url
+    index_url="$(grep -iE '^index[-_]url\s*=' "$conf" | head -1 | sed 's/^[^=]*=//' | sed 's/^[[:space:]]*//')"
+    if [[ -z "$index_url" ]]; then
+      echo "ERROR: pip.conf has no index-url (required in Jenkins)." >&2
+      exit 1
+    fi
+    # Strip scheme and credentials, extract host: take text after the last '@', then cut at '/'.
+    local host
+    host="$(echo "$index_url" | sed 's|^[a-z]*://||; s|.*@||; s|/.*||')"
+    if [[ "$host" != *.jfrog.io ]]; then
+      echo "ERROR: pip.conf index-url host ($host) is not on jfrog.io (required in Jenkins)." >&2
+      exit 1
+    fi
+  fi
+  export PIP_CONF="$conf"
+}
+
 function set_network {
   echo "$1" > "$(dev_dir)/tmp/docker_network"
 }

@@ -91,14 +91,20 @@ Your Secrets Manager instance will be configured with the following:
 
 ## Testing
 
-### Prerequisites — Artifactory credentials
+### Prerequisites — pip.conf
 
-All test and dev scripts pull Python packages from CyberArk's internal Artifactory
-registry (`everest-pypi-virtual`). Before running any script, you must have a valid
-`~/.pip/pip.conf` on your machine configured with CyberArk Artifactory credentials.
-Contact your team lead or check the internal developer onboarding docs to obtain the
-correct configuration. This file must never be committed to the repository (it is
-listed in `.gitignore`).
+**Prerequisite:** A `pip.conf` file must exist in the repo root. This file tells pip where to download
+packages from and is gitignored so it will never be accidentally committed. All test and dev scripts
+fail if it is missing.
+
+To create it, copy the provided template from the repo root:
+
+```bash
+cp pip.conf.dist pip.conf
+```
+
+- **External contributors:** no further changes needed — `pip.conf.dist` points to the public PyPI index.
+- **Internal contributors:** open `pip.conf` and replace the `index-url` with your Artifactory URL and credentials.
 
 ### Updating test dependencies
 
@@ -116,29 +122,15 @@ All `.txt` lockfiles are auto-generated from their corresponding `.in` source fi
 | `dev/requirements-ansible-12.in` | `dev/requirements-ansible-12.txt` | `python:3.12-slim` | dev environment (Ansible 12) |
 
 To add a new dependency or change a constraint, edit the relevant `.in` file and then
-regenerate the `.txt` lockfile by running the following command from the repo root
-(requires `~/.pip/pip.conf` configured as described above):
+regenerate the `.txt` lockfile using the provided script (requires the repo-root `pip.conf`):
 
 ```sh
-# Example: regenerate tests/unit/requirements.txt
-docker run --rm \
-  -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
-  -v "$(pwd)/tests/unit:/work" python:3.12-slim /bin/sh -c "
-  pip install pip-tools==7.6.2 &&
-  pip-compile --generate-hashes --output-file /work/requirements.txt /work/requirements.in
-"
+# Regenerate all lockfiles at once:
+./dev/compile_requirements.sh
 
-# Example: regenerate tests/requirements-ansible-core-2.18.txt (uses python:3.13-slim)
-docker run --rm \
-  -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
-  -v "$(pwd)/tests:/work" python:3.13-slim /bin/sh -c "
-  pip install pip-tools==7.6.2 &&
-  pip-compile --generate-hashes --output-file /work/requirements-ansible-core-2.18.txt /work/requirements-ansible-core-2.18.in
-"
+# Regenerate a specific lockfile by passing its .in path:
+./dev/compile_requirements.sh tests/unit/requirements.in
 ```
-
-Use the Python image from the table above for each file. To upgrade all packages to their
-latest compatible versions, add `--upgrade` to the `pip-compile` command.
 
 Commit both the `.in` file and the regenerated `.txt`. CI will fail
 if any `.txt` is out of sync with its `.in` source.

@@ -31,6 +31,11 @@ while getopts 'a:p:r' flag; do
    esac
 done
 
+if [[ "$ansible_version" == stable-* ]]; then
+  echo "ERROR: Pass the bare version number (e.g. '2.19')." >&2
+  exit 1
+fi
+
 collection_root="$(pwd)"
 
 # Find the artifact in the current directory
@@ -64,14 +69,15 @@ if [[ "$gen_report" == "true" ]]; then
   "
 fi
 
-if [[ -n "${PIP_CONF:-}" ]]; then
-  pip_secret="id=pip_conf,env=PIP_CONF"
-elif [[ -f "${HOME}/.pip/pip.conf" ]] && grep -q "jfrog.io" "${HOME}/.pip/pip.conf"; then
-  pip_secret="id=pip_conf,src=${HOME}/.pip/pip.conf"
-else
-  echo "ERROR: Artifactory credentials not available." >&2
-  echo "Either set the PIP_CONF env var or configure ~/.pip/pip.conf with jfrog.io credentials." >&2
-  exit 1
+source dev/util.sh
+require_pip_conf
+pip_secret="id=pip_conf,src=${PIP_CONF}"
+
+# In source mode the repo root is mounted, which includes pip.conf.
+# Shadow it so the test container cannot read registry credentials.
+pip_conf_shadow=()
+if [[ -z "$artifact_file" ]]; then
+  pip_conf_shadow=(-v /dev/null:/ansible_collections/cyberark/conjur/pip.conf:ro)
 fi
 
 docker build \
@@ -81,6 +87,7 @@ docker build \
   -t "pytest-tools:${ansible_version}" \
   -f tests/sanity/Dockerfile .
 docker run --rm \
+  "${pip_conf_shadow[@]}" \
   -v "${collection_root}":/ansible_collections/cyberark/conjur/ \
   -v "$(pwd)/tests/output/reports":/ansible_collections/cyberark/conjur/tests/output/reports \
   -w /ansible_collections/cyberark/conjur/ \
