@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get clean
 
 ARG ANSIBLE_VERSION
-RUN pip install https://github.com/ansible/ansible/archive/${ANSIBLE_VERSION}.tar.gz --disable-pip-version-check --no-cache-dir
-
-COPY tests/unit/requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt --no-cache-dir
+# ansible-core and test dependencies are installed from a hash-pinned lock file
+# (one per Ansible matrix entry). Regenerate with dev/update_test_locks.sh.
+COPY tests/requirements/ansible-${ANSIBLE_VERSION}.txt /tmp/requirements.txt
+RUN pip install --require-hashes -r /tmp/requirements.txt --disable-pip-version-check --no-cache-dir
