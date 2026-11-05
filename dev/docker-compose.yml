@@ -57,7 +57,7 @@ services:
     environment:
       CONJUR_APPLIANCE_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres@pg/postgres
-      CONJUR_DATA_KEY: "W0BuL8iTr/7QvtjIluJbrb5LDAnmXzmcpxkqihO3dXA="
+      CONJUR_DATA_KEY: ${CONJUR_DATA_KEY}
       CONJUR_FEATURE_AUTHENTICATOR_SERVICE_ENABLED: "true"
       CONJUR_AUTHENTICATORS: authn-iam/prod,authn-azure/AzureAnsible,authn-gcp,authn-jwt/oidc-provider,authn-jwt/oidc-provider-tap
     depends_on:

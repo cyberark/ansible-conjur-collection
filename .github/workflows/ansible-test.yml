@@ -65,9 +65,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      # Install the head of the given branch
-      - name: Install ansible-base (${{ matrix.ansible }})
-        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+      # Install ansible-core from a hash-pinned lock file for this matrix entry.
+      # Regenerate the lock files with dev/update_test_locks.sh.
+      - name: Install ansible-core (${{ matrix.ansible }})
+        run: pip install --require-hashes -r tests/requirements/ansible-${{ matrix.ansible }}.txt --disable-pip-version-check
+        working-directory: ./ansible_collections/cyberark/conjur
 
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required.

@@ -350,6 +350,8 @@ function generate_authn_cert_certificates {
 
 function deploy_conjur_open_source() {
   echo "---- deploying Conjur Open Source ----"
+  # Generate a fresh data key for this run rather than using a fixed value
+  export CONJUR_DATA_KEY="$(docker run --rm cyberark/conjur data-key generate)"
   # Start the embedded OIDC provider alongside Conjur when jwt-oidc auth is requested
   local extra_services=""
   [[ "$AUTHN_TYPE" == "jwt-oidc" ]] && extra_services="oidc-provider"
