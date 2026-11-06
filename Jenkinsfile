@@ -13,13 +13,23 @@ properties([
 if (params.MODE == "PROMOTE") {
   release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
 
-    infrapool.agentSh """
-      ls "${assetDirectory}"
-      cp "${assetDirectory}/cyberark-conjur-${targetVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
+    // Promote never reaches the pipeline's post block, so pip.conf is removed in finally.
+    try {
+      writeArtifactoryPipConf(infrapool)
+      infrapool.agentSh """
+        ls "${assetDirectory}"
+        cp "${assetDirectory}/cyberark-conjur-${targetVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
 
-      export TAG="v${targetVersion}"
-      summon -e publish ./ci/publish
-    """
+        export TAG="v${targetVersion}"
+        CI_REQUIRE_ARTIFACTORY=true summon -e publish ./ci/publish
+      """
+    } finally {
+      try {
+        infrapool.agentSh 'rm -f pip.conf'
+      } catch (e) {
+        echo "Warning: could not clean up promote pip.conf: ${e.message}"
+      }
+    }
 
   }
   release.copyEnterpriseRelease(params.VERSION_TO_PROMOTE)
@@ -38,7 +48,7 @@ pipeline {
 
   environment {
     MODE = release.canonicalizeMode()
-    ANSIBLE_VERSION = 'stable-2.19'
+    ANSIBLE_VERSION = '2.19'
     PYTHON_VERSION = '3.13'
   }
 
@@ -91,6 +101,20 @@ pipeline {
       }
     }
 
+    // Writes the repo-root pip.conf that every pip install in the build uses
+    stage('Prepare pip.conf') {
+      steps {
+        script {
+          writeArtifactoryPipConf(INFRAPOOL_EXECUTORV2_AGENT_1)
+          writeArtifactoryPipConf(INFRAPOOL_EXECUTORV2_AGENT_2)
+          // Azure agents never run pip install (image is pre-built on AWS and relayed).
+          // Use the public pip.conf template — no Artifactory credentials needed or distributed.
+          INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh 'install -m 600 pip.conf.dist pip.conf'
+          INFRAPOOL_AZURE_EXECUTORV2_AGENT_2.agentSh 'install -m 600 pip.conf.dist pip.conf'
+        }
+      }
+    }
+
     // Refreshes Ansible Automation Hub token to prevent 30-day inactivity expiration
     stage('Refresh Automation Hub Token') {
       steps {
@@ -105,6 +129,30 @@ pipeline {
         script {
           INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './ci/build_release'
           INFRAPOOL_EXECUTORV2_AGENT_1.agentArchiveArtifacts artifacts: 'cyberark-conjur-*.tar.gz', fingerprint: true
+          // Stash so Azure agents can reuse this artifact instead of rebuilding it.
+          INFRAPOOL_EXECUTORV2_AGENT_1.agentStash name: 'collection-artifact', includes: 'cyberark-conjur-*.tar.gz'
+        }
+      }
+    }
+
+    stage('Verify requirements.txt files are up to date') {
+      steps {
+        script {
+          INFRAPOOL_EXECUTORV2_AGENT_1.agentSh """
+              set -e
+              ./dev/compile_requirements.sh
+              git diff --exit-code \\
+                tests/unit/requirements.txt \\
+                dev/oidc-provider/requirements.txt \\
+                tests/requirements-ansible-core-2.17.txt \\
+                tests/requirements-ansible-core-2.18.txt \\
+                tests/requirements-ansible-core-2.19.txt \\
+                dev/requirements-ansible-11.txt \\
+                dev/requirements-ansible-12.txt \\
+                ci/requirements-build.txt \\
+                ci/requirements-publish.txt || \\
+                (echo "One or more requirements.txt files are out of date — run ./dev/compile_requirements.sh to regenerate" && exit 1)
+          """
         }
       }
     }
@@ -141,7 +189,7 @@ pipeline {
         stage ('Run ansible-lint') {
           steps {
             script {
-              runAnsibleLint(INFRAPOOL_EXECUTORV2_AGENT_1)
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './dev/lint.sh'
             }
           }
         }
@@ -149,7 +197,7 @@ pipeline {
         stage('conjur_variable sanity tests for Ansible core 2.17') {
           steps {
             script {
-              runSanityTests(INFRAPOOL_EXECUTORV2_AGENT_1, 'stable-2.17', '3.12')
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './dev/test_sanity.sh -a 2.17 -p 3.12'
             }
           }
         }
@@ -157,7 +205,7 @@ pipeline {
         stage('conjur_variable sanity tests for Ansible core 2.18') {
           steps {
             script {
-              runSanityTests(INFRAPOOL_EXECUTORV2_AGENT_1, 'stable-2.18', '3.13')
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './dev/test_sanity.sh -a 2.18 -p 3.13'
             }
           }
         }
@@ -165,7 +213,9 @@ pipeline {
         stage('conjur_variable sanity tests for Ansible core (2.19) - default') {
           steps {
             script {
-              runSanityTestsDefault(INFRAPOOL_EXECUTORV2_AGENT_1)
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentSh './dev/test_sanity.sh -r'
+              INFRAPOOL_EXECUTORV2_AGENT_1.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
+              unstash 'sanity-test-report'
             }
             publishHTML (target : [allowMissing: false,
                                    alwaysLinkToLastBuild: false,
@@ -183,21 +233,22 @@ pipeline {
       stages {
         stage('Run API Key Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
           }
           post {
             always {
               script {
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_1, 'conjur_variable', 'tests/conjur_variable/junit/*')
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_1, 'conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
-
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_2, 'conjur_variable', 'tests/conjur_variable/junit/*')
                 handleJunitReports(INFRAPOOL_EXECUTORV2_AGENT_2, 'conjur_host_identity', 'roles/conjur_host_identity/tests/junit/*')
               }
@@ -207,14 +258,16 @@ pipeline {
 
         stage('Run API Key Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  runApiKeyIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
           }
         }
       }
@@ -224,27 +277,31 @@ pipeline {
       stages {
         stage('Run IAM Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
           }
         }
 
         stage('Run IAM Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  runIamIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
           }
         }
       }
@@ -270,14 +327,16 @@ pipeline {
 
         stage('Run Authn Cert Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  runAuthnCertIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
           }
         }
       }
@@ -287,27 +346,44 @@ pipeline {
       stages {
         stage('Run JWT Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
           }
         }
 
         stage('Run JWT Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  runJwtOidcIntegrationTests(INFRAPOOL_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
+          }
+        }
+      }
+    }
+
+    stage('Build Ansible test images for Azure') {
+      steps {
+        script {
+          // Build on the AWS agent, which has Artifactory access via pip.conf.
+          buildAnsibleTestImage(INFRAPOOL_EXECUTORV2_AGENT_1, '11', '3.12')
+          buildAnsibleTestImage(INFRAPOOL_EXECUTORV2_AGENT_1, LATEST_ANSIBLE_VERSION, '3.12')
+          if (params.TEST_CLOUD) {
+            buildAnsibleTestImage(INFRAPOOL_EXECUTORV2_AGENT_1, LATEST_ANSIBLE_VERSION, '3.13')
           }
         }
       }
@@ -317,27 +393,31 @@ pipeline {
       stages {
         stage('Run Azure Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
-                    },
-                    "Ansible 12": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'oss', '3.12')
+                },
+                "Ansible 12": {
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'oss', '3.12')
+                }
+              )
+            }
           }
         }
 
         stage('Run Azure Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
-                    },
-                    "Ansible 12": {
-                      runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, '11', 'enterprise', '3.12')
+                },
+                "Ansible 12": {
+                  runAzureIntegrationTests(INFRAPOOL_AZURE_EXECUTORV2_AGENT_2, LATEST_ANSIBLE_VERSION, 'enterprise', '3.12')
+                }
+              )
+            }
           }
         }
       }
@@ -347,59 +427,44 @@ pipeline {
       stages {
         stage('Run GCP Integration Tests with Conjur OSS') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_1,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
-                              '11',
-                              'oss',
-                              '3.12',
-                              'cucumber',
-                              'token-out'
-                      )
-                    },
-                    "Ansible 12": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_2,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
-                              LATEST_ANSIBLE_VERSION,
-                              'oss',
-                              '3.12',
-                              'cucumber',
-                              'token-out'
-                      )
-                    }
-            )
+            script {
+              // Only the executor agents run start.sh (docker-compose); GCP agents only fetch tokens
+              parallel(
+                "Ansible 11": {
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_1, INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
+                    '11', 'oss', '3.12', 'cucumber', 'token-out'
+                  )
+                },
+                "Ansible 12": {
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_2, INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
+                    LATEST_ANSIBLE_VERSION, 'oss', '3.12', 'cucumber', 'token-out'
+                  )
+                }
+              )
+            }
           }
         }
 
         stage('Run GCP Integration Tests with Conjur Enterprise') {
           steps {
-            parallel(
-                    "Ansible 11": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_1,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
-                              '11',
-                              'enterprise',
-                              '3.12',
-                              'demo',
-                              'token-out-enterprise'
-                      )
-                    },
-                    "Ansible 12": {
-                      runGcpIntegrationTests(
-                              INFRAPOOL_EXECUTORV2_AGENT_2,
-                              INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
-                              LATEST_ANSIBLE_VERSION,
-                              'enterprise',
-                              '3.12',
-                              'demo',
-                              'token-out-enterprise'
-                      )
-                    }
-            )
+            script {
+              parallel(
+                "Ansible 11": {
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_1, INFRAPOOL_GCP_EXECUTORV2_AGENT_1,
+                    '11', 'enterprise', '3.12', 'demo', 'token-out-enterprise'
+                  )
+                },
+                "Ansible 12": {
+                  runGcpIntegrationTests(
+                    INFRAPOOL_EXECUTORV2_AGENT_2, INFRAPOOL_GCP_EXECUTORV2_AGENT_2,
+                    LATEST_ANSIBLE_VERSION, 'enterprise', '3.12', 'demo', 'token-out-enterprise'
+                  )
+                }
+              )
+            }
           }
         }
       }
@@ -656,7 +721,11 @@ pipeline {
           }
           steps {
             script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh"summon -e azure ./dev/start.sh -f cloud -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
+              def tag = ansibleTestImage(LATEST_ANSIBLE_VERSION, '3.13')
+              // Relay the pre-built image from the AWS agent — Azure agents cannot reach Artifactory.
+              relayAnsibleTestImage(INFRAPOOL_EXECUTORV2_AGENT_1, INFRAPOOL_AZURE_EXECUTORV2_AGENT_1, tag)
+              // CI_REQUIRE_ARTIFACTORY=false: Azure agents carry the public pip.conf template (PyPI URL).
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh "CI_REQUIRE_ARTIFACTORY=false ANSIBLE_IMAGE=${tag} summon -e azure ./dev/start.sh -f cloud -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
             }
           }
         }
@@ -678,7 +747,9 @@ pipeline {
           }
           steps {
             script {
-              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh "summon -e azure ./dev/start.sh -f edge -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
+              // Image already relayed to Azure agent 1 in 'Run Azure tests against Cloud Tenant'.
+              def tag = ansibleTestImage(LATEST_ANSIBLE_VERSION, '3.13')
+              INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh "CI_REQUIRE_ARTIFACTORY=false ANSIBLE_IMAGE=${tag} summon -e azure ./dev/start.sh -f edge -a azure -v ${LATEST_ANSIBLE_VERSION} -p 3.13"
               INFRAPOOL_AZURE_EXECUTORV2_AGENT_1.agentSh 'summon -e azure ./ci/test.sh -u azure -d -t conjur_variable'
             }
           }
@@ -708,58 +779,110 @@ pipeline {
         if (params.TEST_CLOUD) {
           deleteConjurCloudTenant("${TENANT.id}")
         }
+        removePipConf { INFRAPOOL_EXECUTORV2_AGENT_1 }
+        removePipConf { INFRAPOOL_EXECUTORV2_AGENT_2 }
+        removePipConf { INFRAPOOL_AZURE_EXECUTORV2_AGENT_1 }
+        removePipConf { INFRAPOOL_AZURE_EXECUTORV2_AGENT_2 }
       }
       releaseInfraPoolAgent(".infrapool/release_agents")
     }
   }
 }
 
-static def runApiKeyIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+// Writes the Artifactory pip.conf directly into the agent's workspace root (repo root).
+// Credentials are expanded by the shell on the agent (never Groovy-interpolated);
+// the file is created with mode 600 before credentials are written.
+def writeArtifactoryPipConf(agent) {
+  artifactoryAuth.withCreds(agent, "reader") {
+    def hostRef = artifactoryAuth.hostVarRef(agent)
+    def userRef = artifactoryAuth.userVarRef(agent)
+    def passRef = artifactoryAuth.passVarRef(agent)
+    agent.agentSh """
+      install -m 600 /dev/null pip.conf
+      printf '[global]\\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\\n' \\
+        "${userRef}" "${passRef}" "${hostRef}" > pip.conf
+    """
+  }
+}
+
+// Removes pip.conf from an agent; the agent may not exist if leasing failed.
+def removePipConf(Closure getAgent) {
+  try {
+    getAgent().agentSh 'rm -f pip.conf dev/tmp/pip.conf'
+  } catch (e) {
+    echo "Skipping pip.conf cleanup: ${e.message}"
+  }
+}
+
+def runApiKeyIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
   executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a api_key -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u api_key -d -t conjur_variable'
   executorAgent.agentSh './ci/test.sh -d -t conjur_host_identity'
 }
 
-static def runIamIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
-  executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a iam  -v ${ansibleVersion} -p ${pythonVersion}"
+def runIamIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+  executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a iam -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u iam -d -t conjur_variable'
 }
 
-static def runAuthnCertIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+def runAuthnCertIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
   executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a authn-cert -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u authn-cert -d -t conjur_variable'
 }
 
-static def runJwtOidcIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+def runJwtOidcIntegrationTests(executorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
   executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a jwt-oidc -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u jwt-oidc -d -t conjur_variable'
 }
 
-static def runAzureIntegrationTests(azureExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
-  azureExecutorAgent.agentSh "summon -e azure ./dev/start.sh -f ${conjurFlavour} -a azure -v ${ansibleVersion} -p ${pythonVersion}"
+// Returns the Docker image tag for the Ansible test image for the given Ansible and Python versions.
+// The tag includes a short git commit hash so reused Azure VMs cannot pick up a stale image
+// from a different branch that happened to share the same BUILD_NUMBER.
+def ansibleTestImage(String ansibleVersion, String pythonVersion) {
+  def shortCommit = env.GIT_COMMIT?.take(12) ?: 'local'
+  return "ansible-conjur-test:${shortCommit}-${BUILD_NUMBER}-a${ansibleVersion}-py${pythonVersion}"
+}
+
+// Builds the Ansible test image on the given agent using the repo-root pip.conf secret.
+// Returns the image tag.
+def buildAnsibleTestImage(agent, String ansibleVersion, String pythonVersion) {
+  def tag = ansibleTestImage(ansibleVersion, pythonVersion)
+  // BuildKit refuses --secret src paths outside the build context (dev/), so copy into dev/tmp/.
+  agent.agentSh """
+    mkdir -p dev/tmp
+    cp cyberark-conjur-*.tar.gz dev/
+    trap 'rm -f dev/tmp/pip.conf dev/cyberark-conjur-*.tar.gz' EXIT
+    install -m 600 pip.conf dev/tmp/pip.conf
+    DOCKER_BUILDKIT=1 docker build \\
+      --secret id=pip_conf,src=dev/tmp/pip.conf \\
+      --build-arg ANSIBLE_VERSION=${ansibleVersion} \\
+      --build-arg PYTHON_VERSION=${pythonVersion} \\
+      -t ${tag} dev/
+  """
+  return tag
+}
+
+// Relays the named image from one InfraPool agent to another via dockerRelayImage.
+def relayAnsibleTestImage(fromAgent, toAgent, String tag) {
+  dockerRelayImage(fromAgent, toAgent, [tag])
+}
+
+def runAzureIntegrationTests(azureExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion) {
+  azureExecutorAgent.agentUnstash name: 'collection-artifact'
+  def tag = ansibleTestImage(ansibleVersion, pythonVersion)
+  // Relay the pre-built image from the AWS agent — Azure agents cannot reach Artifactory.
+  relayAnsibleTestImage(INFRAPOOL_EXECUTORV2_AGENT_1, azureExecutorAgent, tag)
+  // CI_REQUIRE_ARTIFACTORY=false: Azure agents carry the public pip.conf template (PyPI URL).
+  azureExecutorAgent.agentSh "CI_REQUIRE_ARTIFACTORY=false ANSIBLE_IMAGE=${tag} summon -e azure ./dev/start.sh -f ${conjurFlavour} -a azure -v ${ansibleVersion} -p ${pythonVersion}"
   azureExecutorAgent.agentSh 'summon -e azure ./ci/test.sh -u azure -d -t conjur_variable'
 }
 
-static def runGcpIntegrationTests(executorAgent, gcpExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion, appName, stashName) {
+def runGcpIntegrationTests(executorAgent, gcpExecutorAgent, ansibleVersion, conjurFlavour, pythonVersion, appName, stashName) {
   gcpExecutorAgent.agentSh "./dev/get_gcp_token.sh host/gcp-apps/test-app ${appName}"
   gcpExecutorAgent.agentStash name: stashName, includes: 'dev/gcp/*'
   executorAgent.agentUnstash name: stashName
-  executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a gcp  -v ${ansibleVersion} -p ${pythonVersion}"
+  executorAgent.agentSh "./dev/start.sh -f ${conjurFlavour} -a gcp -v ${ansibleVersion} -p ${pythonVersion}"
   executorAgent.agentSh './ci/test.sh -u gcp -d -t conjur_variable'
-}
-
-static def runAnsibleLint(executorAgent) {
-  executorAgent.agentSh './dev/lint.sh'
-}
-
-static def runSanityTests(executorAgent, version, pythonVersion) {
-  executorAgent.agentSh "./dev/test_sanity.sh -a ${version} -p ${pythonVersion}"
-}
-
-def runSanityTestsDefault(executorAgent) {
-  executorAgent.agentSh './dev/test_sanity.sh -r'
-  executorAgent.agentStash name: 'sanity-test-report', includes: 'tests/output/reports/coverage=sanity/*'
-  unstash 'sanity-test-report'
 }
 
 def handleJunitReports(executorAgent, stashName, testFilesPattern) {

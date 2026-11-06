@@ -1,11 +1,14 @@
 services:
   ansible:
+    image: ${ANSIBLE_IMAGE:-ansible-conjur-dev:local}
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ANSIBLE_VERSION: ${ANSIBLE_VERSION}
         PYTHON_VERSION: ${PYTHON_VERSION}
+      secrets:
+        - pip_conf
     command: /bin/sleep 1d
     environment:
       COMPOSE_PROJECT_NAME: dev
@@ -31,6 +34,7 @@ services:
     volumes:
       - .:/cyberark/dev
       - /cyberark/dev/conjur-intro/
+      - /dev/null:/cyberark/dev/tmp/pip.conf:ro
       - ../roles/conjur_host_identity:/roles/cyberark.conjur.conjur_host_identity/
       - ../roles/conjur_host_identity/tests:/cyberark/tests/conjur_host_identity/
       - ../plugins:/root/.ansible/plugins
@@ -112,6 +116,8 @@ services:
   oidc-provider:
     build:
       context: ./oidc-provider
+      secrets:
+        - pip_conf
     environment:
       OIDC_ISSUER: http://oidc-provider:8080
       PORT: "8080"
@@ -124,3 +130,7 @@ networks:
   dap_net:
     name: dap_net
     external: true
+
+secrets:
+  pip_conf:
+    file: ${PIP_CONF:-./tmp/pip.conf}

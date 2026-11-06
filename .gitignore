@@ -41,3 +41,10 @@ vendor/
 *.tmp
 conjur.pem
 .ansible/
+
+# Credential files — must never be committed
+pip.conf
+ci/requirements.txt
+
+# Local-only version file (not committed; set manually before release)
+VERSION

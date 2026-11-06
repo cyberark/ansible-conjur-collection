@@ -91,6 +91,50 @@ Your Secrets Manager instance will be configured with the following:
 
 ## Testing
 
+### Prerequisites — pip.conf
+
+**Prerequisite:** A `pip.conf` file must exist in the repo root. This file tells pip where to download
+packages from and is gitignored so it will never be accidentally committed. All test and dev scripts
+fail if it is missing.
+
+To create it, copy the provided template from the repo root:
+
+```bash
+cp pip.conf.dist pip.conf
+```
+
+- **External contributors:** no further changes needed — `pip.conf.dist` points to the public PyPI index.
+- **Internal contributors:** open `pip.conf` and replace the `index-url` with your Artifactory URL and credentials.
+
+### Updating test dependencies
+
+Test dependencies are managed via [pip-tools](https://pip-tools.readthedocs.io/).
+All `.txt` lockfiles are auto-generated from their corresponding `.in` source files and must not be edited directly.
+
+| `.in` source | Generated `.txt` | Python image | Used by |
+|---|---|---|---|
+| `tests/unit/requirements.in` | `tests/unit/requirements.txt` | `python:3.12-slim` | unit tests |
+| `dev/oidc-provider/requirements.in` | `dev/oidc-provider/requirements.txt` | `python:3.12-slim` | OIDC provider container |
+| `tests/requirements-ansible-core-2.17.in` | `tests/requirements-ansible-core-2.17.txt` | `python:3.12-slim` | sanity tests (ansible-core 2.17) |
+| `tests/requirements-ansible-core-2.18.in` | `tests/requirements-ansible-core-2.18.txt` | `python:3.13-slim` | sanity tests (ansible-core 2.18) |
+| `tests/requirements-ansible-core-2.19.in` | `tests/requirements-ansible-core-2.19.txt` | `python:3.13-slim` | sanity tests (ansible-core 2.19) |
+| `dev/requirements-ansible-11.in` | `dev/requirements-ansible-11.txt` | `python:3.12-slim` | dev environment (Ansible 11) |
+| `dev/requirements-ansible-12.in` | `dev/requirements-ansible-12.txt` | `python:3.12-slim` | dev environment (Ansible 12) |
+
+To add a new dependency or change a constraint, edit the relevant `.in` file and then
+regenerate the `.txt` lockfile using the provided script (requires the repo-root `pip.conf`):
+
+```sh
+# Regenerate all lockfiles at once:
+./dev/compile_requirements.sh
+
+# Regenerate a specific lockfile by passing its .in path:
+./dev/compile_requirements.sh tests/unit/requirements.in
+```
+
+Commit both the `.in` file and the regenerated `.txt`. CI will fail
+if any `.txt` is out of sync with its `.in` source.
+
 ### Unit tests
 
 Unit tests are only available for the Secrets Manager Variable Lookup plugin. To run

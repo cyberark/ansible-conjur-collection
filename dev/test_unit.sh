@@ -1,6 +1,8 @@
 #!/bin/bash -eu
 
-ansible_version="stable-2.17"
+export DOCKER_BUILDKIT=1
+
+ansible_version="2.17"
 python_version="3.12"
 gen_report="false"
 
@@ -12,7 +14,7 @@ Run unit tests for Conjur Variable Lookup plugin.
 
 ./ansibletest.sh [options]
 
--a <version>     Run tests against specified Ansible version (Default: stable-2.17)
+-a <version>     Run tests against specified Ansible version (Default: 2.17)
 -p <version>     Run tests against specified Python version  (Default: 3.12)
 -r               Generate test coverage report
 EOF
@@ -28,6 +30,15 @@ while getopts 'a:p:r' flag; do
    esac
 done
 
+if [[ "$ansible_version" == stable-* ]]; then
+  echo "ERROR: Pass the bare version number (e.g. '2.17')." >&2
+  exit 1
+fi
+
+source dev/util.sh
+require_pip_conf
+pip_secret="id=pip_conf,src=${PIP_CONF}"
+
 test_cmd="ansible-test units -v --python $python_version"
 if [[ "$gen_report" == "true" ]]; then
   test_cmd="ansible-test coverage erase;
@@ -37,12 +48,14 @@ if [[ "$gen_report" == "true" ]]; then
 fi
 
 docker build \
+  --secret "${pip_secret}" \
   --build-arg PYTHON_VERSION="${python_version}" \
   --build-arg ANSIBLE_VERSION="${ansible_version}" \
   -t pytest-tools:latest \
   -f tests/unit/Dockerfile .
 docker run --rm \
   -v "${PWD}/":/ansible_collections/cyberark/conjur/ \
+  -v /dev/null:/ansible_collections/cyberark/conjur/pip.conf:ro \
   -w /ansible_collections/cyberark/conjur/tests/unit/ \
   pytest-tools:latest /bin/bash -c "
     git config --global --add safe.directory /ansible_collections/cyberark/conjur

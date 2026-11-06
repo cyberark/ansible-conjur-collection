@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1
+#
+# Build image for ci/build_release.
+# pip.conf (Artifactory credentials) is injected as a BuildKit secret:
+#   --mount=type=secret makes it available only during this RUN step and
+#   never stores it in any image layer.
+#
+# Build with:
+#   DOCKER_BUILDKIT=1 docker build \
+#     --secret id=pip_conf,src=<path-to-pip.conf> \
+#     -f ci/Dockerfile.build -t ansible-build-tmp:latest .
+# Pinned to a specific manifest-list digest (architecture-independent) to prevent a
+# compromised python:3.12 tag on Docker Hub from producing a tampered build artifact.
+# Update when a Python 3.12 security patch is released:
+#   docker buildx imagetools inspect python:3.12 --format '{{.Manifest.Digest}}'
+FROM python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f
+COPY ci/requirements-build.txt /tmp/requirements-build.txt
+RUN --mount=type=secret,id=pip_conf,target=/root/.pip/pip.conf,required=true \
+    pip install --require-hashes -r /tmp/requirements-build.txt

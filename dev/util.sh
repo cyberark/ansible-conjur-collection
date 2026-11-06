@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 function dev_dir {
   repo="$(git rev-parse --show-superproject-working-tree)"
   if [[ "$repo" == "" ]]; then
@@ -7,6 +8,29 @@ function dev_dir {
   fi
 
   echo "$repo/dev"
+}
+
+# Exports PIP_CONF pointing at the repo-root pip.conf, or exits if it is missing.
+# In Jenkins (CI_REQUIRE_ARTIFACTORY=true), also verifies the file references Artifactory.
+# Artifactory credentials are written by writeArtifactoryPipConf in the Jenkinsfile before
+# any agentSh call, so this check is a safety net rather than the primary enforcement.
+function require_pip_conf {
+  local conf
+  conf="$(dirname "$(dev_dir)")/pip.conf"
+  if [[ ! -f "$conf" ]]; then
+    echo "ERROR: pip.conf not found in the repo root ($conf)." >&2
+    echo "  Run: cp pip.conf.dist pip.conf" >&2
+    echo "  Internal: update index-url in pip.conf to point to your Artifactory instance." >&2
+    exit 1
+  fi
+  if [[ "${CI_REQUIRE_ARTIFACTORY:-false}" == "true" ]]; then
+    if ! grep -qi 'artifactory' "$conf"; then
+      echo "ERROR: CI_REQUIRE_ARTIFACTORY=true but pip.conf does not reference an Artifactory host." >&2
+      echo "  Internal: ensure writeArtifactoryPipConf ran before this script." >&2
+      exit 1
+    fi
+  fi
+  export PIP_CONF="$conf"
 }
 
 function set_network {

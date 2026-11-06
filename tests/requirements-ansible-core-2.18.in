@@ -1,0 +1,16 @@
+# Human-maintained source file for ansible-core 2.18 dependency.
+# Edit this file to update the version — do NOT edit requirements-ansible-core-2.18.txt directly.
+#
+# To regenerate requirements-ansible-core-2.18.txt with pinned versions and hashes, run
+# (requires ~/.pip/pip.conf with Artifactory credentials):
+#
+#   docker run --rm \
+#     -v "${HOME}/.pip/pip.conf:/root/.pip/pip.conf:ro" \
+#     -v "$(pwd)/tests:/work" python:3.13-slim /bin/sh -c "
+#       pip install pip-tools==7.6.2 &&
+#       pip-compile --generate-hashes --no-emit-index-url \
+#         --output-file /work/requirements-ansible-core-2.18.txt \
+#         /work/requirements-ansible-core-2.18.in
+#     "
+#
+ansible-core==2.18.*

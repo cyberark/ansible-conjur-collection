@@ -29,4 +29,5 @@ rm -rf inventory.tmp \
        ca.pem \
        ca.key \
        client.pem \
-       client.key
+       client.key \
+       tmp/pip.conf

@@ -1,0 +1,8 @@
+# Human-maintained source file for ci/publish dependencies.
+# Edit this file to add/update packages — do NOT edit requirements-publish.txt directly.
+#
+# To regenerate requirements-publish.txt with pinned versions and hashes, run:
+#
+#   ./dev/compile_requirements.sh ci/requirements-publish.in
+#
+ansible-core

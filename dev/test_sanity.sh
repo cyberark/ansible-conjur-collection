@@ -1,6 +1,8 @@
 #!/bin/bash -eu
 
-ansible_version="stable-2.19"
+export DOCKER_BUILDKIT=1
+
+ansible_version="2.19"
 python_version="3.13"
 gen_report="false"
 artifact_file=""
@@ -13,7 +15,7 @@ Run sanity tests for Conjur Variable Lookup plugin.
 
 ./dev/test_sanity.sh [options]
 
--a <version>     Run tests against specified Ansible version (Default: stable-2.19)
+-a <version>     Run tests against specified Ansible version (Default: 2.19)
 -p <version>     Run tests against specified Python version  (Default: 3.13)
 -r               Generate test coverage report
 EOF
@@ -28,6 +30,11 @@ while getopts 'a:p:r' flag; do
        exit 1 ;;
    esac
 done
+
+if [[ "$ansible_version" == stable-* ]]; then
+  echo "ERROR: Pass the bare version number (e.g. '2.19')." >&2
+  exit 1
+fi
 
 collection_root="$(pwd)"
 
@@ -62,12 +69,25 @@ if [[ "$gen_report" == "true" ]]; then
   "
 fi
 
+source dev/util.sh
+require_pip_conf
+pip_secret="id=pip_conf,src=${PIP_CONF}"
+
+# In source mode the repo root is mounted, which includes pip.conf.
+# Shadow it so the test container cannot read registry credentials.
+pip_conf_shadow=()
+if [[ -z "$artifact_file" ]]; then
+  pip_conf_shadow=(-v /dev/null:/ansible_collections/cyberark/conjur/pip.conf:ro)
+fi
+
 docker build \
+  --secret "${pip_secret}" \
   --build-arg PYTHON_VERSION="${python_version}" \
   --build-arg ANSIBLE_VERSION="${ansible_version}" \
   -t "pytest-tools:${ansible_version}" \
   -f tests/sanity/Dockerfile .
 docker run --rm \
+  "${pip_conf_shadow[@]+"${pip_conf_shadow[@]}"}" \
   -v "${collection_root}":/ansible_collections/cyberark/conjur/ \
   -v "$(pwd)/tests/output/reports":/ansible_collections/cyberark/conjur/tests/output/reports \
   -w /ansible_collections/cyberark/conjur/ \

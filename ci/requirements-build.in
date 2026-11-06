@@ -1,0 +1,8 @@
+# Human-maintained source file for ci/build_release dependencies.
+# Edit this file to add/update packages — do NOT edit requirements-build.txt directly.
+#
+# To regenerate requirements-build.txt with pinned versions and hashes, run:
+#
+#   ./dev/compile_requirements.sh ci/requirements-build.in
+#
+ansible-core

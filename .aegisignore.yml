@@ -1,0 +1,10 @@
+lines:
+  - file: Jenkinsfile
+    line: 104
+    reason: False positive — "pip install" appears in a comment, not an executable command.
+  - file: Jenkinsfile
+    line: 110
+    reason: False positive — "pip install" appears in a comment, not an executable command.
+  - file: dev/compile_requirements.sh
+    line: 40
+    reason: Bootstrapping install of pip-tools to generate all hash-locked lockfiles; --require-hashes cannot be used here without a circular lockfile dependency. Version is explicitly pinned and pulled from internal Artifactory only.
