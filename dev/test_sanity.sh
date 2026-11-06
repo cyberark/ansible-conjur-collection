@@ -87,7 +87,7 @@ docker build \
   -t "pytest-tools:${ansible_version}" \
   -f tests/sanity/Dockerfile .
 docker run --rm \
-  "${pip_conf_shadow[@]}" \
+  "${pip_conf_shadow[@]+"${pip_conf_shadow[@]}"}" \
   -v "${collection_root}":/ansible_collections/cyberark/conjur/ \
   -v "$(pwd)/tests/output/reports":/ansible_collections/cyberark/conjur/tests/output/reports \
   -w /ansible_collections/cyberark/conjur/ \

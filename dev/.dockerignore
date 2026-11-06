@@ -1,0 +1,2 @@
+# Exclude pip.conf secrets copied here before docker build (passed via --secret instead).
+tmp/

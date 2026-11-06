@@ -850,7 +850,8 @@ def buildAnsibleTestImage(agent, String ansibleVersion, String pythonVersion) {
   // BuildKit refuses --secret src paths outside the build context (dev/), so copy into dev/tmp/.
   agent.agentSh """
     mkdir -p dev/tmp
-    trap 'rm -f dev/tmp/pip.conf' EXIT
+    cp cyberark-conjur-*.tar.gz dev/
+    trap 'rm -f dev/tmp/pip.conf dev/cyberark-conjur-*.tar.gz' EXIT
     install -m 600 pip.conf dev/tmp/pip.conf
     DOCKER_BUILDKIT=1 docker build \\
       --secret id=pip_conf,src=dev/tmp/pip.conf \\

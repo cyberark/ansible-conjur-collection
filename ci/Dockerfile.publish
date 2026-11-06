@@ -15,5 +15,5 @@
 #   docker buildx imagetools inspect python:3.12 --format '{{.Manifest.Digest}}'
 FROM python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f
 COPY ci/requirements-publish.txt /tmp/requirements-publish.txt
-RUN --mount=type=secret,id=pip_conf,target=/root/.pip/pip.conf \
+RUN --mount=type=secret,id=pip_conf,target=/root/.pip/pip.conf,required=true \
     pip install --require-hashes -r /tmp/requirements-publish.txt

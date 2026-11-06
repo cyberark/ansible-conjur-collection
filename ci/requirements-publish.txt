@@ -4,14 +4,10 @@
 #
 #    pip-compile --generate-hashes --no-emit-index-url --output-file=/work/requirements-publish.txt /work/requirements-publish.in
 #
-ansible==14.5.0 \
-    --hash=sha256:245623ccc2d31d0f6f4bdb63168d550cad305fb032cc43d96e8f61ce8ab0ba84 \
-    --hash=sha256:daeafe730cb2cf82ebe1a1a30960dcdfc0d624c497eb96d57d81713ec19ef19f
-    # via -r /work/requirements-publish.in
 ansible-core==2.21.5 \
     --hash=sha256:08886f9f3e23d129aa98a01271c4a47833516e1cb7c737a246788cb474f41222 \
     --hash=sha256:65bb3148c58ebb843cd5074004c805f404f152114d98476dd823324616c9c6cb
-    # via ansible
+    # via -r /work/requirements-publish.in
 cffi==2.1.1 \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
     --hash=sha256:06c72bb76605a4b0cd0aad6930b69d4baf7dd5d806cfc409b824191099700e66 \

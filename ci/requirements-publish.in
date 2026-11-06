@@ -5,4 +5,4 @@
 #
 #   ./dev/compile_requirements.sh ci/requirements-publish.in
 #
-ansible
+ansible-core
