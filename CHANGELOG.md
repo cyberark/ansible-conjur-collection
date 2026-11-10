@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.3.15] - 2026-11-10
 
 ### Security
 - Enforced `--require-hashes` on pip installs for all test and dev dependencies
@@ -203,8 +203,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated code from Ansible conjur_variable lookup plugin
 - Added support to configure the use of the plugin via environment variables
 
-[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.14...HEAD
-[1.3.13]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.13...v1.3.14
+[Unreleased]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.15...HEAD
+[1.3.15]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.14...v1.3.15
+[1.3.14]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.13...v1.3.14
 [1.3.13]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.12...v1.3.13
 [1.3.12]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.11...v1.3.12
 [1.3.11]: https://github.com/cyberark/ansible-conjur-collection/compare/v1.3.10...v1.3.11
