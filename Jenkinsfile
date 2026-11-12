@@ -19,8 +19,7 @@ if (params.MODE == "PROMOTE") {
       infrapool.agentSh """
         set -e
         install -m 600 /dev/null pip.conf
-        trap 'rm -f pip.conf' EXIT
-        printf '[global]\\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\\n' \\
+        printf \"[global]\\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\\n\" \\
           "${userRef}" "${passRef}" "${hostRef}" > pip.conf
 
         ls "${assetDirectory}"
@@ -28,6 +27,7 @@ if (params.MODE == "PROMOTE") {
 
         export TAG="v${targetVersion}"
         CI_REQUIRE_ARTIFACTORY=true summon -e publish ./ci/publish
+        rm -f pip.conf
       """
     }
   }
