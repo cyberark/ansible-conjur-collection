@@ -12,25 +12,24 @@ properties([
 // Performs release promotion.  No other stages will be run
 if (params.MODE == "PROMOTE") {
   release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
-
-    // Promote never reaches the pipeline's post block, so pip.conf is removed in finally.
-    try {
-      writeArtifactoryPipConf(infrapool)
+    artifactoryAuth.withCreds(infrapool, "reader") {
+      def hostRef = artifactoryAuth.hostVarRef(infrapool)
+      def userRef = artifactoryAuth.userVarRef(infrapool)
+      def passRef = artifactoryAuth.passVarRef(infrapool)
       infrapool.agentSh """
+        set -e
+        install -m 600 /dev/null pip.conf
+        trap 'rm -f pip.conf' EXIT
+        printf '[global]\\nindex-url = https://%s:%s@%s/artifactory/api/pypi/everest-pypi-virtual/simple\\n' \\
+          "${userRef}" "${passRef}" "${hostRef}" > pip.conf
+
         ls "${assetDirectory}"
         cp "${assetDirectory}/cyberark-conjur-${targetVersion}.tar.gz" ./cyberark-conjur-${targetVersion}.tar.gz
 
         export TAG="v${targetVersion}"
         CI_REQUIRE_ARTIFACTORY=true summon -e publish ./ci/publish
       """
-    } finally {
-      try {
-        infrapool.agentSh 'rm -f pip.conf'
-      } catch (e) {
-        echo "Warning: could not clean up promote pip.conf: ${e.message}"
-      }
     }
-
   }
   release.copyEnterpriseRelease(params.VERSION_TO_PROMOTE)
   return
