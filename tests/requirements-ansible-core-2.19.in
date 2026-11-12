@@ -13,4 +13,4 @@
 #         /work/requirements-ansible-core-2.19.in
 #     "
 #
-ansible-core==2.19.*
+ansible-core==2.18.*

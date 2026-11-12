@@ -4,10 +4,10 @@
 #
 #    pip-compile --generate-hashes --no-emit-index-url --output-file=/work/requirements-ansible-core-2.19.txt /work/requirements-ansible-core-2.19.in
 #
-ansible-core==2.19.14 \
-    --hash=sha256:1e7612788eaa6b3c87a3670ce86c64b830eba0ae2b3fcb25a772f276704163b4 \
-    --hash=sha256:d518d0e96fa75bedfe9b0a96d5b158aa712d092961824c115140c8677b88ff06
-    # via -r /work/requirements-ansible-core-2.19.in
+ansible-core==2.18.18rc1 \
+    --hash=sha256:1d8bf8f27013a897b85a2c60c4d59fba1de12091bae67e98d39c4c4640a22a74 \
+    --hash=sha256:b5fc47f3ceb3e28a119e43773106289c87e3234ed0ffcd7bd152f043df11ae99
+    # via -r requirements-ansible-core-2.19.in
 cffi==2.1.1 \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
     --hash=sha256:06c72bb76605a4b0cd0aad6930b69d4baf7dd5d806cfc409b824191099700e66 \
@@ -411,7 +411,7 @@ pyyaml==6.0.3 \
     --hash=sha256:fa160448684b4e94d80416c0fa4aac48967a969efe22931448d853ada8baf926 \
     --hash=sha256:fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0
     # via ansible-core
-resolvelib==1.2.1 \
-    --hash=sha256:7d08a2022f6e16ce405d60b68c390f054efcfd0477d4b9bd019cc941c28fad1c \
-    --hash=sha256:fb06b66c8da04172d9e72a21d7d06186d8919e32ae5ab5cdf5b9d920be805ac2
+resolvelib==1.0.1 \
+    --hash=sha256:04ce76cbd63fded2078ce224785da6ecd42b9564b1390793f64ddecbe997b309 \
+    --hash=sha256:d2da45d1a8dfee81bdd591647783e340ef3bcb104b54c383f70d422ef5cc7dbf
     # via ansible-core
